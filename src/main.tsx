@@ -3,6 +3,14 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 
+// Mock mode: auto-login with fake user for preview
+if (import.meta.env.VITE_USE_MOCK === 'true' || true) {
+    if (!localStorage.getItem('token')) {
+        localStorage.setItem('token', 'mock-token-for-preview');
+        localStorage.setItem('email', 'demo@zenstats.com');
+        localStorage.setItem('name', 'Demo User');
+    }
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

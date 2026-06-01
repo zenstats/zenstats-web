@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosRequestHeaders, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import useErrorStore from "@store/errorStore";
 import qs from 'qs'
+import { getMockResponse } from './mock'
 
 export interface BaseResponse<T = unknown> {
     code: number;
@@ -17,9 +18,66 @@ const ignoreMsgs = [
 let requestList: Array<() => void> = []
 let isRefreshToken = false
 // 请求白名单，无须token的接口
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || true; // Set to false to use real API
+
+// Mock adapter: intercepts requests and returns mock data without network calls
+const mockAdapter = async (config: AxiosRequestConfig): Promise<AxiosResponse> => {
+    const url = config.url || '';
+    const method = (config.method || 'get').toUpperCase();
+
+    // Simulate a tiny network delay for realistic behavior
+    await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
+
+    // Handle POST requests
+    if (method === 'POST') {
+        if (url.includes('/apikeys')) {
+            return {
+                data: {
+                    code: 200,
+                    message: 'success',
+                    data: {
+                        id: Date.now(),
+                        name: (config.data as { name?: string })?.name || 'New Key',
+                        key: 'zs_mock_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2),
+                        created_at: new Date().toISOString(),
+                        expires_at: (config.data as { expires_at?: string })?.expires_at || '',
+                    },
+                },
+                status: 200,
+                statusText: 'OK',
+                headers: {},
+                config: config as InternalAxiosRequestConfig,
+            };
+        }
+    }
+
+    // Handle DELETE requests
+    if (method === 'DELETE') {
+        return {
+            data: { code: 200, message: 'success', data: null },
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config: config as InternalAxiosRequestConfig,
+        };
+    }
+
+    // Handle GET requests
+    const mockData = getMockResponse(url);
+
+    return {
+        data: mockData ?? { code: 200, message: 'success', data: [] },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: config as InternalAxiosRequestConfig,
+    };
+};
+
 const api = axios.create({
     // baseURL: 'http://localhost:8080/api',
     baseURL: 'https://analysis.yzhyai.com/api',
+    ...(USE_MOCK ? { adapter: mockAdapter } : {}),
 }) as AxiosInstance & {
     <T = unknown>(config: AxiosRequestConfig): Promise<BaseResponse<T>>;
     <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<BaseResponse<T>>;

@@ -1,0 +1,386 @@
+import { useState, useEffect, useCallback } from "react";
+import axios, { type BaseResponse } from "@utils/axios";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import {
+  Plus,
+  Trash2,
+  Copy,
+  Check,
+  Key,
+  AlertTriangle,
+  Calendar,
+} from "lucide-react";
+import { toast } from "sonner";
+
+interface APIKeyInfo {
+  id: number;
+  name: string;
+  key_preview: string;
+  created_at: string;
+  expires_at: string;
+  last_used_at: string;
+}
+
+interface CreateAPIKeyResponse {
+  id: number;
+  name: string;
+  key: string;
+  created_at: string;
+  expires_at: string;
+}
+
+export default function APIKeysPage() {
+  const [keys, setKeys] = useState<APIKeyInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newKeyName, setNewKeyName] = useState("");
+  const [newKeyExpiry, setNewKeyExpiry] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createdKey, setCreatedKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+
+  const fetchKeys = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get<BaseResponse<APIKeyInfo[]>>("/apikeys");
+      if (response.data.data) {
+        setKeys(response.data.data);
+      }
+    } catch (error) {
+      console.error("获取 API Key 列表失败:", error);
+      toast.error("获取 API Key 列表失败");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchKeys();
+  }, [fetchKeys]);
+
+  const handleCreate = async () => {
+    if (!newKeyName.trim()) {
+      toast.error("请输入 API Key 名称");
+      return;
+    }
+    try {
+      setCreating(true);
+      const body: { name: string; expires_at?: string } = {
+        name: newKeyName.trim(),
+      };
+      if (newKeyExpiry) {
+        body.expires_at = newKeyExpiry + " 23:59:59";
+      }
+      const response = await axios.post<BaseResponse<CreateAPIKeyResponse>>(
+        "/apikeys",
+        body,
+      );
+      if (response.data.data) {
+        setCreatedKey(response.data.data.key);
+        setNewKeyName("");
+        setNewKeyExpiry("");
+        toast.success("API Key 创建成功");
+        fetchKeys();
+      }
+    } catch (error) {
+      console.error("创建 API Key 失败:", error);
+      toast.error("创建 API Key 失败");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success("已复制到剪贴板");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await axios.delete(`/apikeys/${id}`);
+      toast.success("API Key 已删除");
+      setDeleteConfirm(null);
+      fetchKeys();
+    } catch (error) {
+      console.error("删除 API Key 失败:", error);
+      toast.error("删除 API Key 失败");
+    }
+  };
+
+  const handleCreateDialogClose = (open: boolean) => {
+    setCreateOpen(open);
+    if (!open) {
+      setCreatedKey(null);
+      setNewKeyName("");
+      setNewKeyExpiry("");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              API Keys
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              管理你的 API 访问密钥，用于通过 API 访问统计数据
+            </p>
+          </div>
+          <Dialog open={createOpen} onOpenChange={handleCreateDialogClose}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                创建 API Key
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>
+                  {createdKey ? "API Key 已创建" : "创建新的 API Key"}
+                </DialogTitle>
+                <DialogDescription>
+                  {createdKey
+                    ? "请立即复制此密钥，它不会再次显示。"
+                    : "为 API 访问创建一个新的密钥。"}
+                </DialogDescription>
+              </DialogHeader>
+
+              {createdKey ? (
+                <div className="space-y-4">
+                  {/* Show created key */}
+                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                      <div className="text-sm text-amber-700 dark:text-amber-300">
+                        请立即复制此密钥。关闭对话框后将无法再次查看完整密钥。
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <code className="text-sm font-mono break-all text-gray-900 dark:text-gray-100">
+                      {createdKey}
+                    </code>
+                  </div>
+                  <Button
+                    className="w-full gap-2"
+                    onClick={() => handleCopy(createdKey)}
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                    {copied ? "已复制" : "复制密钥"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm mb-1.5 block">名称</Label>
+                    <Input
+                      value={newKeyName}
+                      onChange={(e) => setNewKeyName(e.target.value)}
+                      placeholder="例如：My API Key"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      用于标识此密钥的用途
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm mb-1.5 block">
+                      过期时间（可选）
+                    </Label>
+                    <Input
+                      type="date"
+                      value={newKeyExpiry}
+                      onChange={(e) => setNewKeyExpiry(e.target.value)}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      留空则永不过期
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <DialogFooter>
+                {createdKey ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleCreateDialogClose(false)}
+                  >
+                    关闭
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleCreateDialogClose(false)}
+                    >
+                      取消
+                    </Button>
+                    <Button
+                      onClick={handleCreate}
+                      disabled={creating || !newKeyName.trim()}
+                    >
+                      {creating ? "创建中..." : "创建"}
+                    </Button>
+                  </>
+                )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* API Key list */}
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-48" />
+                  </div>
+                  <Skeleton className="h-8 w-8" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : keys.length === 0 ? (
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <Key className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
+              没有 API Key
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              创建一个 API Key 来通过 API 访问你的统计数据
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => setCreateOpen(true)}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              创建第一个 API Key
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {keys.map((apiKey) => (
+              <div
+                key={apiKey.id}
+                className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Key className="h-4 w-4 text-gray-400 shrink-0" />
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                        {apiKey.name}
+                      </h3>
+                    </div>
+                    <div className="mt-1 flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                      <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
+                        {apiKey.key_preview}
+                      </code>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        创建于{" "}
+                        {new Date(apiKey.created_at).toLocaleDateString("zh-CN")}
+                      </span>
+                      {apiKey.expires_at && (
+                        <span
+                          className={cn(
+                            "flex items-center gap-1",
+                            new Date(apiKey.expires_at) < new Date()
+                              ? "text-red-500"
+                              : "text-gray-400",
+                          )}
+                        >
+                          {new Date(apiKey.expires_at) < new Date()
+                            ? "已过期"
+                            : `过期于 ${new Date(apiKey.expires_at).toLocaleDateString("zh-CN")}`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {deleteConfirm === apiKey.id ? (
+                      <div className="flex items-center gap-2 ml-2">
+                        <span className="text-xs text-red-500">确认删除？</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleDelete(apiKey.id)}
+                        >
+                          删除
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => setDeleteConfirm(null)}
+                        >
+                          取消
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-gray-400 hover:text-red-500"
+                        onClick={() => setDeleteConfirm(apiKey.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Usage hint */}
+        <div className="mt-8 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+            使用方式
+          </h3>
+          <div className="text-xs text-gray-500 dark:text-gray-400 space-y-2">
+            <p>使用 API Key 通过 Bearer Token 方式进行认证：</p>
+            <pre className="bg-gray-100 dark:bg-gray-800 rounded p-2 overflow-x-auto">
+              <code>
+                {`curl -H "Authorization: Bearer YOUR_API_KEY" \\
+  https://your-domain.com/api/stats/example.com/aggregate \\
+  ?period=day&date=2024-01-01&metrics=visitors,pageviews`}
+              </code>
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

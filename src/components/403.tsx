@@ -1,4 +1,4 @@
-import React from "react";
+// 403 Forbidden component
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";

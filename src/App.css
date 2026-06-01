@@ -118,3 +118,6 @@
     @apply bg-background text-foreground;
   }
 }
+.toaster-offset {
+  margin-top: 64px; /* Adjust based on your header's height + desired spacing */
+}

@@ -8,10 +8,12 @@ export interface Site {
   rate_seconds?: number;
 }
 
-
 export interface TimeRangeVisitor {
   date: string;
+  time?: string;
   uv: number;
+  visitors?: number;
+  pageviews?: number;
 }
 
 export interface TopStats {
@@ -35,12 +37,69 @@ export interface RankItem {
 
 export interface StatsRequest {
   period: string;
-  date?: string; // 日期，可选
-  from?: string; // 开始日期，可选
-  to?: string; // 结束日期，可选
+  date?: string;
+  from?: string;
+  to?: string;
   interval?: Interval;
-
-  refresh?: Date
+  metrics?: string;
+  property?: string;
+  filters?: string;
+  limit?: number;
+  page?: number;
+  refresh?: Date;
 }
 
-export type Interval = 'hour' | 'day' | 'week' | 'minute';
+export type Interval = 'minute' | 'hourly' | 'daily' | 'weekly' | 'monthly';
+
+// New Aggregate API types
+export interface AggregateMetric {
+  value: number;
+  comparison_value: number | null;
+  change: number | null;
+}
+
+export interface AggregateResponse {
+  results: Record<string, AggregateMetric>;
+}
+
+// New Main Graph API types
+export interface MainGraphPoint {
+  timestamp: string;
+  metrics: Record<string, number>;
+}
+
+// New Breakdown API types
+export interface BreakdownColumn {
+  name: string;
+  label: string;
+  type: string;
+}
+
+export interface BreakdownResponse {
+  columns: string[];
+  data: Record<string, string | number>[];
+}
+
+// Current Visitors API types
+export interface CurrentVisitors {
+  total: number;
+  visitors: number;
+  sessions: number;
+  last_updated: string;
+}
+
+// Combined stats data for the page
+export interface StatsData {
+  aggregate: AggregateResponse | null;
+  mainGraph: MainGraphPoint[] | null;
+  currentVisitors: CurrentVisitors | null;
+  sources: BreakdownResponse | null;
+  pages: BreakdownResponse | null;
+  countries: BreakdownResponse | null;
+  browsers: BreakdownResponse | null;
+  operatingSystems: BreakdownResponse | null;
+  devices: BreakdownResponse | null;
+  entryPages: BreakdownResponse | null;
+  exitPages: BreakdownResponse | null;
+  screenSizes: BreakdownResponse | null;
+}

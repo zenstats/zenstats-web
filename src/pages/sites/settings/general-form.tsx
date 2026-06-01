@@ -12,7 +12,13 @@ import {
   FormMessage,
 } from "@components/ui/form";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useCallback, useEffect, useState } from "react";
 import axios, { type BaseResponse } from "@utils/axios";
 import type { Site } from "../types/interfaces";
@@ -23,32 +29,30 @@ import { Loader2 } from "lucide-react";
 import { AxiosError } from "axios";
 
 const timeZoneFormSchema = z.object({
-  timeZone: z
-    .string({
-      required_error: "Please select a timezone.",
-    }),
+  timeZone: z.string({
+    required_error: "Please select a timezone.",
+  }),
 });
 
 const rateLimitFormSchema = z.object({
-  limit_minute: z
-    .coerce.number({
+  limit_minute: z.coerce
+    .number({
       required_error: "Please enter a rate limit.",
       invalid_type_error: "Please enter a valid number.",
     })
-    .int('Must be an integer')
-    .min(0, 'Cannot be negative'),
-  rateLimitUnit: z
-    .string({
-      required_error: "Please select a rate limit unit.",
-    }),
+    .int("Must be an integer")
+    .min(0, "Cannot be negative"),
+  rateLimitUnit: z.string({
+    required_error: "Please select a rate limit unit.",
+  }),
 });
 
 type TimeZoneFormValues = z.infer<typeof timeZoneFormSchema>;
 type RateLimitFormValues = z.infer<typeof rateLimitFormSchema>;
 
 export function SettingsGeneralForm() {
-  const [isTimeZoneLoading, setIsTimeZoneLoading] = useState(false)
-  const [isRateLimitLoading, setIsRateLimitLoading] = useState(false)
+  const [isTimeZoneLoading, setIsTimeZoneLoading] = useState(false);
+  const [isRateLimitLoading, setIsRateLimitLoading] = useState(false);
 
   const { domain } = useParams();
   const [site, setSite] = useState<Site | null>(null);
@@ -56,8 +60,8 @@ export function SettingsGeneralForm() {
     resolver: zodResolver(timeZoneFormSchema),
     mode: "onChange",
     defaultValues: {
-      timeZone: ''
-    }
+      timeZone: "",
+    },
   });
 
   const rateLimitForm = useForm<RateLimitFormValues>({
@@ -65,29 +69,29 @@ export function SettingsGeneralForm() {
     mode: "onChange",
     defaultValues: {
       limit_minute: 1000,
-      rateLimitUnit: 'second'
-    }
+      rateLimitUnit: "second",
+    },
   });
 
   // 当 site 变化时，更新时区表单
   useEffect(() => {
     if (site) {
-      timeZoneForm.setValue('timeZone', site.timezone || '');
+      timeZoneForm.setValue("timeZone", site.timezone || "");
     }
   }, [site, timeZoneForm]);
 
   // 当 site 变化时，更新速率限制表单
   useEffect(() => {
     if (site) {
-      rateLimitForm.setValue('limit_minute', site.limit_minute || 1000);
+      rateLimitForm.setValue("limit_minute", site.limit_minute || 1000);
 
       // 根据 rate_seconds 设置速率限制单位
       if (site.rate_seconds === 3600) {
-        rateLimitForm.setValue('rateLimitUnit', 'hour');
+        rateLimitForm.setValue("rateLimitUnit", "hour");
       } else if (site.rate_seconds === 60) {
-        rateLimitForm.setValue('rateLimitUnit', 'minute');
+        rateLimitForm.setValue("rateLimitUnit", "minute");
       } else {
-        rateLimitForm.setValue('rateLimitUnit', 'second');
+        rateLimitForm.setValue("rateLimitUnit", "second");
       }
     }
   }, [site, rateLimitForm]);
@@ -96,16 +100,20 @@ export function SettingsGeneralForm() {
     // 提交时区修改
     setIsTimeZoneLoading(true);
 
-    axios.put(`/sites/${domain}`, { timezone: data.timeZone }).then(() => {
-      setIsTimeZoneLoading(false);
-      toast.success("时区修改成功");
-    }).catch((err) => {
-      setIsTimeZoneLoading(false);
-      console.log(err);
-      toast.error("时区修改失败", {
-        description: err instanceof AxiosError ? err.response?.data.error : "未知错误",
+    axios
+      .put(`/sites/${domain}`, { timezone: data.timeZone })
+      .then(() => {
+        setIsTimeZoneLoading(false);
+        toast.success("时区修改成功");
+      })
+      .catch((err) => {
+        setIsTimeZoneLoading(false);
+        console.log(err);
+        toast.error("时区修改失败", {
+          description:
+            err instanceof AxiosError ? err.response?.data.error : "未知错误",
+        });
       });
-    });
   }
 
   function onSubmitRateLimit(data: RateLimitFormValues) {
@@ -114,24 +122,28 @@ export function SettingsGeneralForm() {
 
     // Convert rateLimitUnit to rate_seconds for API
     let rate_seconds = 1; // default to second
-    if (data.rateLimitUnit === 'minute') rate_seconds = 60;
-    if (data.rateLimitUnit === 'hour') rate_seconds = 3600;
+    if (data.rateLimitUnit === "minute") rate_seconds = 60;
+    if (data.rateLimitUnit === "hour") rate_seconds = 3600;
 
     const submitData = {
       limit_minute: data.limit_minute,
-      rate_seconds
+      rate_seconds,
     };
 
-    axios.put(`/sites/${domain}`, submitData).then(() => {
-      setIsRateLimitLoading(false);
-      toast.success("速率限制修改成功");
-    }).catch((err) => {
-      setIsRateLimitLoading(false);
-      console.log(err);
-      toast.error("速率限制修改失败", {
-        description: err instanceof AxiosError ? err.response?.data.error : "未知错误",
+    axios
+      .put(`/sites/${domain}`, submitData)
+      .then(() => {
+        setIsRateLimitLoading(false);
+        toast.success("速率限制修改成功");
+      })
+      .catch((err) => {
+        setIsRateLimitLoading(false);
+        console.log(err);
+        toast.error("速率限制修改失败", {
+          description:
+            err instanceof AxiosError ? err.response?.data.error : "未知错误",
+        });
       });
-    });
   }
 
   const fetchSites = useCallback(async () => {
@@ -148,10 +160,13 @@ export function SettingsGeneralForm() {
   }, [fetchSites]);
 
   return (
-    <div className="container mx-auto space-y-6">
+    <div className="space-y-6">
       {/* 时区设置表单 */}
       <Form {...timeZoneForm}>
-        <form onSubmit={timeZoneForm.handleSubmit(onSubmitTimeZone)} className="space-y-8">
+        <form
+          onSubmit={timeZoneForm.handleSubmit(onSubmitTimeZone)}
+          className="space-y-8"
+        >
           <Card>
             <CardHeader>
               <CardTitle>时区设置</CardTitle>
@@ -165,23 +180,31 @@ export function SettingsGeneralForm() {
                   <FormItem>
                     <FormLabel>报告时区</FormLabel>
                     <select
-              value={field.value}
-              onChange={field.onChange}
-              className="w-full rounded-md border border-gray-300 px-3 py-2"
-            >
-              <option value="" disabled>选择时区</option>
-              {timeZones.map((timeZone) => (
-                <option key={timeZone.value} value={timeZone.value}>
-                  {timeZone.label}
-                </option>
-              ))}
-            </select>
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="w-full rounded-md border border-gray-300 px-3 py-2"
+                    >
+                      <option value="" disabled>
+                        选择时区
+                      </option>
+                      {timeZones.map((timeZone) => (
+                        <option key={timeZone.value} value={timeZone.value}>
+                          {timeZone.label}
+                        </option>
+                      ))}
+                    </select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isTimeZoneLoading} className="mt-6">
-                {isTimeZoneLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button
+                type="submit"
+                disabled={isTimeZoneLoading}
+                className="mt-6"
+              >
+                {isTimeZoneLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 {isTimeZoneLoading ? "提交中..." : "更新时区设置"}
               </Button>
             </CardContent>
@@ -191,7 +214,10 @@ export function SettingsGeneralForm() {
 
       {/* 速率限制表单 */}
       <Form {...rateLimitForm}>
-        <form onSubmit={rateLimitForm.handleSubmit(onSubmitRateLimit)} className="space-y-8">
+        <form
+          onSubmit={rateLimitForm.handleSubmit(onSubmitRateLimit)}
+          className="space-y-8"
+        >
           <Card>
             <CardHeader>
               <CardTitle>速率限制设置</CardTitle>
@@ -210,20 +236,29 @@ export function SettingsGeneralForm() {
                         type="number"
                         placeholder="限制数量"
                         onChange={(e) => {
-                          const value = e.target.value.replace(/[^0-9]/g, '');
+                          const value = e.target.value.replace(/[^0-9]/g, "");
                           field.onChange(value);
                         }}
-                        className={rateLimitForm.formState.errors.limit_minute ? "border-red-500" : ""}
+                        className={
+                          rateLimitForm.formState.errors.limit_minute
+                            ? "border-red-500"
+                            : ""
+                        }
                       />
                       <select
-              value={rateLimitForm.watch('rateLimitUnit')}
-              onChange={(e) => rateLimitForm.setValue('rateLimitUnit', e.target.value)}
-              className="w-[150px] rounded-md border border-gray-300 px-3 py-2"
-            >
-              <option value="second">每秒</option>
-              <option value="minute">每分钟</option>
-              <option value="hour">每小时</option>
-            </select>
+                        value={rateLimitForm.watch("rateLimitUnit")}
+                        onChange={(e) =>
+                          rateLimitForm.setValue(
+                            "rateLimitUnit",
+                            e.target.value,
+                          )
+                        }
+                        className="w-[150px] rounded-md border border-gray-300 px-3 py-2"
+                      >
+                        <option value="second">每秒</option>
+                        <option value="minute">每分钟</option>
+                        <option value="hour">每小时</option>
+                      </select>
                     </div>
                     <FormMessage />
                   </FormItem>
@@ -232,12 +267,16 @@ export function SettingsGeneralForm() {
               <FormField
                 control={rateLimitForm.control}
                 name="rateLimitUnit"
-                render={({ field }) => (
-                  <input type="hidden" {...field} />
-                )}
+                render={({ field }) => <input type="hidden" {...field} />}
               />
-              <Button type="submit" disabled={isRateLimitLoading} className="mt-6">
-                {isRateLimitLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button
+                type="submit"
+                disabled={isRateLimitLoading}
+                className="mt-6"
+              >
+                {isRateLimitLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 {isRateLimitLoading ? "提交中..." : "更新速率限制"}
               </Button>
             </CardContent>

@@ -31,7 +31,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
               buttonVariants({ variant: "ghost" }),
               isActive
                 ? "bg-muted hover:bg-muted"
-                : "hover:bg-transparent hover:underline",
+                : "hover:bg-muted/50",
               "justify-start"
             )}
           >

@@ -1,10 +1,10 @@
-import React from 'react';
 import type { RouteObject } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import Login from "@/pages/login/login";
 import Sites from "@/pages/sites/sites";
 import NewSite from "@/pages/sites/new";
-import State from "@/pages/sites/stats/stats";
+import StatsPage from "@/pages/sites/stats/stats";
+import APIKeysPage from "@/pages/sites/apikeys/apikeys";
 import Setup from '@/pages/login/setup';
 import NotFoundPage from '@/pages/404';
 import SettingsLayout from './pages/sites/settings/layout';
@@ -12,6 +12,15 @@ import { SettingsGeneralForm } from './pages/sites/settings/general-form';
 import SettingShieldsIpAddress from './pages/sites/settings/shields/ip_address';
 import SettingShieldsHostname from './pages/sites/settings/shields/hostname';
 import SettingShieldsCountries from './pages/sites/settings/shields/countries';
+
+// Root redirect component that checks login state
+function RootRedirect() {
+  const token = localStorage.getItem("token");
+  if (token) {
+    return <Navigate to="/sites" replace />;
+  }
+  return <Navigate to="/login" replace />;
+}
 
 const routes: RouteObject[] = [
   {
@@ -35,7 +44,7 @@ const routes: RouteObject[] = [
       },
       {
         path: ":domain/stats",
-        element: <State />
+        element: <StatsPage />
       },
       {
         path: ":domain/settings",
@@ -79,8 +88,12 @@ const routes: RouteObject[] = [
     ]
   },
   {
+    path: "/apikeys",
+    element: <APIKeysPage />
+  },
+  {
     path: "/",
-    element: <Navigate to="/login" replace />
+    element: <RootRedirect />
   },
   {
     path: "*",
