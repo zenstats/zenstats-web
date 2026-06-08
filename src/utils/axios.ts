@@ -18,7 +18,7 @@ const ignoreMsgs = [
 let requestList: Array<() => void> = []
 let isRefreshToken = false
 // 请求白名单，无须token的接口
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || true; // Set to false to use real API
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'; // Set VITE_USE_MOCK=true to enable mock mode
 
 // Mock adapter: intercepts requests and returns mock data without network calls
 const mockAdapter = async (config: AxiosRequestConfig): Promise<AxiosResponse> => {
@@ -74,9 +74,9 @@ const mockAdapter = async (config: AxiosRequestConfig): Promise<AxiosResponse> =
     };
 };
 
+// baseURL 使用相对路径，由反向代理（Caddy）将 /api/* 转发到后端
 const api = axios.create({
-    // baseURL: 'http://localhost:8080/api',
-    baseURL: 'https://analysis.yzhyai.com/api',
+    baseURL: '/api',
     ...(USE_MOCK ? { adapter: mockAdapter } : {}),
 }) as AxiosInstance & {
     <T = unknown>(config: AxiosRequestConfig): Promise<BaseResponse<T>>;

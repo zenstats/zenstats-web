@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { BaseResponse } from "@utils/axios";
 import type { StatsRequest, AggregateMetric, AggregateResponse } from "@/pages/sites/types/interfaces";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Play, Plus, X, RotateCcw } from "lucide-react";
+import { Play, Plus, X, RotateCcw, Download, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Dimension options for property selector (API-supported only)
 const DIMENSION_OPTIONS = [
@@ -47,6 +47,28 @@ const METRIC_OPTIONS = [
   { value: "events", label: "事件数" },
 ];
 
+const DEFAULT_BREAKDOWN_METRICS = ["visitors", "events"];
+const BREAKDOWN_UNSUPPORTED_METRICS = new Set(["views_per_visit"]);
+const EVENT_ONLY_DIMENSIONS = new Set(["event:name"]);
+const SESSION_ONLY_METRICS = new Set(["pageviews", "bounce_rate", "visit_duration", "views_per_visit"]);
+const PAGE_SIZE = 50;
+
+function filterColumnsWithData(columns: string[], data: Record<string, unknown>[]): string[] {
+  return columns.filter((col) => data.some((row) => row[col] != null && row[col] !== ""));
+}
+
+function isMetricAvailable(metric: string, resultType: "breakdown" | "aggregate", property: string) {
+  if (resultType !== "breakdown") return true;
+  if (BREAKDOWN_UNSUPPORTED_METRICS.has(metric)) return false;
+  if (EVENT_ONLY_DIMENSIONS.has(property) && SESSION_ONLY_METRICS.has(metric)) return false;
+  return true;
+}
+
+function sanitizeMetrics(metrics: string[], resultType: "breakdown" | "aggregate", property: string) {
+  const available = metrics.filter((metric) => isMetricAvailable(metric, resultType, property));
+  return available.length > 0 ? available : ["visitors"];
+}
+
 // Filter operators
 const OPERATORS = [
   { value: "is", label: "是 (=)" },
@@ -69,6 +91,7 @@ interface CustomQueryProps {
   domain: string;
   breakdownApi: (params: StatsRequest) => Promise<BaseResponse<unknown>>;
   aggregateApi: (params: StatsRequest) => Promise<BaseResponse<AggregateResponse>>;
+  exportApi: (params: StatsRequest) => Promise<Blob>;
 }
 
 function generateId() {
@@ -80,10 +103,11 @@ export default function CustomQuery({
   domain,
   breakdownApi,
   aggregateApi,
+  exportApi,
 }: CustomQueryProps) {
   // Query form state
   const [property, setProperty] = useState("event:name");
-  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["visitors", "events"]);
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(DEFAULT_BREAKDOWN_METRICS);
   const [filters, setFilters] = useState<FilterRow[]>([]);
   const [limit, setLimit] = useState(100);
   const [resultType, setResultType] = useState<"breakdown" | "aggregate">("breakdown");
@@ -94,6 +118,9 @@ export default function CustomQuery({
   const [aggregateResult, setAggregateResult] = useState<Record<string, AggregateMetric> | null>(null);
   const [resultColumns, setResultColumns] = useState<string[]>([]);
   const [hasExecuted, setHasExecuted] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const effectiveMetrics = sanitizeMetrics(selectedMetrics, resultType, property);
 
   const addFilter = () => {
     setFilters((prev) => [
@@ -113,10 +140,25 @@ export default function CustomQuery({
   };
 
   const toggleMetric = (metric: string) => {
+    if (!isMetricAvailable(metric, resultType, property)) return;
     setSelectedMetrics((prev) =>
       prev.includes(metric) ? prev.filter((m) => m !== metric) : [...prev, metric]
     );
   };
+
+  const handlePropertyChange = (value: string) => {
+    setProperty(value);
+    setSelectedMetrics((prev) => sanitizeMetrics(prev, resultType, value));
+  };
+
+  const handleResultTypeChange = (value: "breakdown" | "aggregate") => {
+    setResultType(value);
+    setSelectedMetrics((prev) => sanitizeMetrics(prev, value, property));
+  };
+
+  useEffect(() => {
+    setSelectedMetrics((prev) => sanitizeMetrics(prev, resultType, property));
+  }, [property, resultType]);
 
   const buildFiltersString = (): string | undefined => {
     const validFilters = filters.filter((f) => f.value.trim());
@@ -133,16 +175,57 @@ export default function CustomQuery({
     ]);
   };
 
+  const lastQueryRef = useRef<{
+    property: string;
+    selectedMetrics: string[];
+    filtersStr: string | undefined;
+    resultType: "breakdown" | "aggregate";
+  } | null>(null);
+
+  const fetchBreakdownPage = useCallback(async (p: number) => {
+    const last = lastQueryRef.current;
+    if (!last) return;
+    setLoading(true);
+    try {
+      const params: StatsRequest = {
+        ...baseQuery,
+        property: last.property,
+        metrics: sanitizeMetrics(last.selectedMetrics, last.resultType, last.property).join(","),
+        limit: PAGE_SIZE,
+        page: p,
+        filters: last.filtersStr,
+        refresh: new Date(),
+      };
+      const result = await breakdownApi(params);
+      if (result.data && typeof result.data === "object" && "data" in (result.data as object)) {
+        const bdData = result.data as { columns?: string[]; data: Record<string, unknown>[] };
+        setResultData(bdData.data);
+        if (bdData.data.length > 0) {
+          const cols = bdData.columns || Object.keys(bdData.data[0]);
+          setResultColumns(filterColumnsWithData(cols, bdData.data));
+        }
+        setHasMore(bdData.data.length === PAGE_SIZE);
+      }
+    } catch (error) {
+      console.error("查询失败:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [baseQuery, breakdownApi]);
+
   const executeQuery = useCallback(async () => {
     setLoading(true);
     setHasExecuted(true);
+    setPage(1);
+    const filtersStr = buildFiltersString();
+    lastQueryRef.current = { property, selectedMetrics, filtersStr, resultType };
     try {
-      const filtersStr = buildFiltersString();
       const params: StatsRequest = {
         ...baseQuery,
         property,
-        metrics: selectedMetrics.join(","),
-        limit,
+        metrics: sanitizeMetrics(selectedMetrics, resultType, property).join(","),
+        limit: resultType === "breakdown" ? PAGE_SIZE : limit,
+        page: resultType === "breakdown" ? 1 : undefined,
         filters: filtersStr,
         refresh: new Date(),
       };
@@ -153,8 +236,10 @@ export default function CustomQuery({
           const bdData = result.data as { columns?: string[]; data: Record<string, unknown>[] };
           setResultData(bdData.data);
           if (bdData.data.length > 0) {
-            setResultColumns(bdData.columns || Object.keys(bdData.data[0]));
+            const cols = bdData.columns || Object.keys(bdData.data[0]);
+            setResultColumns(filterColumnsWithData(cols, bdData.data));
           }
+          setHasMore(bdData.data.length === PAGE_SIZE);
         }
         setAggregateResult(null);
       } else {
@@ -163,6 +248,7 @@ export default function CustomQuery({
           setAggregateResult((result.data as AggregateResponse).results);
         }
         setResultData(null);
+        setHasMore(false);
       }
     } catch (error) {
       console.error("查询失败:", error);
@@ -173,13 +259,46 @@ export default function CustomQuery({
 
   const handleReset = () => {
     setProperty("event:name");
-    setSelectedMetrics(["visitors", "events"]);
+    setSelectedMetrics(DEFAULT_BREAKDOWN_METRICS);
     setFilters([]);
     setLimit(100);
     setResultType("breakdown");
     setResultData(null);
     setAggregateResult(null);
     setHasExecuted(false);
+    setPage(1);
+    setHasMore(false);
+    lastQueryRef.current = null;
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    fetchBreakdownPage(newPage);
+  };
+
+  const handleExportCSV = async () => {
+    if (!lastQueryRef.current) return;
+    const last = lastQueryRef.current;
+    try {
+      const params: StatsRequest = {
+        ...baseQuery,
+        property: last.property,
+        metrics: sanitizeMetrics(last.selectedMetrics, last.resultType, last.property).join(","),
+        filters: last.filtersStr,
+        refresh: new Date(),
+      };
+      const blob = await exportApi(params);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${domain}_${last.property}_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("导出失败:", error);
+    }
   };
 
   return (
@@ -206,7 +325,7 @@ export default function CustomQuery({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <Label className="text-xs text-gray-500 mb-1 block">查询类型</Label>
-            <Select value={resultType} onValueChange={(v) => setResultType(v as "breakdown" | "aggregate")}>
+            <Select value={resultType} onValueChange={(v) => handleResultTypeChange(v as "breakdown" | "aggregate")}>
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -220,7 +339,7 @@ export default function CustomQuery({
           {resultType === "breakdown" && (
             <div>
               <Label className="text-xs text-gray-500 mb-1 block">分组维度 (Property)</Label>
-              <Select value={property} onValueChange={setProperty}>
+              <Select value={property} onValueChange={handlePropertyChange}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
@@ -259,12 +378,17 @@ export default function CustomQuery({
         <div>
           <Label className="text-xs text-gray-500 mb-2 block">指标 (Metrics)</Label>
           <div className="flex flex-wrap gap-2">
-            {METRIC_OPTIONS.map((metric) => (
+            {METRIC_OPTIONS.map((metric) => {
+              const disabled = !isMetricAvailable(metric.value, resultType, property);
+              return (
               <button
                 key={metric.value}
                 onClick={() => toggleMetric(metric.value)}
+                disabled={disabled}
+                title={disabled ? "当前查询类型或分组维度不支持该指标" : undefined}
                 className={cn(
                   "px-2.5 py-1 text-xs font-medium rounded-md border transition-colors",
+                  disabled && "cursor-not-allowed opacity-40",
                   selectedMetrics.includes(metric.value)
                     ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800"
                     : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
@@ -272,7 +396,7 @@ export default function CustomQuery({
               >
                 {metric.label}
               </button>
-            ))}
+            );})}
           </div>
         </div>
 
@@ -365,7 +489,7 @@ export default function CustomQuery({
           <code className="text-xs text-gray-600 dark:text-gray-300 font-mono break-all">
             GET /api/stats/{domain}/{resultType === "breakdown" ? "breakdown" : "aggregate"}
             ?property={resultType === "breakdown" ? property : ""}
-            &metrics={selectedMetrics.join(",")}
+            &metrics={effectiveMetrics.join(",")}
             {filters.filter(f => f.value.trim()).length > 0 && `&filters=${buildFiltersString()}`}
             &limit={limit}
           </code>
@@ -388,47 +512,92 @@ export default function CustomQuery({
             配置查询参数后点击"执行查询"查看结果
           </div>
         ) : resultType === "breakdown" && resultData ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800">
-                  <th className="text-left py-2 px-2 font-medium text-gray-500">#</th>
-                  {resultColumns.map((col) => (
-                    <th key={col} className="text-right py-2 px-2 font-medium text-gray-500">
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {resultData.map((row, index) => (
-                  <tr
-                    key={index}
-                    className="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30"
-                  >
-                    <td className="py-2 px-2 text-gray-400">{index + 1}</td>
+          <div>
+            {/* Results header with export */}
+            {resultData.length > 0 && (
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs text-gray-400">
+                  第 {page} 页 · 本页 {resultData.length} 条
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportCSV}
+                  className="h-7 px-2 text-xs gap-1.5"
+                >
+                  <Download className="h-3 w-3" />
+                  导出 CSV
+                </Button>
+              </div>
+            )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-gray-800">
+                    <th className="text-left py-2 px-2 font-medium text-gray-500">#</th>
                     {resultColumns.map((col) => (
-                      <td
-                        key={col}
-                        className={cn(
-                          "py-2 px-2",
-                          col === resultColumns[0]
-                            ? "text-left font-medium text-gray-900 dark:text-gray-100"
-                            : "text-right text-gray-700 dark:text-gray-300 tabular-nums"
-                        )}
-                      >
-                        {typeof row[col] === "number"
-                          ? (row[col] as number).toLocaleString()
-                          : String(row[col] ?? "")}
-                      </td>
+                      <th key={col} className="text-right py-2 px-2 font-medium text-gray-500">
+                        {col}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {resultData.length === 0 && (
-              <div className="text-center py-4 text-sm text-gray-400">
-                查询无结果
+                </thead>
+                <tbody>
+                  {resultData.map((row, index) => (
+                    <tr
+                      key={index}
+                      className="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30"
+                    >
+                      <td className="py-2 px-2 text-gray-400">{(page - 1) * PAGE_SIZE + index + 1}</td>
+                      {resultColumns.map((col) => (
+                        <td
+                          key={col}
+                          className={cn(
+                            "py-2 px-2",
+                            col === resultColumns[0]
+                              ? "text-right font-medium text-gray-900 dark:text-gray-100"
+                              : "text-right text-gray-700 dark:text-gray-300 tabular-nums"
+                          )}
+                        >
+                          {typeof row[col] === "number"
+                            ? (row[col] as number).toLocaleString()
+                            : String(row[col] ?? "")}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {resultData.length === 0 && (
+                <div className="text-center py-4 text-sm text-gray-400">
+                  查询无结果
+                </div>
+              )}
+            </div>
+            {/* Pagination */}
+            {(page > 1 || hasMore) && (
+              <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page <= 1 || loading}
+                  className="h-7 px-2 text-xs"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <span className="text-xs text-gray-500 min-w-[4rem] text-center">
+                  第 {page} 页
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={loading || !hasMore}
+                  className="h-7 px-2 text-xs"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
               </div>
             )}
           </div>

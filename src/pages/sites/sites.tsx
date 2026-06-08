@@ -8,7 +8,7 @@ import {
   CardContent,
   CardAction,
 } from "@/components/ui/card";
-import { Settings } from "lucide-react";
+import { Code2, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import axios, { type BaseResponse } from "@utils/axios";
@@ -92,18 +92,34 @@ export default function Sites() {
               <CardTitle>{site.domain}</CardTitle>
               <CardDescription>{site.remark}</CardDescription>
               <CardAction>
-                <Button
-                  disabled={site.role === "viewer"}
-                  variant="link"
-                  className="cursor-pointer hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-40"
-                  // 为设置按钮添加点击事件，跳转到设置页面
-                  onClick={(e) => {
-                    e.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击事件
-                    navigate(`/sites/${site.domain}/settings/general`);
-                  }}
-                >
-                  <Settings />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="link"
+                    className="cursor-pointer hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-40"
+                    title="安装统计代码"
+                    aria-label="安装统计代码"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/sites/${site.domain}/install`);
+                    }}
+                  >
+                    <Code2 />
+                  </Button>
+                  <Button
+                    disabled={site.role === "viewer"}
+                    variant="link"
+                    className="cursor-pointer hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-40"
+                    title="站点设置"
+                    aria-label="站点设置"
+                    // 为设置按钮添加点击事件，跳转到设置页面
+                    onClick={(e) => {
+                      e.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击事件
+                      navigate(`/sites/${site.domain}/settings/general`);
+                    }}
+                  >
+                    <Settings />
+                  </Button>
+                </div>
               </CardAction>
             </CardHeader>
             <CardContent>{/* 这里暂时先显示一个空卡片 */}</CardContent>

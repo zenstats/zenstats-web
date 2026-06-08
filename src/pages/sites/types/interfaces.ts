@@ -103,3 +103,61 @@ export interface StatsData {
   exitPages: BreakdownResponse | null;
   screenSizes: BreakdownResponse | null;
 }
+
+// Goal types
+export interface Goal {
+  id: number;
+  site_id: number;
+  event_name?: string;
+  page_path?: string;
+  display_name: string;
+}
+
+export interface CreateGoalRequest {
+  event_name?: string;
+  page_path?: string;
+  display_name: string;
+}
+
+// Funnel types
+export interface FunnelStep {
+  step_order: number;
+  goal_id: number;
+  goal_name: string;
+  goal_type: string;
+  goal_value: string;
+}
+
+export interface Funnel {
+  id: number;
+  site_id: number;
+  name: string;
+  steps: { id: number; goal_id: number; step_order: number }[];
+}
+
+export interface FunnelDetail {
+  id: number;
+  site_id: number;
+  name: string;
+  steps: FunnelStep[];
+}
+
+export interface CreateFunnelRequest {
+  name: string;
+  steps: { goal_id: number }[];
+}
+
+// Funnel Analysis types
+export interface FunnelStepResult {
+  step_order: number;
+  goal_name: string;
+  visitors: number;
+  drop_off: number;
+  conversion_rate: number;
+}
+
+export interface FunnelAnalysisResult {
+  total_visitors: number;
+  steps: FunnelStepResult[];
+  conversion_rate: number;
+}

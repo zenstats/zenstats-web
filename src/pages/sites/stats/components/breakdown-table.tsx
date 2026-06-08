@@ -47,10 +47,8 @@ export default function BreakdownTable({
     }
   }, [fetchData, query.refresh]);
 
-  if (!data || !data.data) return null;
-
-  const rows = data.data;
-  const columns = data.columns || (rows.length > 0 ? Object.keys(rows[0]) : []);
+  const rows = data?.data || [];
+  const columns = data?.columns || (rows.length > 0 ? Object.keys(rows[0]) : []);
   const displayRows = showMore ? rows : rows.slice(0, limit);
 
   // First column is the dimension key, rest are metrics
@@ -79,7 +77,7 @@ export default function BreakdownTable({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden min-h-[200px]">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-2">

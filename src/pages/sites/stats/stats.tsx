@@ -20,6 +20,7 @@ import {
   RefreshCw,
   ChevronDown,
   Settings,
+  Code2,
   Link,
   Globe,
   Monitor,
@@ -232,6 +233,14 @@ export default function StatsPage() {
           "/stats/" + domain + "/breakdown",
           { params: dateRange },
         );
+        return response.data;
+      },
+      // Export breakdown as CSV file
+      exportBreakdown: async (dateRange: StatsRequest) => {
+        const response = await axios.get("/stats/" + domain + "/export", {
+          params: dateRange,
+          responseType: "blob",
+        });
         return response.data;
       },
       getSiteList: async () => {
@@ -464,6 +473,13 @@ export default function StatsPage() {
                     <Settings className="h-4 w-4" />
                     站点设置
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate(`/sites/${domain}/install`)}
+                    className="flex items-center gap-2"
+                  >
+                    <Code2 className="h-4 w-4" />
+                    安装统计代码
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
               )}
@@ -673,6 +689,7 @@ export default function StatsPage() {
             domain={domain!}
             breakdownApi={api.getBreakdown}
             aggregateApi={api.getAggregate}
+            exportApi={api.exportBreakdown}
           />
         </div>
 

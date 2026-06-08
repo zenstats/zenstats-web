@@ -83,7 +83,7 @@ export function SettingsGeneralForm() {
   // 当 site 变化时，更新速率限制表单
   useEffect(() => {
     if (site) {
-      rateLimitForm.setValue("limit_minute", site.limit_minute || 1000);
+      rateLimitForm.setValue("limit_minute", site.limit_minute ?? 1000);
 
       // 根据 rate_seconds 设置速率限制单位
       if (site.rate_seconds === 3600) {

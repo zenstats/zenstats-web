@@ -131,7 +131,7 @@ function UserDropdown({ user, onLogout }: { user: { name: string; email: string 
           <span className="text-sm">API Keys</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => navigate("/sites/settings/general")}
+          onClick={() => navigate("/settings/account")}
           className="flex items-center gap-2.5 py-2 cursor-pointer"
         >
           <Settings className="h-4 w-4 text-gray-500" />
@@ -191,11 +191,18 @@ export default function Header() {
   const scrolled = useScroll(10);
 
   useEffect(() => {
-    const userInfo = {
-      email: localStorage.getItem("email") || "",
-      name: localStorage.getItem("name") || "",
+    const loadUser = () => {
+      const userInfo = {
+        email: localStorage.getItem("email") || "",
+        name: localStorage.getItem("name") || "",
+      };
+      set(userInfo);
     };
-    set(userInfo);
+
+    loadUser();
+    window.addEventListener("zenstats:user-updated", loadUser);
+
+    return () => window.removeEventListener("zenstats:user-updated", loadUser);
   }, [location.pathname, set]);
 
   useEffect(() => {
@@ -324,7 +331,7 @@ export default function Header() {
                 variant="ghost"
                 className="w-full justify-start gap-2.5 h-11"
                 onClick={() => {
-                  navigate("/sites/settings/general");
+                  navigate("/settings/account");
                   setOpen(false);
                 }}
               >

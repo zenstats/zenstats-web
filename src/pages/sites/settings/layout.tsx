@@ -1,7 +1,7 @@
 import { Separator } from "@components/ui/separator"
 import { SidebarNav, type SidebarNavItem } from "./components/sidebar-nav"
 import { useNavigate, useParams } from "react-router-dom";
-import { Rocket, ShieldAlert } from "lucide-react";
+import { Code2, Rocket, ShieldAlert, Target } from "lucide-react";
 
 interface SettingsLayoutProps {
   children: React.ReactNode
@@ -19,6 +19,29 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
       title: "General",
       icon: <Rocket className="mr-2 h-4 w-4" />,
       href: `${baseUrl}/general`,
+    },
+    {
+      id: "install",
+      title: "Install Code",
+      icon: <Code2 className="mr-2 h-4 w-4" />,
+      href: `/sites/${domain}/install`,
+    },
+    {
+      id: "conversions",
+      title: "Conversions",
+      icon: <Target className="mr-2 h-4 w-4" />,
+      children: [
+        {
+          id: "goals",
+          title: "Goals",
+          href: `${baseUrl}/goals`,
+        },
+        {
+          id: "funnels",
+          title: "Funnels",
+          href: `${baseUrl}/funnels`,
+        },
+      ],
     },
     {
       id: "shields",
@@ -45,7 +68,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
   ];
 
   return (
-    <div className="hidden space-y-6 p-10 pb-16 md:block">
+    <div className="space-y-6 p-4 pb-16 md:p-10">
       <div className="space-y-2">
         <div
           className="text-sm text-blue-500 hover:underline cursor-pointer w-fit"

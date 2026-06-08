@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import axios from "@utils/axios";
 import { AxiosError } from "axios"
 
@@ -27,6 +27,7 @@ export default function NewSitePage() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
@@ -53,16 +54,16 @@ export default function NewSitePage() {
       axios.post("/sites", data).then(() => {
         setIsLoading(false)
         toast.success("创建成功")
-        navigate("/sites")
+        navigate(`/sites/${encodeURIComponent(data.domain)}/install`)
       }).catch((err) => {
         toast.error("创建失败", {
           description: err instanceof AxiosError ? err.response?.data.error : "未知错误",
         })
       })
 
-    } catch (err) {
+    } catch (_err) {
       toast.error("创建失败", {
-          description: err instanceof AxiosError ? err.response?.data.error : "未知错误",
+          description: "未知错误",
         })
     } finally {
       setIsLoading(false)
@@ -119,19 +120,26 @@ export default function NewSitePage() {
                 type="number"
                 className={errors.limit_minute ? "border-red-500" : ""}
               />
-              <Select
-                {...register("rateLimitUnit")}
-                defaultValue="second"
-              >
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="second">Per Second</SelectItem>
-                  <SelectItem value="minute">Per Minute</SelectItem>
-                  <SelectItem value="hour">Per Hour</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                name="rateLimitUnit"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    defaultValue="second"
+                  >
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="Unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="second">Per Second</SelectItem>
+                      <SelectItem value="minute">Per Minute</SelectItem>
+                      <SelectItem value="hour">Per Hour</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           </div>
 

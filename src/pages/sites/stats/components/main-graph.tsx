@@ -34,6 +34,7 @@ const METRIC_OPTIONS = [
 
 // Interval options
 const INTERVAL_OPTIONS = [
+  { key: "minute", label: "按分钟" },
   { key: "hourly", label: "按小时" },
   { key: "daily", label: "按天" },
   { key: "weekly", label: "按周" },
@@ -48,7 +49,7 @@ export default function MainGraph({ query, setQuery, api }: MainGraphProps) {
   // Determine active metric (default visitors)
   const activeMetric = query.metrics || "visitors";
   // Determine active interval (default based on period)
-  const activeInterval = query.interval || (query.period === "day" || query.period === "realtime" ? "hourly" : "daily");
+  const activeInterval = query.interval || (query.period === "realtime" ? "minute" : query.period === "day" ? "hourly" : "daily");
 
   const fetchData = useCallback(async () => {
     try {
@@ -78,6 +79,11 @@ export default function MainGraph({ query, setQuery, api }: MainGraphProps) {
 
   // Calculate total
   const total = chartData.reduce((sum, d) => sum + d.value, 0);
+
+  // Filter interval options based on period - realtime only shows minute
+  const availableIntervals = query.period === "realtime"
+    ? INTERVAL_OPTIONS.filter((i) => i.key === "minute")
+    : INTERVAL_OPTIONS.filter((i) => i.key !== "minute");
 
   const handleIntervalChange = (interval: string) => {
     setQuery((prev) => ({ ...prev, interval: interval as StatsRequest["interval"] }));
@@ -136,7 +142,7 @@ export default function MainGraph({ query, setQuery, api }: MainGraphProps) {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-28" align="start">
-              {INTERVAL_OPTIONS.map((opt) => (
+              {availableIntervals.map((opt) => (
                 <DropdownMenuItem
                   key={opt.key}
                   onClick={() => handleIntervalChange(opt.key)}

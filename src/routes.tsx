@@ -3,8 +3,11 @@ import { Navigate } from "react-router-dom";
 import Login from "@/pages/login/login";
 import Sites from "@/pages/sites/sites";
 import NewSite from "@/pages/sites/new";
+import SiteInstallPage from "@/pages/sites/install";
 import StatsPage from "@/pages/sites/stats/stats";
+import FunnelAnalysisPage from "@/pages/sites/funnel-analysis/funnel-analysis";
 import APIKeysPage from "@/pages/sites/apikeys/apikeys";
+import AccountSettingsPage from "@/pages/settings/account";
 import Setup from '@/pages/login/setup';
 import NotFoundPage from '@/pages/404';
 import SettingsLayout from './pages/sites/settings/layout';
@@ -12,6 +15,8 @@ import { SettingsGeneralForm } from './pages/sites/settings/general-form';
 import SettingShieldsIpAddress from './pages/sites/settings/shields/ip_address';
 import SettingShieldsHostname from './pages/sites/settings/shields/hostname';
 import SettingShieldsCountries from './pages/sites/settings/shields/countries';
+import GoalsSettings from './pages/sites/settings/goals';
+import FunnelsSettings from './pages/sites/settings/funnels';
 
 // Root redirect component that checks login state
 function RootRedirect() {
@@ -43,8 +48,16 @@ const routes: RouteObject[] = [
         element: <NewSite />
       },
       {
+        path: ":domain/install",
+        element: <SiteInstallPage />
+      },
+      {
         path: ":domain/stats",
         element: <StatsPage />
+      },
+      {
+        path: ":domain/funnel-analysis",
+        element: <FunnelAnalysisPage />
       },
       {
         path: ":domain/settings",
@@ -57,6 +70,18 @@ const routes: RouteObject[] = [
             path: "general",
             element: <SettingsLayout>
               <SettingsGeneralForm />
+            </SettingsLayout>,
+          },
+          {
+            path: "goals",
+            element: <SettingsLayout>
+              <GoalsSettings />
+            </SettingsLayout>,
+          },
+          {
+            path: "funnels",
+            element: <SettingsLayout>
+              <FunnelsSettings />
             </SettingsLayout>,
           },
 
@@ -90,6 +115,10 @@ const routes: RouteObject[] = [
   {
     path: "/apikeys",
     element: <APIKeysPage />
+  },
+  {
+    path: "/settings/account",
+    element: <AccountSettingsPage />
   },
   {
     path: "/",
