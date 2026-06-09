@@ -11,6 +11,7 @@ interface BreakdownTableProps {
   query: StatsRequest;
   setQuery: Dispatch<SetStateAction<StatsRequest>>;
   api: (dateRange: StatsRequest) => Promise<BaseResponse<BreakdownResponse>>;
+  exportApi?: (dateRange: StatsRequest) => Promise<Blob>;
   icon?: React.ReactNode;
 }
 
@@ -20,6 +21,7 @@ export default function BreakdownTable({
   query,
   setQuery,
   api,
+  exportApi,
   icon,
 }: BreakdownTableProps) {
   const [loading, setLoading] = useState(false);
@@ -199,6 +201,7 @@ export default function BreakdownTable({
         title={title}
         query={query}
         api={api}
+        exportApi={exportApi}
         onFilterClick={handleFilterClick}
       />
     </div>

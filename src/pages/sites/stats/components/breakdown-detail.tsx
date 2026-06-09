@@ -17,6 +17,7 @@ interface BreakdownDetailDialogProps {
   title: string;
   query: StatsRequest;
   api: (dateRange: StatsRequest) => Promise<BaseResponse<BreakdownResponse>>;
+  exportApi?: (dateRange: StatsRequest) => Promise<Blob>;
   onFilterClick?: (value: string) => void;
 }
 
@@ -28,6 +29,7 @@ export default function BreakdownDetailDialog({
   title,
   query,
   api,
+  exportApi,
   onFilterClick,
 }: BreakdownDetailDialogProps) {
   const [loading, setLoading] = useState(false);
@@ -73,37 +75,21 @@ export default function BreakdownDetailDialog({
     fetchData(newPage);
   };
 
-  const handleExportCSV = () => {
-    if (!data || !data.data || data.data.length === 0) return;
-
-    const columns = data.columns || Object.keys(data.data[0]);
-    const headerRow = columns.join(",");
-
-    const bodyRows = data.data.map((row) =>
-      columns
-        .map((col) => {
-          const val = row[col];
-          const str = String(val ?? "");
-          // Escape CSV values with commas or quotes
-          if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-            return `"${str.replace(/"/g, '""')}"`;
-          }
-          return str;
-        })
-        .join(",")
-    );
-
-    const csv = [headerRow, ...bodyRows].join("\n");
-    const BOM = "\uFEFF";
-    const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${title}_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const handleExportCSV = async () => {
+    if (!exportApi) return;
+    try {
+      const blob = await exportApi(query);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${title}_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const columns =
@@ -124,7 +110,7 @@ export default function BreakdownDetailDialog({
                 variant="outline"
                 size="sm"
                 onClick={handleExportCSV}
-                disabled={!data || data.data.length === 0}
+                disabled={!exportApi}
                 className="gap-1.5"
               >
                 <Download className="h-3.5 w-3.5" />

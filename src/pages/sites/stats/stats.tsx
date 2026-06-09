@@ -675,6 +675,7 @@ export default function StatsPage() {
                   query={{ ...query, property: dim.property }}
                   setQuery={setQuery}
                   api={api.getBreakdown}
+                  exportApi={api.exportBreakdown}
                   icon={DIMENSION_ICONS[dim.key] || <BarChart3 className="h-4 w-4" />}
                 />
               ))}
