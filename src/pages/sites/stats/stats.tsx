@@ -142,7 +142,6 @@ export default function StatsPage() {
     from: undefined,
     to: undefined,
   });
-  const [queryTime, setQueryTime] = useState<Date>(new Date());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectdOptionName, setSelectdOptionName] = useState<string>(t('stats.period.today'));
@@ -216,9 +215,10 @@ export default function StatsPage() {
     () => ({
       // New aggregate API (replaces /top_stats)
       getAggregate: async (dateRange: StatsRequest) => {
+        const { metrics: _metrics, ...params } = dateRange;
         const response = await axios.get<BaseResponse<AggregateResponse>>(
           "/stats/" + domain + "/aggregate",
-          { params: dateRange },
+          { params },
         );
         return response.data;
       },
@@ -329,6 +329,13 @@ export default function StatsPage() {
         params.date = dayjs(date).format("YYYY-MM-DD");
       }
 
+      // Preserve current filters when changing date
+      setQuery((prev) => ({
+        ...params,
+        filters: prev.filters,
+        refresh: new Date(),
+      }));
+
       const queryString = qs.stringify(params);
       window.history.pushState(
         {},
@@ -337,9 +344,8 @@ export default function StatsPage() {
       );
 
       setIsDropdownOpen(false);
-      setQueryTime(new Date());
     },
-    [selectedDateRange],
+    [selectedDateRange, setQuery],
   );
 
   useEffect(() => {
@@ -409,12 +415,19 @@ export default function StatsPage() {
     }
   };
 
-  const refreshData = () => setQueryTime(new Date());
+  const refreshData = () => {
+    setQuery((prev) => ({ ...prev, refresh: new Date() }));
+  };
 
+  // Initial data load
+  useEffect(() => {
+    fetchAllData();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Update selected option name when query date changes
   useEffect(() => {
     handleSelectdOptionName();
-    fetchAllData();
-  }, [queryTime, fetchAllData]);
+  }, [query.period, query.date, query.from, query.to]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Filter management
   const handleRemoveFilter = (index: number) => {
@@ -423,17 +436,19 @@ export default function StatsPage() {
       try {
         const parsed = JSON.parse(prev.filters);
         parsed.splice(index, 1);
-        return { ...prev, filters: parsed.length > 0 ? JSON.stringify(parsed) : undefined };
+        return {
+          ...prev,
+          filters: parsed.length > 0 ? JSON.stringify(parsed) : undefined,
+          refresh: new Date(),
+        };
       } catch {
-        return { ...prev, filters: undefined };
+        return { ...prev, filters: undefined, refresh: new Date() };
       }
     });
-    setQueryTime(new Date());
   };
 
   const handleClearAllFilters = () => {
-    setQuery((prev) => ({ ...prev, filters: undefined }));
-    setQueryTime(new Date());
+    setQuery((prev) => ({ ...prev, filters: undefined, refresh: new Date() }));
   };
 
   // Ensure activeCategoryTab is valid
