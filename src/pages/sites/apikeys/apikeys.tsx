@@ -24,6 +24,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 interface APIKeyInfo {
   id: number;
@@ -43,6 +44,7 @@ interface CreateAPIKeyResponse {
 }
 
 export default function APIKeysPage() {
+  const { t } = useTranslation();
   const [keys, setKeys] = useState<APIKeyInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -61,8 +63,8 @@ export default function APIKeysPage() {
         setKeys(response.data.data);
       }
     } catch (error) {
-      console.error("获取 API Key 列表失败:", error);
-      toast.error("获取 API Key 列表失败");
+      console.error("Failed to load API keys:", error);
+      toast.error(t('apiKeys.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -74,7 +76,7 @@ export default function APIKeysPage() {
 
   const handleCreate = async () => {
     if (!newKeyName.trim()) {
-      toast.error("请输入 API Key 名称");
+      toast.error(t('apiKeys.nameRequired'));
       return;
     }
     try {
@@ -93,12 +95,12 @@ export default function APIKeysPage() {
         setCreatedKey(response.data.data.key);
         setNewKeyName("");
         setNewKeyExpiry("");
-        toast.success("API Key 创建成功");
+        toast.success(t('apiKeys.createSuccess'));
         fetchKeys();
       }
     } catch (error) {
-      console.error("创建 API Key 失败:", error);
-      toast.error("创建 API Key 失败");
+      console.error("Failed to create API key:", error);
+      toast.error(t('apiKeys.createFailed'));
     } finally {
       setCreating(false);
     }
@@ -107,19 +109,19 @@ export default function APIKeysPage() {
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
-    toast.success("已复制到剪贴板");
+    toast.success(t('apiKeys.copiedToClipboard'));
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDelete = async (id: number) => {
     try {
       await axios.delete(`/apikeys/${id}`);
-      toast.success("API Key 已删除");
+      toast.success(t('apiKeys.deleteSuccess'));
       setDeleteConfirm(null);
       fetchKeys();
     } catch (error) {
-      console.error("删除 API Key 失败:", error);
-      toast.error("删除 API Key 失败");
+      console.error("Failed to delete API key:", error);
+      toast.error(t('apiKeys.deleteFailed'));
     }
   };
 
@@ -139,28 +141,28 @@ export default function APIKeysPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              API Keys
+              {t('apiKeys.title')}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              管理你的 API 访问密钥，用于通过 API 访问统计数据
+              {t('apiKeys.description')}
             </p>
           </div>
           <Dialog open={createOpen} onOpenChange={handleCreateDialogClose}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
-                创建 API Key
+                {t('apiKeys.createKey')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>
-                  {createdKey ? "API Key 已创建" : "创建新的 API Key"}
+                  {createdKey ? t('apiKeys.createdTitle') : t('apiKeys.createNewTitle')}
                 </DialogTitle>
                 <DialogDescription>
                   {createdKey
-                    ? "请立即复制此密钥，它不会再次显示。"
-                    : "为 API 访问创建一个新的密钥。"}
+                    ? t('apiKeys.copyWarning')
+                    : t('apiKeys.createdWarning')}
                 </DialogDescription>
               </DialogHeader>
 
@@ -171,7 +173,7 @@ export default function APIKeysPage() {
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                       <div className="text-sm text-amber-700 dark:text-amber-300">
-                        请立即复制此密钥。关闭对话框后将无法再次查看完整密钥。
+                        {t('apiKeys.createdWarning')}
                       </div>
                     </div>
                   </div>
@@ -189,25 +191,25 @@ export default function APIKeysPage() {
                     ) : (
                       <Copy className="h-4 w-4" />
                     )}
-                    {copied ? "已复制" : "复制密钥"}
+                    {copied ? t('apiKeys.copied') : t('apiKeys.copyKey')}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-sm mb-1.5 block">名称</Label>
+                    <Label className="text-sm mb-1.5 block">{t('apiKeys.name')}</Label>
                     <Input
                       value={newKeyName}
                       onChange={(e) => setNewKeyName(e.target.value)}
-                      placeholder="例如：My API Key"
+                      placeholder={t('apiKeys.namePlaceholder')}
                     />
                     <p className="text-xs text-gray-400 mt-1">
-                      用于标识此密钥的用途
+                      {t('apiKeys.nameHint')}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm mb-1.5 block">
-                      过期时间（可选）
+                      {t('apiKeys.expiry')}
                     </Label>
                     <Input
                       type="date"
@@ -215,7 +217,7 @@ export default function APIKeysPage() {
                       onChange={(e) => setNewKeyExpiry(e.target.value)}
                     />
                     <p className="text-xs text-gray-400 mt-1">
-                      留空则永不过期
+                      {t('apiKeys.expiryHint')}
                     </p>
                   </div>
                 </div>
@@ -227,7 +229,7 @@ export default function APIKeysPage() {
                     variant="outline"
                     onClick={() => handleCreateDialogClose(false)}
                   >
-                    关闭
+                    {t('apiKeys.close')}
                   </Button>
                 ) : (
                   <>
@@ -235,13 +237,13 @@ export default function APIKeysPage() {
                       variant="outline"
                       onClick={() => handleCreateDialogClose(false)}
                     >
-                      取消
+                      {t('apiKeys.cancel')}
                     </Button>
                     <Button
                       onClick={handleCreate}
                       disabled={creating || !newKeyName.trim()}
                     >
-                      {creating ? "创建中..." : "创建"}
+                      {creating ? t('apiKeys.creating') : t('apiKeys.create')}
                     </Button>
                   </>
                 )}
@@ -272,10 +274,10 @@ export default function APIKeysPage() {
           <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
             <Key className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
-              没有 API Key
+              {t('apiKeys.noKeys')}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              创建一个 API Key 来通过 API 访问你的统计数据
+              {t('apiKeys.createFirst')}
             </p>
             <Button
               variant="outline"
@@ -283,7 +285,7 @@ export default function APIKeysPage() {
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              创建第一个 API Key
+              {t('apiKeys.createFirstKey')}
             </Button>
           </div>
         ) : (
@@ -307,7 +309,7 @@ export default function APIKeysPage() {
                       </code>
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        创建于{" "}
+                        {t('apiKeys.createdAt')}{" "}
                         {new Date(apiKey.created_at).toLocaleDateString("zh-CN")}
                       </span>
                       {apiKey.expires_at && (
@@ -320,8 +322,8 @@ export default function APIKeysPage() {
                           )}
                         >
                           {new Date(apiKey.expires_at) < new Date()
-                            ? "已过期"
-                            : `过期于 ${new Date(apiKey.expires_at).toLocaleDateString("zh-CN")}`}
+                            ? t('apiKeys.expired')
+                            : `${t('apiKeys.expiresAt')} ${new Date(apiKey.expires_at).toLocaleDateString("zh-CN")}`}
                         </span>
                       )}
                     </div>
@@ -329,14 +331,14 @@ export default function APIKeysPage() {
                   <div className="flex items-center gap-1">
                     {deleteConfirm === apiKey.id ? (
                       <div className="flex items-center gap-2 ml-2">
-                        <span className="text-xs text-red-500">确认删除？</span>
+                        <span className="text-xs text-red-500">{t('apiKeys.confirmDelete')}</span>
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
                           onClick={() => handleDelete(apiKey.id)}
                         >
-                          删除
+                          {t('apiKeys.delete')}
                         </Button>
                         <Button
                           variant="ghost"
@@ -344,7 +346,7 @@ export default function APIKeysPage() {
                           className="h-7 text-xs"
                           onClick={() => setDeleteConfirm(null)}
                         >
-                          取消
+                          {t('apiKeys.deleteCancel')}
                         </Button>
                       </div>
                     ) : (
@@ -367,10 +369,10 @@ export default function APIKeysPage() {
         {/* Usage hint */}
         <div className="mt-8 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-            使用方式
+            {t('apiKeys.usage')}
           </h3>
           <div className="text-xs text-gray-500 dark:text-gray-400 space-y-2">
-            <p>使用 API Key 通过 Bearer Token 方式进行认证：</p>
+            <p>{t('apiKeys.usageDescription')}</p>
             <pre className="bg-gray-100 dark:bg-gray-800 rounded p-2 overflow-x-auto">
               <code>
                 {`curl -H "Authorization: Bearer YOUR_API_KEY" \\

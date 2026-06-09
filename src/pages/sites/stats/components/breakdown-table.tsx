@@ -3,6 +3,7 @@ import type { BaseResponse } from "@utils/axios";
 import type { StatsRequest, BreakdownResponse } from "@/pages/sites/types/interfaces";
 import { Skeleton } from "@components/ui/skeleton";
 import BreakdownDetailDialog from "./breakdown-detail";
+import { useTranslation } from "react-i18next";
 
 interface BreakdownTableProps {
   title: string;
@@ -26,6 +27,7 @@ export default function BreakdownTable({
 }: BreakdownTableProps) {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<BreakdownResponse | null>(null);
+  const { t } = useTranslation();
   const [showMore, setShowMore] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -111,7 +113,7 @@ export default function BreakdownTable({
           ))}
         </div>
       ) : rows.length === 0 ? (
-        <div className="p-8 text-center text-sm text-gray-400">暂无数据</div>
+        <div className="p-8 text-center text-sm text-gray-400">{t('stats.breakdown.noData')}</div>
       ) : (
         <div>
           {displayRows.map((row, index) => {
@@ -170,13 +172,13 @@ export default function BreakdownTable({
                 onClick={() => setShowMore(!showMore)}
                 className="flex-1 px-4 py-2.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
               >
-                {showMore ? "收起" : `展开 (${rows.length})`}
+                {showMore ? t('stats.breakdown.collapse') : t('stats.breakdown.expand', { count: rows.length })}
               </button>
               <button
                 onClick={() => setDetailOpen(true)}
                 className="px-4 py-2.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-l border-gray-100 dark:border-gray-800"
               >
-                详情
+                {t('stats.breakdown.details')}
               </button>
             </div>
           )}
@@ -187,7 +189,7 @@ export default function BreakdownTable({
                 onClick={() => setDetailOpen(true)}
                 className="px-4 py-2.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
               >
-                详情
+                {t('stats.breakdown.details')}
               </button>
             </div>
           )}

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, memo } from "react";
 import { Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "./ui/select";
@@ -29,6 +30,7 @@ const SearchSelect = memo(function SearchSelect<TValue extends string = string>(
   searchPlaceholder,
   disabled = false,
 }: SearchSelectProps<TValue>) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = React.useState<string>("");
   const [isOpen, setIsOpen] = React.useState(false);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
@@ -77,14 +79,14 @@ const SearchSelect = memo(function SearchSelect<TValue extends string = string>(
           ) : (
             <div className="flex items-center text-muted-foreground">
               <Search className="mr-2 h-4 w-4" />
-              {placeholder || "Select an option"}
+              {placeholder || t('common.selectOption')}
             </div>
           )}
         </SelectTrigger>
         <SelectContent className="w-full">
           <div className="p-2 border-b sticky top-0 bg-background z-10">
             <Input
-              placeholder={searchPlaceholder || "Search..."}
+              placeholder={searchPlaceholder || t('common.search')}
               className="w-full"
               value={searchQuery}
               onChange={handleSearchChange}
@@ -101,7 +103,7 @@ const SearchSelect = memo(function SearchSelect<TValue extends string = string>(
             ))
           ) : (
             <div className="p-4 text-center text-muted-foreground">
-              No options found
+              {t('common.noOptions')}
             </div>
           )}
         </SelectContent>

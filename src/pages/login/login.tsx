@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from 'react-i18next'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,6 +12,7 @@ import axios, { type BaseResponse } from "@utils/axios";
 import { AxiosError } from "axios"
 
 export default function Login() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [rememberMe, setRememberMe] = useState(false)
   const [email, setEmail] = useState("")
@@ -40,18 +42,18 @@ export default function Login() {
     }
 
     if (!email) {
-      newErrors.email = "邮箱不能为空"
+      newErrors.email = t('login.validation.emailRequired')
       valid = false
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "邮箱格式不正确"
+      newErrors.email = t('login.validation.emailInvalid')
       valid = false
     }
 
     if (!password) {
-      newErrors.password = "密码不能为空"
+      newErrors.password = t('login.validation.passwordRequired')
       valid = false
     } else if (password.length < 6) {
-      newErrors.password = "密码至少6位"
+      newErrors.password = t('login.validation.passwordMinLength')
       valid = false
     }
 
@@ -72,13 +74,13 @@ export default function Login() {
       axios.post<BaseResponse<LoginResponse>>("/auth/login", { "email": email, "password": password }).then((res) => {
         setIsLoading(false)
         if (res.data.code !== 200) {
-          toast.error("登录失败", {
+          toast.error(t('login.loginFailed'), {
             description: res.data.error,
           })
           setServerError(res.data.error || "")
           return;
         } else {
-          toast.success("登录成功")
+          toast.success(t('login.loginSuccess'))
           if (rememberMe) {
             localStorage.setItem("rememberedEmail", email)
           } else {
@@ -93,17 +95,17 @@ export default function Login() {
 
         }
       }).catch((err) => {
-        toast.error("登录失败", {
-          description: err instanceof AxiosError ? err.response?.data.error : "未知错误",
+        toast.error(t('login.loginFailed'), {
+          description: err instanceof AxiosError ? err.response?.data.error : t('login.unknownError'),
         })
-        setServerError(err instanceof AxiosError ? err.response?.data.error : "未知错误")
+        setServerError(err instanceof AxiosError ? err.response?.data.error : t('login.unknownError'))
       })
 
     } catch (err) {
-      toast.error("登录失败", {
-        description: err instanceof AxiosError ? err.response?.data.error : "未知错误",
+      toast.error(t('login.loginFailed'), {
+        description: err instanceof AxiosError ? err.response?.data.error : t('login.unknownError'),
       })
-      setServerError(err instanceof AxiosError ? err.response?.data.error : "未知错误")
+      setServerError(err instanceof AxiosError ? err.response?.data.error : t('login.unknownError'))
     } finally {
       setIsLoading(false)
     }
@@ -131,7 +133,7 @@ export default function Login() {
           setRememberMe(true);
         }
       } catch (err) {
-        console.error("检查系统状态失败:", err);
+        console.error("Failed to check system status:", err);
         // 可以添加 toast 提示或静默处理
       }
     };
@@ -143,7 +145,7 @@ export default function Login() {
     <div className="flex items-center justify-center h-full">
       <Card className="w-full max-w-md items-center justify-center">
         <CardHeader className="w-full">
-          <CardTitle className="text-2xl text-center">登录</CardTitle>
+          <CardTitle className="text-2xl text-center">{t('login.title')}</CardTitle>
         </CardHeader>
         <CardContent className="w-full">
 
@@ -154,7 +156,7 @@ export default function Login() {
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">邮箱地址</Label>
+              <Label htmlFor="email">{t('login.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -166,7 +168,7 @@ export default function Login() {
               {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">密码</Label>
+              <Label htmlFor="password">{t('login.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -184,18 +186,18 @@ export default function Login() {
                 onCheckedChange={() => setRememberMe(!rememberMe)}
               />
               <Label htmlFor="remember-me" className="text-sm">
-                记住账号
+                {t('login.rememberMe')}
               </Label>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? "登录中..." : "登录"}
+              {isLoading ? t('login.submitting') : t('login.submit')}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <Button variant="link" className="w-full text-sm">
-            忘记密码？
+            {t('login.forgotPassword')}
           </Button>
         </CardFooter>
       </Card>

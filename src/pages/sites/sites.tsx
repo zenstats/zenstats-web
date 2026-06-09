@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Code2, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState, useCallback } from "react";
 import axios, { type BaseResponse } from "@utils/axios";
 import type { Site } from "./types/interfaces";
@@ -33,6 +34,7 @@ const useDebounce = (value: string, delay: number) => {
 
 export default function Sites() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [sites, setSites] = useState([] as Site[]);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -60,7 +62,7 @@ export default function Sites() {
     <div className="container mx-auto px-4 py-8">
       {/* 标题部分 */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">站点管理</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('sites.title')}</h1>
         <div className="border-b border-gray-200 mt-4"></div>
       </div>
 
@@ -68,14 +70,14 @@ export default function Sites() {
       <div className="flex justify-between mb-6">
         <div className="w-1/4">
           <Input
-            placeholder="搜索站点..."
+            placeholder={t('sites.searchPlaceholder')}
             value={searchQuery}
             className="bg-white"
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <Button variant="default" onClick={() => navigate("/sites/new")}>
-          添加站点
+          {t('sites.addSite')}
         </Button>
       </div>
 
@@ -96,8 +98,8 @@ export default function Sites() {
                   <Button
                     variant="link"
                     className="cursor-pointer hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-40"
-                    title="安装统计代码"
-                    aria-label="安装统计代码"
+                    title={t('sites.installTrackingCode')}
+                    aria-label={t('sites.installTrackingCode')}
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/sites/${site.domain}/install`);
@@ -109,8 +111,8 @@ export default function Sites() {
                     disabled={site.role === "viewer"}
                     variant="link"
                     className="cursor-pointer hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-40"
-                    title="站点设置"
-                    aria-label="站点设置"
+                    title={t('sites.siteSettings')}
+                    aria-label={t('sites.siteSettings')}
                     // 为设置按钮添加点击事件，跳转到设置页面
                     onClick={(e) => {
                       e.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击事件

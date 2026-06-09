@@ -2,6 +2,7 @@ import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig, type Ax
 import useErrorStore from "@store/errorStore";
 import qs from 'qs'
 import { getMockResponse } from './mock'
+import i18n from '@/i18n'
 
 export interface BaseResponse<T = unknown> {
     code: number;
@@ -90,6 +91,9 @@ api.interceptors.request.use(
             config.headers.Authorization = 'Bearer ' + localStorage.getItem('token') // 让每个请求携带自定义token
         }
 
+        // Set Accept-Language header for backend i18n
+        config.headers['Accept-Language'] = i18n.language || 'en';
+
         const params = config.params || {}
         const data = config.data || false
         if (
@@ -123,7 +127,7 @@ api.interceptors.response.use(
 
         if (status === 500) {
             await handleError();
-            return Promise.reject('服务器异常！');
+            return Promise.reject(i18n.t('common.serverError'));
         }
 
         if (!data) {
@@ -140,7 +144,7 @@ api.interceptors.response.use(
 
                 if (!localStorage.getItem("refreshToken")) {
                     await handleAuthorized();
-                    return Promise.reject('认证失败');
+                    return Promise.reject(i18n.t('common.authFailed'));
                 }
                 try {
                     const refreshTokenRes = await refreshToken();
@@ -155,14 +159,14 @@ api.interceptors.response.use(
                         return api(newConfig);
                     } else {
                         await handleAuthorized();
-                        return Promise.reject('认证失败');
+                        return Promise.reject(i18n.t('common.authFailed'));
                     }
                 } catch {
                     requestList.forEach((cb) => {
                         cb();
                     });
                     await handleAuthorized();
-                    return Promise.reject('认证失败');
+                    return Promise.reject(i18n.t('common.authFailed'));
                 } finally {
                     requestList = [];
                     isRefreshToken = false;
@@ -179,13 +183,13 @@ api.interceptors.response.use(
             }
         } else if (code === 500) {
             await handleError();
-            return Promise.reject('服务器异常');
+            return Promise.reject(i18n.t('common.serverError'));
         } else if (code === 403) {
             await handleForbidden();
-            return Promise.reject('未授权访问');
+            return Promise.reject(i18n.t('common.unauthorized'));
         } else if (code === 406) {
             await handleAuthorized();
-            return Promise.reject('认证失败');
+            return Promise.reject(i18n.t('common.authFailed'));
         } else if (code === 401) {
             await handleAuthorized();
         }
@@ -199,7 +203,7 @@ api.interceptors.response.use(
         const errorMessage =
             error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data
                 ? (error.response.data as { message: string }).message
-                : "网络错误";
+                : i18n.t('common.networkError');
         setError(errorMessage);
 
         return Promise.reject(error);
@@ -220,19 +224,19 @@ const handleAuthorized = () => {
     localStorage.removeItem('email')
     localStorage.removeItem('name')
     window.location.href = '/login'
-    return Promise.reject('认证失败')
+    return Promise.reject(i18n.t('common.authFailed'))
 }
 
 const handleForbidden = () => {
     const { setError } = useErrorStore.getState() as { setError: (msg: string) => void };
-    setError("未授权访问");
-    return Promise.reject(new Error("未授权访问"));
+    setError(i18n.t('common.unauthorized'));
+    return Promise.reject(new Error(i18n.t('common.unauthorized')));
 }
 
 const handleError = () => {
     const { setError } = useErrorStore.getState() as { setError: (msg: string) => void };
-    setError("服务器异常");
-    return Promise.reject(new Error("服务器异常"));
+    setError(i18n.t('common.serverError'));
+    return Promise.reject(new Error(i18n.t('common.serverError')));
 }
 
 export default api;

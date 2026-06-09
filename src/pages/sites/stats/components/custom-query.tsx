@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { BaseResponse } from "@utils/axios";
 import type { StatsRequest, AggregateMetric, AggregateResponse } from "@/pages/sites/types/interfaces";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,36 +16,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Play, Plus, X, RotateCcw, Download, ChevronLeft, ChevronRight } from "lucide-react";
-
-// Dimension options for property selector (API-supported only)
-const DIMENSION_OPTIONS = [
-  { group: "事件", items: [
-    { value: "event:name", label: "事件名称" },
-    { value: "event:page", label: "页面路径" },
-  ]},
-  { group: "访问", items: [
-    { value: "visit:source", label: "来源" },
-    { value: "visit:country", label: "国家/地区" },
-    { value: "visit:region", label: "地区" },
-    { value: "visit:city", label: "城市" },
-    { value: "visit:browser", label: "浏览器" },
-    { value: "visit:os", label: "操作系统" },
-    { value: "visit:device", label: "设备类型" },
-    { value: "visit:screen_size", label: "屏幕尺寸" },
-    { value: "visit:entry_page", label: "入口页面" },
-    { value: "visit:exit_page", label: "退出页面" },
-  ]},
-];
-
-// Metric options
-const METRIC_OPTIONS = [
-  { value: "visitors", label: "独立访客 (UV)" },
-  { value: "pageviews", label: "浏览量 (PV)" },
-  { value: "bounce_rate", label: "跳出率" },
-  { value: "visit_duration", label: "平均访问时长" },
-  { value: "views_per_visit", label: "每次访问页面数" },
-  { value: "events", label: "事件数" },
-];
+import { useTranslation } from "react-i18next";
 
 const DEFAULT_BREAKDOWN_METRICS = ["visitors", "events"];
 const BREAKDOWN_UNSUPPORTED_METRICS = new Set(["views_per_visit"]);
@@ -69,15 +40,7 @@ function sanitizeMetrics(metrics: string[], resultType: "breakdown" | "aggregate
   return available.length > 0 ? available : ["visitors"];
 }
 
-// Filter operators
-const OPERATORS = [
-  { value: "is", label: "是 (=)" },
-  { value: "is_not", label: "不是 (≠)" },
-  { value: "contains", label: "包含" },
-  { value: "contains_not", label: "不包含" },
-  { value: "matches", label: "匹配" },
-  { value: "matches_not", label: "不匹配" },
-];
+
 
 interface FilterRow {
   id: string;
@@ -105,6 +68,44 @@ export default function CustomQuery({
   aggregateApi,
   exportApi,
 }: CustomQueryProps) {
+  const { t } = useTranslation();
+
+  const DIMENSION_OPTIONS = useMemo(() => [
+    { group: t('stats.categories.events'), items: [
+      { value: "event:name", label: t('stats.customQuery.dimensions.eventName') },
+      { value: "event:page", label: t('stats.customQuery.dimensions.pagePath') },
+    ]},
+    { group: t('stats.categories.visit'), items: [
+      { value: "visit:source", label: t('stats.customQuery.dimensions.source') },
+      { value: "visit:country", label: t('stats.customQuery.dimensions.country') },
+      { value: "visit:region", label: t('stats.customQuery.dimensions.region') },
+      { value: "visit:city", label: t('stats.customQuery.dimensions.city') },
+      { value: "visit:browser", label: t('stats.customQuery.dimensions.browser') },
+      { value: "visit:os", label: t('stats.customQuery.dimensions.os') },
+      { value: "visit:device", label: t('stats.customQuery.dimensions.device') },
+      { value: "visit:entry_page", label: t('stats.customQuery.dimensions.entryPage') },
+      { value: "visit:exit_page", label: t('stats.customQuery.dimensions.exitPage') },
+    ]},
+  ], [t]);
+
+  const METRIC_OPTIONS = useMemo(() => [
+    { value: "visitors", label: t('stats.customQuery.metrics.visitors') },
+    { value: "pageviews", label: t('stats.customQuery.metrics.pageviews') },
+    { value: "bounce_rate", label: t('stats.customQuery.metrics.bounceRate') },
+    { value: "visit_duration", label: t('stats.customQuery.metrics.visitDuration') },
+    { value: "views_per_visit", label: t('stats.customQuery.metrics.viewsPerVisit') },
+    { value: "events", label: t('stats.customQuery.metrics.events') },
+  ], [t]);
+
+  const OPERATORS = useMemo(() => [
+    { value: "is", label: t('stats.customQuery.operators.is') },
+    { value: "is_not", label: t('stats.customQuery.operators.isNot') },
+    { value: "contains", label: t('stats.customQuery.operators.contains') },
+    { value: "contains_not", label: t('stats.customQuery.operators.containsNot') },
+    { value: "matches", label: t('stats.customQuery.operators.matches') },
+    { value: "matches_not", label: t('stats.customQuery.operators.matchesNot') },
+  ], [t]);
+
   // Query form state
   const [property, setProperty] = useState("event:name");
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(DEFAULT_BREAKDOWN_METRICS);
@@ -307,16 +308,16 @@ export default function CustomQuery({
       <div className="p-4 space-y-4 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            自定义查询
+            {t('stats.customQuery.title')}
           </h3>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 px-2 text-xs">
               <RotateCcw className="h-3 w-3 mr-1" />
-              重置
+              {t('stats.customQuery.reset')}
             </Button>
             <Button size="sm" onClick={executeQuery} className="h-7 px-3 text-xs">
               <Play className="h-3 w-3 mr-1" />
-              执行查询
+              {t('stats.customQuery.execute')}
             </Button>
           </div>
         </div>
@@ -324,21 +325,21 @@ export default function CustomQuery({
         {/* Query type and property */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <Label className="text-xs text-gray-500 mb-1 block">查询类型</Label>
+            <Label className="text-xs text-gray-500 mb-1 block">{t('stats.customQuery.queryType')}</Label>
             <Select value={resultType} onValueChange={(v) => handleResultTypeChange(v as "breakdown" | "aggregate")}>
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="breakdown">分解查询 (Breakdown)</SelectItem>
-                <SelectItem value="aggregate">聚合查询 (Aggregate)</SelectItem>
+                <SelectItem value="breakdown">{t('stats.customQuery.breakdownQuery')}</SelectItem>
+                <SelectItem value="aggregate">{t('stats.customQuery.aggregateQuery')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {resultType === "breakdown" && (
             <div>
-              <Label className="text-xs text-gray-500 mb-1 block">分组维度 (Property)</Label>
+              <Label className="text-xs text-gray-500 mb-1 block">{t('stats.customQuery.groupBy')}</Label>
               <Select value={property} onValueChange={handlePropertyChange}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
@@ -361,7 +362,7 @@ export default function CustomQuery({
 
           <div>
             <Label className="text-xs text-gray-500 mb-1 block">
-              限制条数 {resultType === "breakdown" && "(Limit)"}
+              {t('stats.customQuery.limit')} {resultType === "breakdown" && "(Limit)"}
             </Label>
             <Input
               type="number"
@@ -376,7 +377,7 @@ export default function CustomQuery({
 
         {/* Metrics selector */}
         <div>
-          <Label className="text-xs text-gray-500 mb-2 block">指标 (Metrics)</Label>
+          <Label className="text-xs text-gray-500 mb-2 block">{t('stats.customQuery.metricsLabel')}</Label>
           <div className="flex flex-wrap gap-2">
             {METRIC_OPTIONS.map((metric) => {
               const disabled = !isMetricAvailable(metric.value, resultType, property);
@@ -385,7 +386,7 @@ export default function CustomQuery({
                 key={metric.value}
                 onClick={() => toggleMetric(metric.value)}
                 disabled={disabled}
-                title={disabled ? "当前查询类型或分组维度不支持该指标" : undefined}
+                title={disabled ? t('stats.customQuery.metricUnavailable') : undefined}
                 className={cn(
                   "px-2.5 py-1 text-xs font-medium rounded-md border transition-colors",
                   disabled && "cursor-not-allowed opacity-40",
@@ -403,10 +404,10 @@ export default function CustomQuery({
         {/* Filters */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <Label className="text-xs text-gray-500">筛选条件 (Filters)</Label>
+            <Label className="text-xs text-gray-500">{t('stats.customQuery.filters')}</Label>
             <Button variant="ghost" size="sm" onClick={addFilter} className="h-6 px-2 text-xs">
               <Plus className="h-3 w-3 mr-1" />
-              添加条件
+              {t('stats.customQuery.addFilter')}
             </Button>
           </div>
 
@@ -466,7 +467,7 @@ export default function CustomQuery({
                   <Input
                     value={filter.value}
                     onChange={(e) => updateFilter(filter.id, "value", e.target.value)}
-                    placeholder="输入值，多值用逗号分隔"
+                    placeholder={t('stats.customQuery.filterPlaceholder')}
                     className="h-8 text-xs flex-1"
                   />
 
@@ -485,7 +486,7 @@ export default function CustomQuery({
 
         {/* Query preview */}
         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-md px-3 py-2">
-          <div className="text-xs text-gray-400 mb-1">API 请求预览</div>
+          <div className="text-xs text-gray-400 mb-1">{t('stats.customQuery.apiPreview')}</div>
           <code className="text-xs text-gray-600 dark:text-gray-300 font-mono break-all">
             GET /api/stats/{domain}/{resultType === "breakdown" ? "breakdown" : "aggregate"}
             ?property={resultType === "breakdown" ? property : ""}
@@ -509,7 +510,7 @@ export default function CustomQuery({
           </div>
         ) : !hasExecuted ? (
           <div className="text-center py-8 text-sm text-gray-400">
-            配置查询参数后点击"执行查询"查看结果
+            {t('stats.customQuery.configHint')}
           </div>
         ) : resultType === "breakdown" && resultData ? (
           <div>
@@ -517,7 +518,7 @@ export default function CustomQuery({
             {resultData.length > 0 && (
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-gray-400">
-                  第 {page} 页 · 本页 {resultData.length} 条
+                  {t('stats.customQuery.pageInfo', { page, count: resultData.length })}
                 </span>
                 <Button
                   variant="outline"
@@ -526,7 +527,7 @@ export default function CustomQuery({
                   className="h-7 px-2 text-xs gap-1.5"
                 >
                   <Download className="h-3 w-3" />
-                  导出 CSV
+                  {t('stats.customQuery.exportCsv')}
                 </Button>
               </div>
             )}
@@ -570,7 +571,7 @@ export default function CustomQuery({
               </table>
               {resultData.length === 0 && (
                 <div className="text-center py-4 text-sm text-gray-400">
-                  查询无结果
+                  {t('stats.customQuery.noResults')}
                 </div>
               )}
             </div>
@@ -587,7 +588,7 @@ export default function CustomQuery({
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
                 <span className="text-xs text-gray-500 min-w-[4rem] text-center">
-                  第 {page} 页
+                  {t('stats.customQuery.pageOf', { page })}
                 </span>
                 <Button
                   variant="outline"
@@ -627,7 +628,7 @@ export default function CustomQuery({
           </div>
         ) : (
           <div className="text-center py-4 text-sm text-gray-400">
-            查询无结果
+            {t('stats.customQuery.noResults')}
           </div>
         )}
       </div>

@@ -15,6 +15,7 @@ import SearchSelect from "@components/search-select";
 import axios, { type BaseResponse } from "@utils/axios";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 // Define interface for Country shield rule
 interface ShieldCountryRule {
@@ -89,12 +90,13 @@ export default function SettingShieldsCountries() {
     })), []);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const { t } = useTranslation();
   const { domain: domainParam } = useParams<Params>();
   const domain = domainParam!;
 
   // Handle country deletion
   const handleDeleteCountry = async (id: number) => {
-    if (!domain || !window.confirm('Are you sure you want to unblock this country?')) return;
+    if (!domain || !window.confirm(t('settings.shields.countries.confirmUnblock'))) return;
     setLoading(true);
     setDeletingId(id);
     try {
@@ -102,18 +104,18 @@ export default function SettingShieldsCountries() {
       // Refresh country list
       const updatedCountries = await fetchCountries(domain);
       setCountryList(updatedCountries);
-      toast.success('Country unblocked successfully');
+      toast.success(t('settings.shields.countries.unblockSuccess'));
     } catch (error) {
       console.error('Error deleting country:', error);
       if (error instanceof AxiosError) {
         const status = error.response?.status;
         const errorData = error.response?.data;
-        toast.error(`Failed to unblock country (${status || 'Unknown'})`, {
-          description: errorData?.message || errorData?.error || 'Unknown error'
+        toast.error(`${t('settings.shields.countries.unblockFailed')} (${status || 'Unknown'})`, {
+          description: errorData?.message || errorData?.error || t('common.unknownError')
         });
       } else {
-        toast.error('Failed to unblock country', {
-          description: 'Unknown error'
+        toast.error(t('settings.shields.countries.unblockFailed'), {
+          description: t('common.unknownError')
         });
       }
     } finally {
@@ -132,8 +134,8 @@ export default function SettingShieldsCountries() {
         setCountryList(countries);
       } catch (error) {
         console.error('Error loading country list:', error);
-        toast.error('加载国家/地区列表失败', {
-          description: error instanceof AxiosError ? error.response?.data.error : '未知错误'
+        toast.error(t('settings.shields.countries.loadFailed'), {
+          description: error instanceof AxiosError ? error.response?.data.error : t('common.unknownError')
         });
       } finally {
         setLoading(false);
@@ -155,11 +157,11 @@ export default function SettingShieldsCountries() {
       setNewCountryCode('');
       setNewCountryDescription('');
       setIsModalOpen(false);
-      toast.success('Country blocked successfully');
+      toast.success(t('settings.shields.countries.addSuccess'));
     } catch (error) {
       console.error('Error adding country:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to add country';
-      toast.error('添加国家/地区失败', {
+      toast.error(t('settings.shields.countries.addFailed'), {
         description: errorMessage
       });
     } finally {
@@ -169,7 +171,7 @@ export default function SettingShieldsCountries() {
 
   // Validate domain exists
   if (!domainParam) {
-    return <div>Loading...</div>;
+    return <div>{t('common.loading')}</div>;
   }
 
   const getCountryName = (code: string) => {
@@ -182,20 +184,20 @@ export default function SettingShieldsCountries() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
-            <CardTitle>Country Blacklist</CardTitle>
-            <CardDescription>Block incoming traffic from specific countries/regions (blacklist).</CardDescription>
+            <CardTitle>{t('settings.shields.countries.title')}</CardTitle>
+            <CardDescription>{t('settings.shields.countries.description')}</CardDescription>
           </div>
           <Button onClick={() => {
             setIsModalOpen(true);
-          }}>Add Blocked Country</Button>
+          }}>{t('settings.shields.countries.addBlockedCountry')}</Button>
         </CardHeader>
         <CardContent>
           <Separator className="my-6" />
 
           {loading ? (
-            <div className="text-center py-8">Loading countries...</div>
+            <div className="text-center py-8">{t('settings.shields.countries.loading')}</div>
           ) : countryList.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">No countries in blacklist yet</div>
+            <div className="text-center py-8 text-gray-500">{t('settings.shields.countries.noCountries')}</div>
           ) : (
             <div className="space-y-4">
               {countryList.map((country) => (
@@ -207,14 +209,14 @@ export default function SettingShieldsCountries() {
                     {country.description && (
                       <p className="text-sm text-gray-500 mt-1">{country.description}</p>
                     )}
-                    <p className="text-xs text-gray-400">Added by {country.added_by} on {new Date(country.created_at).toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">{t('settings.shields.countries.addedBy', { addedBy: country.added_by, date: new Date(country.created_at).toLocaleString() })}</p>
                   </div>
                   <button
                     onClick={() => handleDeleteCountry(country.id)}
                     className="text-red-500 hover:text-red-700"
                     disabled={loading}
                   >
-                    {loading && country.id === deletingId ? 'Deleting...' : 'Delete'}
+                    {loading && country.id === deletingId ? t('settings.shields.countries.deleting') : t('settings.shields.countries.delete')}
                   </button>
                 </div>
               ))}
@@ -226,29 +228,29 @@ export default function SettingShieldsCountries() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[425px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add Country to Blacklist</DialogTitle>
+            <DialogTitle>{t('settings.shields.countries.addTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="country-code">Country Code</Label>
+              <Label htmlFor="country-code">{t('settings.shields.countries.countryCode')}</Label>
               <SearchSelect
                 className="w-full"
                 options={countryOptions}
                 value={newCountryCode}
                 onValueChange={setNewCountryCode}
-                placeholder="Select a country"
-                searchPlaceholder="Search country..."
+                placeholder={t('settings.shields.countries.selectCountry')}
+                searchPlaceholder={t('settings.shields.countries.searchCountry')}
                 disabled={loading}
               />
-              <p className="text-xs text-gray-500">Use ISO 3166-1 alpha-2 country codes (2 uppercase letters)</p>
+              <p className="text-xs text-gray-500">{t('settings.shields.countries.codeHint')}</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="country-description">Description (optional)</Label>
+              <Label htmlFor="country-description">{t('settings.shields.countries.descriptionLabel')}</Label>
               <Textarea
                 id="country-description"
                 value={newCountryDescription}
                 onChange={(e) => setNewCountryDescription(e.target.value)}
-                placeholder="Why is this country blocked?"
+                placeholder={t('settings.shields.countries.descriptionPlaceholder')}
                 className="resize-none"
                 rows={3}
                 disabled={loading}
@@ -262,10 +264,10 @@ export default function SettingShieldsCountries() {
               onClick={() => setIsModalOpen(false)}
               disabled={loading}
             >
-              Cancel
+              {t('settings.shields.countries.cancel')}
             </Button>
             <Button onClick={handleAddCountry} disabled={loading || !newCountryCode.trim()}>
-              {loading ? 'Adding...' : 'Add Country'}
+              {loading ? t('settings.shields.countries.adding') : t('settings.shields.countries.addCountry')}
             </Button>
           </DialogFooter>
         </DialogContent>

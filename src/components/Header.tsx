@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/language-switcher";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -79,6 +81,7 @@ function UserAvatar({ name }: { name: string }) {
 // Enhanced User dropdown
 function UserDropdown({ user, onLogout }: { user: { name: string; email: string }; onLogout: () => void }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const initial = user.name ? user.name.charAt(0).toUpperCase() : "U";
 
   return (
@@ -121,21 +124,21 @@ function UserDropdown({ user, onLogout }: { user: { name: string; email: string 
           className="flex items-center gap-2.5 py-2 cursor-pointer"
         >
           <LayoutGrid className="h-4 w-4 text-gray-500" />
-          <span className="text-sm">我的站点</span>
+          <span className="text-sm">{t('header.mySites')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => navigate("/apikeys")}
           className="flex items-center gap-2.5 py-2 cursor-pointer"
         >
           <Key className="h-4 w-4 text-gray-500" />
-          <span className="text-sm">API Keys</span>
+          <span className="text-sm">{t('header.apiKeys')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => navigate("/settings/account")}
           className="flex items-center gap-2.5 py-2 cursor-pointer"
         >
           <Settings className="h-4 w-4 text-gray-500" />
-          <span className="text-sm">设置</span>
+          <span className="text-sm">{t('header.settings')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -143,7 +146,7 @@ function UserDropdown({ user, onLogout }: { user: { name: string; email: string 
           className="flex items-center gap-2.5 py-2 cursor-pointer text-red-600"
         >
           <LogOut className="h-4 w-4" />
-          <span className="text-sm">退出登录</span>
+          <span className="text-sm">{t('header.logout')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -189,6 +192,7 @@ export default function Header() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const scrolled = useScroll(10);
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     const loadUser = () => {
@@ -249,8 +253,10 @@ export default function Header() {
               className="text-gray-600 dark:text-gray-400 text-sm gap-1.5"
             >
               <Globe className="h-4 w-4" />
-              站点
+              {t('header.sites')}
             </Button>
+
+            <LanguageSwitcher />
 
             {user?.name ? (
               <UserDropdown user={user} onLogout={logout} />
@@ -262,7 +268,7 @@ export default function Header() {
                 className="gap-1.5"
               >
                 <User className="h-4 w-4" />
-                登录
+                {t('header.login')}
               </Button>
             )}
           </div>
@@ -314,7 +320,7 @@ export default function Header() {
                 }}
               >
                 <LayoutGrid className="h-4 w-4 text-gray-500" />
-                我的站点
+                {t('header.mySites')}
               </Button>
               <Button
                 variant="ghost"
@@ -325,7 +331,7 @@ export default function Header() {
                 }}
               >
                 <Key className="h-4 w-4 text-gray-500" />
-                API Keys
+                {t('header.apiKeys')}
               </Button>
               <Button
                 variant="ghost"
@@ -336,10 +342,21 @@ export default function Header() {
                 }}
               >
                 <Settings className="h-4 w-4 text-gray-500" />
-                设置
+                {t('header.settings')}
               </Button>
 
               <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
+
+              <button
+                className="w-full flex items-center gap-2.5 py-2 px-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+                onClick={() => {
+                  i18n.changeLanguage(i18n.language === 'zh-CN' ? 'en' : 'zh-CN');
+                  localStorage.setItem('zenstats-language', i18n.language === 'zh-CN' ? 'en' : 'zh-CN');
+                }}
+              >
+                <Globe className="h-4 w-4 text-gray-500" />
+                {i18n.language === 'zh-CN' ? 'English' : '简体中文'}
+              </button>
 
               <Button
                 variant="ghost"
@@ -350,7 +367,7 @@ export default function Header() {
                 }}
               >
                 <LogOut className="h-4 w-4" />
-                退出登录
+                {t('header.logout')}
               </Button>
             </>
           ) : (
@@ -363,7 +380,7 @@ export default function Header() {
               }}
             >
               <User className="h-4 w-4" />
-              登录
+              {t('header.login')}
             </Button>
           )}
         </div>

@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import axios, { type BaseResponse } from "@utils/axios";
 import dayjs from "dayjs";
+import { useTranslation } from 'react-i18next';
 import type {
   Funnel,
   FunnelDetail,
@@ -44,14 +45,15 @@ import type {
 import FunnelVisualization from "./components/funnel-visualization";
 
 const PERIOD_OPTIONS = [
-  { key: "day", label: "Today" },
-  { key: "yesterday", label: "Yesterday" },
-  { key: "p7", label: "Last 7 days", separator: true },
-  { key: "p14", label: "Last 14 days" },
-  { key: "p30", label: "Last 30 days" },
+  { key: "day", labelKey: "funnelAnalysis.period.today" },
+  { key: "yesterday", labelKey: "funnelAnalysis.period.yesterday" },
+  { key: "p7", labelKey: "funnelAnalysis.period.last7Days", separator: true },
+  { key: "p14", labelKey: "funnelAnalysis.period.last14Days" },
+  { key: "p30", labelKey: "funnelAnalysis.period.last30Days" },
 ];
 
 export default function FunnelAnalysisPage() {
+  const { t } = useTranslation();
   const { domain } = useParams<{ domain: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -74,7 +76,7 @@ export default function FunnelAnalysisPage() {
       setFunnels(res.data.data || []);
     } catch (error) {
       console.error("Failed to fetch funnels:", error);
-      toast.error("Failed to load funnels");
+      toast.error(t('funnelAnalysis.fetchFunnelsFailed'));
     }
   }, [domain]);
 
@@ -86,7 +88,7 @@ export default function FunnelAnalysisPage() {
       setFunnelDetail(res.data.data);
     } catch (error) {
       console.error("Failed to fetch funnel detail:", error);
-      toast.error("Failed to load funnel details");
+      toast.error(t('funnelAnalysis.fetchDetailFailed'));
     }
   }, [domain]);
 
@@ -107,7 +109,7 @@ export default function FunnelAnalysisPage() {
       setAnalysisResult(res.data.data);
     } catch (error) {
       console.error("Failed to run analysis:", error);
-      toast.error("Failed to run funnel analysis");
+      toast.error(t('funnelAnalysis.analysisFailed'));
     } finally {
       setAnalyzing(false);
     }
@@ -180,10 +182,10 @@ export default function FunnelAnalysisPage() {
             <div className="flex-1">
               <h1 className="text-xl font-bold flex items-center gap-2">
                 <Filter className="h-5 w-5" />
-                Funnel Analysis
+                {t('funnelAnalysis.title')}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Analyze conversion rates through your defined funnels.
+                {t('funnelAnalysis.description')}
               </p>
             </div>
 
@@ -192,14 +194,14 @@ export default function FunnelAnalysisPage() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="min-w-[200px] justify-between">
                   <span className="truncate">
-                    {funnelDetail?.name || "Select Funnel"}
+                    {funnelDetail?.name || t('funnelAnalysis.selectFunnel')}
                   </span>
                   <ChevronDown className="h-4 w-4 ml-2 shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[250px]">
                 {funnels.length === 0 ? (
-                  <DropdownMenuItem disabled>No funnels available</DropdownMenuItem>
+                  <DropdownMenuItem disabled>{t('funnelAnalysis.noFunnels')}</DropdownMenuItem>
                 ) : (
                   funnels.map((funnel) => (
                     <DropdownMenuItem
@@ -213,7 +215,7 @@ export default function FunnelAnalysisPage() {
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate(`/sites/${domain}/settings/funnels`)}>
-                  Manage Funnels...
+                  {t('funnelAnalysis.manageFunnels')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -229,7 +231,7 @@ export default function FunnelAnalysisPage() {
               <SelectContent>
                 {PERIOD_OPTIONS.map((opt) => (
                   <SelectItem key={opt.key} value={opt.key}>
-                    {opt.label}
+                    {t(opt.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -260,14 +262,14 @@ export default function FunnelAnalysisPage() {
             <CardContent className="py-12">
               <div className="text-center text-muted-foreground">
                 <Filter className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">Select a funnel to analyze</p>
+                <p className="text-lg font-medium">{t('funnelAnalysis.selectFunnelHint')}</p>
                 <p className="text-sm mt-1">
-                  Choose a funnel from the dropdown above or{" "}
+                  {t('funnelAnalysis.createNew')}
                   <button
                     onClick={() => navigate(`/sites/${domain}/settings/funnels`)}
                     className="text-primary hover:underline"
                   >
-                    create a new one
+                    {t('funnelAnalysis.createNewLink')}
                   </button>
                 </p>
               </div>
@@ -280,7 +282,7 @@ export default function FunnelAnalysisPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardDescription>Total Visitors</CardDescription>
+                    <CardDescription>{t('funnelAnalysis.totalVisitors')}</CardDescription>
                     <CardTitle className="text-2xl flex items-center gap-2">
                       <Users className="h-5 w-5 text-muted-foreground" />
                       {analysisResult.total_visitors.toLocaleString()}
@@ -289,7 +291,7 @@ export default function FunnelAnalysisPage() {
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardDescription>Conversion Rate</CardDescription>
+                    <CardDescription>{t('funnelAnalysis.conversionRate')}</CardDescription>
                     <CardTitle className="text-2xl flex items-center gap-2">
                       <TrendingUp className="h-5 w-5 text-muted-foreground" />
                       {analysisResult.conversion_rate.toFixed(1)}%
@@ -298,7 +300,7 @@ export default function FunnelAnalysisPage() {
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardDescription>Steps</CardDescription>
+                    <CardDescription>{t('funnelAnalysis.steps')}</CardDescription>
                     <CardTitle className="text-2xl">
                       {analysisResult.steps.length}
                     </CardTitle>
@@ -310,9 +312,9 @@ export default function FunnelAnalysisPage() {
             {/* Funnel visualization */}
             <Card>
               <CardHeader>
-                <CardTitle>Funnel Visualization</CardTitle>
+                <CardTitle>{t('funnelAnalysis.funnelVisualization')}</CardTitle>
                 <CardDescription>
-                  Visual representation of user drop-off through each step.
+                  {t('funnelAnalysis.visualizationDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -329,7 +331,7 @@ export default function FunnelAnalysisPage() {
                   />
                 ) : (
                   <p className="text-muted-foreground text-center py-8">
-                    No data available for this funnel.
+                    {t('funnelAnalysis.noData')}
                   </p>
                 )}
               </CardContent>
@@ -338,9 +340,9 @@ export default function FunnelAnalysisPage() {
             {/* Detailed steps table */}
             <Card>
               <CardHeader>
-                <CardTitle>Step Details</CardTitle>
+                <CardTitle>{t('funnelAnalysis.stepDetails')}</CardTitle>
                 <CardDescription>
-                  Detailed metrics for each step in the funnel.
+                  {t('funnelAnalysis.stepDetailsDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -354,11 +356,11 @@ export default function FunnelAnalysisPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[60px]">Step</TableHead>
-                        <TableHead>Goal</TableHead>
-                        <TableHead className="text-right">Visitors</TableHead>
-                        <TableHead className="text-right">Drop-off</TableHead>
-                        <TableHead className="text-right">Conversion</TableHead>
+                        <TableHead className="w-[60px]">{t('funnelAnalysis.step')}</TableHead>
+                        <TableHead>{t('funnelAnalysis.goal')}</TableHead>
+                        <TableHead className="text-right">{t('funnelAnalysis.visitors')}</TableHead>
+                        <TableHead className="text-right">{t('funnelAnalysis.dropOff')}</TableHead>
+                        <TableHead className="text-right">{t('funnelAnalysis.conversion')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -385,7 +387,7 @@ export default function FunnelAnalysisPage() {
                   </Table>
                 ) : (
                   <p className="text-muted-foreground text-center py-8">
-                    No data available.
+                    {t('funnelAnalysis.noDataAvailable')}
                   </p>
                 )}
               </CardContent>

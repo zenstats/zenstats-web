@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { Check, Clipboard, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,6 +15,7 @@ import {
 
 export default function SiteInstallPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { domain = "" } = useParams<{ domain: string }>();
   const [copied, setCopied] = useState(false);
 
@@ -29,10 +31,10 @@ export default function SiteInstallPage() {
     try {
       await navigator.clipboard.writeText(scriptSnippet);
       setCopied(true);
-      toast.success("统计代码已复制");
+      toast.success(t('sites.install.copySuccess'));
       window.setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast.error("复制失败，请手动复制代码");
+      toast.error(t('sites.install.copyFailed'));
     }
   };
 
@@ -43,21 +45,21 @@ export default function SiteInstallPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
             <Check className="h-6 w-6" />
           </div>
-          <CardTitle className="text-2xl">站点已创建</CardTitle>
+          <CardTitle className="text-2xl">{t('sites.install.title')}</CardTitle>
           <CardDescription className="text-base">
-            将下面的 ZenStats 统计代码添加到
+            {t('sites.install.instruction')}
             <span className="font-medium text-foreground"> {domain} </span>
-            的每个页面中，建议放在 <code className="rounded bg-muted px-1">&lt;head&gt;</code> 内。
+            {t('sites.install.instructionSuffix')}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium">统计代码</h3>
+              <h3 className="text-sm font-medium">{t('sites.install.trackingCode')}</h3>
               <Button variant="outline" size="sm" onClick={copySnippet}>
                 {copied ? <Check className="mr-2 h-4 w-4" /> : <Clipboard className="mr-2 h-4 w-4" />}
-                {copied ? "已复制" : "复制代码"}
+                {copied ? t('sites.install.copied') : t('sites.install.copyCode')}
               </Button>
             </div>
             <pre className="overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50">
@@ -66,18 +68,18 @@ export default function SiteInstallPage() {
           </div>
 
           <div className="rounded-lg border bg-white p-4 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">下一步</p>
+            <p className="font-medium text-foreground">{t('sites.install.nextSteps')}</p>
             <ol className="mt-2 list-decimal space-y-1 pl-5">
-              <li>把代码粘贴到网站模板或公共布局的 head 区域。</li>
-              <li>部署你的网站。</li>
-              <li>访问一次你的网站，然后回到 ZenStats 查看实时统计。</li>
+              <li>{t('sites.install.step1')}</li>
+              <li>{t('sites.install.step2')}</li>
+              <li>{t('sites.install.step3')}</li>
             </ol>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => navigate("/sites")}>返回站点列表</Button>
+            <Button variant="outline" onClick={() => navigate("/sites")}>{t('sites.install.backToSites')}</Button>
             <Button onClick={() => navigate(`/sites/${domain}/stats`)}>
-              查看统计面板
+              {t('sites.install.viewStats')}
               <ExternalLink className="ml-2 h-4 w-4" />
             </Button>
           </div>

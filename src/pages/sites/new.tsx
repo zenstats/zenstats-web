@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from 'react-i18next';
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 import { useState } from "react"
@@ -22,6 +23,7 @@ type FormValues = {
 
 export default function NewSitePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false)
 
   const {
@@ -53,17 +55,17 @@ export default function NewSitePage() {
     try {
       axios.post("/sites", data).then(() => {
         setIsLoading(false)
-        toast.success("创建成功")
+        toast.success(t('sites.new.createSuccess'))
         navigate(`/sites/${encodeURIComponent(data.domain)}/install`)
       }).catch((err) => {
-        toast.error("创建失败", {
-          description: err instanceof AxiosError ? err.response?.data.error : "未知错误",
+        toast.error(t('sites.new.createFailed'), {
+          description: err instanceof AxiosError ? err.response?.data.error : t('sites.new.unknownError'),
         })
       })
 
     } catch (_err) {
-      toast.error("创建失败", {
-          description: "未知错误",
+      toast.error(t('sites.new.createFailed'), {
+          description: t('sites.new.unknownError'),
         })
     } finally {
       setIsLoading(false)
@@ -73,17 +75,17 @@ export default function NewSitePage() {
   return (
     <div className="flex items-center justify-center h-full">
       <Card className="w-full max-w-md p-6 space-y-4">
-        <h1 className="text-2xl font-bold text-center">Create New Site</h1>
+        <h1 className="text-2xl font-bold text-center">{t('sites.new.title')}</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="domain">Site Domain</Label>
+            <Label htmlFor="domain">{t('sites.new.domain')}</Label>
             <Input
               {...register("domain", {
-                required: "域名不能为空",
+                required: t('sites.new.validation.domainRequired'),
                 pattern: {
                   value: /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/,
-                  message: "域名格式不正确"
+                  message: t('sites.new.validation.domainInvalid')
                 }
               })}
               placeholder="example.com"
@@ -94,22 +96,22 @@ export default function NewSitePage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('sites.new.description')}</Label>
             <Textarea
               {...register("description", {
                 maxLength: {
                   value: 200,
-                  message: "描述不能超过200个字符"
+                  message: t('sites.new.validation.descriptionMaxLength')
                 }
               })}
-              placeholder="Brief description of your site"
+              placeholder={t('sites.new.descriptionPlaceholder')}
               className={errors.description ? "border-red-500" : ""}
             />
             {errors.description && <p className="text-sm text-red-500">{errors.description.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="limit_minute">Rate Limit</Label>
+            <Label htmlFor="limit_minute">{t('sites.new.rateLimit')}</Label>
             <div className="flex gap-2">
               <Input
                 {...register("limit_minute", {
@@ -133,9 +135,9 @@ export default function NewSitePage() {
                       <SelectValue placeholder="Unit" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="second">Per Second</SelectItem>
-                      <SelectItem value="minute">Per Minute</SelectItem>
-                      <SelectItem value="hour">Per Hour</SelectItem>
+                      <SelectItem value="second">{t('sites.new.perSecond')}</SelectItem>
+                      <SelectItem value="minute">{t('sites.new.perMinute')}</SelectItem>
+                      <SelectItem value="hour">{t('sites.new.perHour')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
@@ -144,10 +146,10 @@ export default function NewSitePage() {
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => navigate("/sites")}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => navigate("/sites")}>{t('sites.new.cancel')}</Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? "Submit..." : "Create Site"}
+              {isLoading ? t('sites.new.submitting') : t('sites.new.createSite')}
             </Button>
           </div>
         </form>

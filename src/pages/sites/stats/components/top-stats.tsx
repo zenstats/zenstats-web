@@ -10,6 +10,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 interface TopStatsProps {
   query: StatsRequest;
@@ -22,6 +23,7 @@ export default function TopStatsComponent({
   // setQuery,
   api,
 }: TopStatsProps) {
+  const { t } = useTranslation();
   const [localLoading, setLocalLoading] = useState(false);
   const [data, setData] = useState<BaseResponse<TopStats>>();
   const fetchData = useCallback(async () => {
@@ -51,7 +53,7 @@ export default function TopStatsComponent({
           <div className="col-span-1 md:col-span-1 p-4 border-r border-gray-200 dark:border-gray-700">
             <CardHeader className="p-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">
-                总访问量 (UV)
+                {t('stats.metrics.visitors')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 pt-0">
@@ -68,7 +70,7 @@ export default function TopStatsComponent({
           <div className="col-span-1 md:col-span-1 p-4 border-r border-gray-200 dark:border-gray-700">
             <CardHeader className="p-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">
-                总浏览量 (PV)
+                {t('stats.metrics.pageviews')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 pt-0">
@@ -87,7 +89,7 @@ export default function TopStatsComponent({
           <div className="col-span-1 md:col-span-1 p-4 border-r border-gray-200 dark:border-gray-700">
             <CardHeader className="p-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">
-                跳出率
+                {t('stats.metrics.bounceRate')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 pt-0">
@@ -100,7 +102,7 @@ export default function TopStatsComponent({
           <div className="col-span-1 md:col-span-1 p-4 border-r border-gray-200 dark:border-gray-700">
             <CardHeader className="p-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">
-                平均访问时长
+                {t('stats.metrics.visitDuration')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 pt-0">
@@ -119,7 +121,7 @@ export default function TopStatsComponent({
           <div className="col-span-1 md:col-span-1 p-4">
             <CardHeader className="p-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">
-                单次访问浏览量
+                {t('stats.metrics.viewsPerVisit')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 pt-0">

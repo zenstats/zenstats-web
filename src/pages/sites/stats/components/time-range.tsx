@@ -34,6 +34,7 @@ import type {
   StatsRequest,
   TimeRangeVisitor,
 } from "@/pages/sites/types/interfaces";
+import { useTranslation } from "react-i18next";
 
 interface TimeRangeProps {
   query: StatsRequest;
@@ -48,6 +49,7 @@ export default function TimeRange({
 }: TimeRangeProps) {
   const [localLoading, setLocalLoading] = useState(false);
   const [data, setData] = useState<BaseResponse<TimeRangeVisitor[]>>();
+  const { t } = useTranslation();
 
   const fetchData = useCallback(async () => {
     try {
@@ -74,8 +76,8 @@ export default function TimeRange({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
-          <CardTitle>访问趋势</CardTitle>
-          <CardDescription>今日各时段UV访问量</CardDescription>
+          <CardTitle>{t('stats.timeRange.title')}</CardTitle>
+          <CardDescription>{t('stats.timeRange.description')}</CardDescription>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -83,13 +85,13 @@ export default function TimeRange({
               type="button"
               className="flex justify-between items-center space-x-2 bg-white p-2 rounded-lg shadow-sm w-[90px] text-left transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-blue-500/20"
             >
-              <span className="text-sm font-medium">Hour</span>
+              <span className="text-sm font-medium">{t('stats.timeRange.hour')}</span>
               <ChevronDown className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="p-2 rounded-lg">
             <DropdownMenuItem className="flex items-center space-x-3">
-              <span>今日</span>
+              <span>{t('stats.timeRange.today')}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -132,7 +134,7 @@ export default function TimeRange({
                     border: "none",
                     boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                   }}
-                  formatter={(value) => [`${value}`, "访问量"]}
+                  formatter={(value) => [`${value}`, t('stats.timeRange.visits')]}
                 />
                 <Area
                   type="monotone"

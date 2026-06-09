@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -25,14 +26,14 @@ import {
   Globe,
   Monitor,
   Layout,
-  ScreenShare,
   MapPin,
   ArrowLeftRight,
   BarChart3,
   Laptop,
   Chrome,
-  Map,
+  MapIcon,
 } from "lucide-react";
+import i18n from '@/i18n';
 import axios, { type BaseResponse } from "@utils/axios";
 import qs from "qs";
 import dayjs from "dayjs";
@@ -57,14 +58,8 @@ import DimensionSettings, {
 import Forbidden from "@components/403";
 import { cn } from "@/lib/utils";
 
-const PERIOD_OPTIONS = [
-  { key: "day", label: "今日" },
-  { key: "yesterday", label: "昨日" },
-  { key: "realtime", label: "实时" },
-  { key: "p7", label: "最近7天", separator: true },
-  { key: "p14", label: "最近14天" },
-  { key: "p30", label: "最近30天" },
-];
+const dateFormat = i18n.language === 'zh-CN' ? "YYYY年MM月DD日" : "YYYY-MM-DD";
+const shortDateFormat = i18n.language === 'zh-CN' ? "MM月DD日" : "MM-DD";
 
 // Map dimension keys to icons
 const DIMENSION_ICONS: Record<string, React.ReactNode> = {
@@ -78,17 +73,8 @@ const DIMENSION_ICONS: Record<string, React.ReactNode> = {
   browser: <Chrome className="h-4 w-4" />,
   os: <Laptop className="h-4 w-4" />,
   device: <Monitor className="h-4 w-4" />,
-  screen_size: <ScreenShare className="h-4 w-4" />,
   event_name: <BarChart3 className="h-4 w-4" />,
 };
-
-// Category groupings for tabs
-const CATEGORY_TABS = [
-  { key: "traffic", label: "流量来源", icon: <Globe className="h-3.5 w-3.5" /> },
-  { key: "page", label: "页面", icon: <Layout className="h-3.5 w-3.5" /> },
-  { key: "audience", label: "受众", icon: <Map className="h-3.5 w-3.5" /> },
-  { key: "technology", label: "技术", icon: <Monitor className="h-3.5 w-3.5" /> },
-];
 
 interface ParsedFilter {
   property: string;
@@ -134,6 +120,23 @@ function parseFilters(filtersStr: string | undefined): ParsedFilter[] {
 export default function StatsPage() {
   const navigate = useNavigate();
   const { domain } = useParams();
+  const { t } = useTranslation();
+
+  const PERIOD_OPTIONS = useMemo(() => [
+    { key: "day", label: t('stats.period.today') },
+    { key: "yesterday", label: t('stats.period.yesterday') },
+    { key: "realtime", label: t('stats.period.realtime') },
+    { key: "p7", label: t('stats.period.last7Days'), separator: true },
+    { key: "p14", label: t('stats.period.last14Days') },
+    { key: "p30", label: t('stats.period.last30Days') },
+  ], [t]);
+
+  const CATEGORY_TABS = useMemo(() => [
+    { key: "traffic", label: t('stats.categories.traffic'), icon: <Globe className="h-3.5 w-3.5" /> },
+    { key: "page", label: t('stats.categories.page'), icon: <Layout className="h-3.5 w-3.5" /> },
+    { key: "audience", label: t('stats.categories.audience'), icon: <MapIcon className="h-3.5 w-3.5" /> },
+    { key: "technology", label: t('stats.categories.technology'), icon: <Monitor className="h-3.5 w-3.5" /> },
+  ], [t]);
 
   const [selectedDateRange, setSelectedDateRange] = useState<DateRange>({
     from: undefined,
@@ -142,7 +145,7 @@ export default function StatsPage() {
   const [queryTime, setQueryTime] = useState<Date>(new Date());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectdOptionName, setSelectdOptionName] = useState<string>("今日");
+  const [selectdOptionName, setSelectdOptionName] = useState<string>(t('stats.period.today'));
   const [sites, setSites] = useState<Site[]>([]);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [activeCategoryTab, setActiveCategoryTab] = useState<string>("traffic");
@@ -150,15 +153,22 @@ export default function StatsPage() {
   // Dimension settings with localStorage persistence
   const storageKey = `zenstats-dimensions-${domain}`;
   const [dimensions, setDimensions] = useState<DimensionConfig[]>(() => {
-    const defaults = getDefaultDimensions();
+    const defaults = getDefaultDimensions(t);
+    const defaultsByKey = new Map<string, DimensionConfig>(defaults.map((d) => [d.key, d]));
     const validKeys = new Set(defaults.map((d) => d.key));
     try {
       const stored = localStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Filter out dimensions that no longer exist in AVAILABLE_DIMENSIONS
-          const valid = parsed.filter((d: DimensionConfig) => validKeys.has(d.key));
+          // Filter out dimensions that no longer exist, update labels from defaults
+          const valid = parsed
+            .filter((d: DimensionConfig) => validKeys.has(d.key))
+            .map((d: DimensionConfig) => ({
+              ...d,
+              label: defaultsByKey.get(d.key)?.label ?? d.label,
+              property: defaultsByKey.get(d.key)?.property ?? d.property,
+            }));
           // Add any new dimensions that weren't in the stored config
           const storedKeys = new Set(valid.map((d: DimensionConfig) => d.key));
           const newDims = defaults.filter((d) => !storedKeys.has(d.key));
@@ -200,7 +210,7 @@ export default function StatsPage() {
   const activeCategories = useMemo(() => {
     const cats = new Set<string>(enabledDimensions.map((d: DimensionConfig) => d.category));
     return CATEGORY_TABS.filter((tab) => cats.has(tab.key));
-  }, [enabledDimensions]);
+  }, [enabledDimensions, CATEGORY_TABS]);
 
   const api = useMemo(
     () => ({
@@ -353,7 +363,7 @@ export default function StatsPage() {
           setHasAccess(found);
         }
       } catch (error) {
-        console.error("获取站点列表失败:", error);
+        console.error("Failed to fetch site list:", error);
       }
     };
     fetchSiteList();
@@ -369,33 +379,33 @@ export default function StatsPage() {
     switch (period) {
       case "day":
         if (dayjs(date).isSame(dayjs(), "day")) {
-          setSelectdOptionName("今日");
+          setSelectdOptionName(t('stats.period.today'));
         } else {
-          setSelectdOptionName(dayjs(date).format("YYYY年MM月DD日"));
+          setSelectdOptionName(dayjs(date).format(dateFormat));
         }
         break;
       case "yesterday":
-        setSelectdOptionName("昨日");
+        setSelectdOptionName(t('stats.period.yesterday'));
         break;
       case "realtime":
-        setSelectdOptionName("实时");
+        setSelectdOptionName(t('stats.period.realtime'));
         break;
       case "p7":
-        setSelectdOptionName("最近7天");
+        setSelectdOptionName(t('stats.period.last7Days'));
         break;
       case "p14":
-        setSelectdOptionName("最近14天");
+        setSelectdOptionName(t('stats.period.last14Days'));
         break;
       case "p30":
-        setSelectdOptionName("最近30天");
+        setSelectdOptionName(t('stats.period.last30Days'));
         break;
       case "custom":
         setSelectdOptionName(
-          `${dayjs(from).format("MM月DD日")} - ${dayjs(to).format("MM月DD日")}`,
+          `${dayjs(from).format(shortDateFormat)} - ${dayjs(to).format(shortDateFormat)}`,
         );
         break;
       default:
-        setSelectdOptionName("今日");
+        setSelectdOptionName(t('stats.period.today'));
     }
   };
 
@@ -440,7 +450,7 @@ export default function StatsPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
           <div className="flex items-center justify-center h-64">
-            <div className="text-sm text-gray-500">正在检查访问权限...</div>
+            <div className="text-sm text-gray-500">{t('stats.loading')}</div>
           </div>
         </div>
       </div>
@@ -471,14 +481,14 @@ export default function StatsPage() {
                     className="flex items-center gap-2"
                   >
                     <Settings className="h-4 w-4" />
-                    站点设置
+                    {t('stats.siteSettings')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => navigate(`/sites/${domain}/install`)}
                     className="flex items-center gap-2"
                   >
                     <Code2 className="h-4 w-4" />
-                    安装统计代码
+                    {t('stats.installTrackingCode')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
@@ -497,7 +507,7 @@ export default function StatsPage() {
               ))}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate("/sites")}>
-                查看全部站点
+                {t('stats.viewAllSites')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -518,7 +528,7 @@ export default function StatsPage() {
             <Dialog open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
               <DialogContent className="sm:max-w-auto w-auto p-0" showCloseButton={false}>
                 <DialogHeader className="sr-only">
-                  <DialogTitle>选择日期范围</DialogTitle>
+                  <DialogTitle>{t('stats.selectDateRange')}</DialogTitle>
                 </DialogHeader>
                 <Calendar
                   mode="range"
@@ -539,7 +549,7 @@ export default function StatsPage() {
                       setSelectedDateRange({ from: undefined, to: undefined });
                     }}
                   >
-                    取消
+                    {t('stats.cancel')}
                   </Button>
                   <Button
                     size="sm"
@@ -550,7 +560,7 @@ export default function StatsPage() {
                       setIsDatePickerOpen(false);
                     }}
                   >
-                    确定
+                    {t('stats.confirm')}
                   </Button>
                 </div>
               </DialogContent>
@@ -594,7 +604,7 @@ export default function StatsPage() {
                   }}
                   className="text-indigo-600 dark:text-indigo-400"
                 >
-                  自定义范围
+                  {t('stats.period.customRange')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -662,7 +672,7 @@ export default function StatsPage() {
           {/* Breakdown tables for current category */}
           {currentCategoryDimensions.length === 0 ? (
             <div className="text-center py-12 text-sm text-gray-400 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-              当前分类下没有启用的维度。点击右上角"维度设置"启用更多维度。
+              {t('stats.emptyDimensions')}
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -697,7 +707,7 @@ export default function StatsPage() {
         {/* Footer */}
         <div className="text-center py-6">
           <span className="text-xs text-gray-400">
-            由 ZenStats 提供统计服务
+            {t('stats.footer')}
           </span>
         </div>
       </div>

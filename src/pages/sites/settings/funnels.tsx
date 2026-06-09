@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Filter, ChevronRight, GripVertical, BarChart3 } from "lucide-react";
 import axios, { type BaseResponse } from "@utils/axios";
 import type { Goal, Funnel, CreateFunnelRequest } from "../types/interfaces";
@@ -42,6 +43,7 @@ export default function FunnelsSettings() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [funnelToDelete, setFunnelToDelete] = useState<Funnel | null>(null);
   const [creating, setCreating] = useState(false);
+  const { t } = useTranslation();
 
   // Form state
   const [funnelName, setFunnelName] = useState("");
@@ -59,7 +61,7 @@ export default function FunnelsSettings() {
       setGoals(goalsRes.data.data || []);
     } catch (error) {
       console.error("Failed to fetch data:", error);
-      toast.error("Failed to load data");
+      toast.error(t('settings.funnels.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -73,12 +75,12 @@ export default function FunnelsSettings() {
     if (!domain) return;
 
     if (!funnelName.trim()) {
-      toast.error("Funnel name is required");
+      toast.error(t('settings.funnels.nameRequired'));
       return;
     }
 
     if (selectedGoals.length < 2) {
-      toast.error("At least 2 steps are required");
+      toast.error(t('settings.funnels.stepsRequired'));
       return;
     }
 
@@ -90,12 +92,12 @@ export default function FunnelsSettings() {
       };
 
       await axios.post<BaseResponse<Funnel>>(`/sites/${domain}/funnels`, body);
-      toast.success("Funnel created successfully");
+      toast.success(t('settings.funnels.createSuccess'));
       setDialogOpen(false);
       resetForm();
       fetchData();
     } catch (error: any) {
-      const message = error?.response?.data?.message || "Failed to create funnel";
+      const message = error?.response?.data?.message || t('settings.funnels.createFailed');
       toast.error(message);
     } finally {
       setCreating(false);
@@ -107,12 +109,12 @@ export default function FunnelsSettings() {
 
     try {
       await axios.delete(`/sites/${domain}/funnels/${funnelToDelete.id}`);
-      toast.success("Funnel deleted successfully");
+      toast.success(t('settings.funnels.deleteSuccess'));
       setDeleteDialogOpen(false);
       setFunnelToDelete(null);
       fetchData();
     } catch (error) {
-      toast.error("Failed to delete funnel");
+      toast.error(t('settings.funnels.deleteFailed'));
     }
   };
 
@@ -133,7 +135,7 @@ export default function FunnelsSettings() {
 
   const addStep = () => {
     if (selectedGoals.length >= 8) {
-      toast.error("Maximum 8 steps allowed");
+      toast.error(t('settings.funnels.maxSteps'));
       return;
     }
     setSelectedGoals([...selectedGoals, 0]);
@@ -141,7 +143,7 @@ export default function FunnelsSettings() {
 
   const removeStep = (index: number) => {
     if (selectedGoals.length <= 2) {
-      toast.error("At least 2 steps are required");
+      toast.error(t('settings.funnels.stepsRequired'));
       return;
     }
     setSelectedGoals(selectedGoals.filter((_, i) => i !== index));
@@ -166,25 +168,25 @@ export default function FunnelsSettings() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
-              Funnels
+              {t('settings.funnels.title')}
             </CardTitle>
             <CardDescription>
-              Create conversion funnels to track user journeys through multiple steps.
+              {t('settings.funnels.description')}
             </CardDescription>
           </div>
           <Button onClick={openCreateDialog} size="sm" disabled={goals.length < 2}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Funnel
+            {t('settings.funnels.addFunnel')}
           </Button>
         </div>
         {goals.length < 2 && (
           <p className="text-sm text-muted-foreground">
-            You need at least 2 goals to create a funnel.{" "}
+            {t('settings.funnels.needGoals')}{" "}
             <button
               onClick={() => navigate(`/sites/${domain}/settings/goals`)}
               className="text-primary hover:underline"
             >
-              Create goals first
+              {t('settings.funnels.createGoalsFirst')}
             </button>
           </p>
         )}
@@ -199,15 +201,15 @@ export default function FunnelsSettings() {
         ) : funnels.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Filter className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No funnels configured yet.</p>
-            <p className="text-sm">Create your first funnel to track conversion paths.</p>
+            <p>{t('settings.funnels.noFunnels')}</p>
+            <p className="text-sm">{t('settings.funnels.createFirst')}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Steps</TableHead>
+                <TableHead>{t('settings.funnels.name')}</TableHead>
+                <TableHead>{t('settings.funnels.steps')}</TableHead>
                 <TableHead className="w-[140px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -217,7 +219,7 @@ export default function FunnelsSettings() {
                   <TableCell className="font-medium">{funnel.name}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <span>{funnel.steps.length} steps</span>
+                      <span>{t('settings.funnels.stepCount', { count: funnel.steps.length })}</span>
                       <ChevronRight className="h-3 w-3" />
                     </div>
                   </TableCell>
@@ -230,7 +232,7 @@ export default function FunnelsSettings() {
                         className="h-8"
                       >
                         <BarChart3 className="h-4 w-4 mr-1" />
-                        Analyze
+                        {t('settings.funnels.analyze')}
                       </Button>
                       <Button
                         variant="ghost"
@@ -252,17 +254,17 @@ export default function FunnelsSettings() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Create Funnel</DialogTitle>
+              <DialogTitle>{t('settings.funnels.createFunnel')}</DialogTitle>
               <DialogDescription>
-                Define a sequence of steps to track conversion rates.
+                {t('settings.funnels.dialogDescription')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="funnel-name">Funnel Name</Label>
+                <Label htmlFor="funnel-name">{t('settings.funnels.funnelName')}</Label>
                 <Input
                   id="funnel-name"
-                  placeholder="e.g., Signup Flow"
+                  placeholder={t('settings.funnels.funnelNamePlaceholder')}
                   value={funnelName}
                   onChange={(e) => setFunnelName(e.target.value)}
                 />
@@ -270,7 +272,7 @@ export default function FunnelsSettings() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>Steps</Label>
+                  <Label>{t('settings.funnels.steps')}</Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -279,11 +281,11 @@ export default function FunnelsSettings() {
                     disabled={selectedGoals.length >= 8}
                   >
                     <Plus className="h-3 w-3 mr-1" />
-                    Add Step
+                    {t('settings.funnels.addStep')}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Add 2-8 steps in the order users should complete them.
+                  {t('settings.funnels.stepsHint')}
                 </p>
 
                 <div className="space-y-2 mt-3">
@@ -298,7 +300,7 @@ export default function FunnelsSettings() {
                         onValueChange={(v) => updateStep(index, parseInt(v))}
                       >
                         <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Select a goal" />
+                          <SelectValue placeholder={t('settings.funnels.selectGoal')} />
                         </SelectTrigger>
                         <SelectContent>
                           {goals.map((goal) => (
@@ -324,10 +326,10 @@ export default function FunnelsSettings() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancel
+                {t('settings.funnels.cancel')}
               </Button>
               <Button onClick={handleCreate} disabled={creating}>
-                {creating ? "Creating..." : "Create Funnel"}
+                {creating ? t('settings.funnels.creating') : t('settings.funnels.createFunnel')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -337,17 +339,17 @@ export default function FunnelsSettings() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Delete Funnel</DialogTitle>
+              <DialogTitle>{t('settings.funnels.deleteTitle')}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{funnelToDelete?.name}"? This action cannot be undone.
+                {t('settings.funnels.deleteConfirm', { name: funnelToDelete?.name })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                Cancel
+                {t('settings.funnels.cancel')}
               </Button>
               <Button variant="destructive" onClick={handleDelete}>
-                Delete
+                {t('settings.funnels.delete')}
               </Button>
             </DialogFooter>
           </DialogContent>

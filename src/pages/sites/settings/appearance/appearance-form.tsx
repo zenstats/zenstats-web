@@ -19,25 +19,31 @@ import {
 } from "@components/ui/form"
 import { RadioGroup, RadioGroupItem } from "@components/ui/radio-group"
 import { buttonVariants } from "@components/ui/variants/button-variants"
-
-const appearanceFormSchema = z.object({
-  theme: z.enum(["light", "dark"], {
-    required_error: "Please select a theme.",
-  }),
-  font: z.enum(["inter", "manrope", "system"], {
-    invalid_type_error: "Select a font",
-    required_error: "Please select a font.",
-  }),
-})
-
-type AppearanceFormValues = z.infer<typeof appearanceFormSchema>
+import { useTranslation } from 'react-i18next'
 
 // This can come from your database or API.
 const defaultValues: Partial<AppearanceFormValues> = {
   theme: "light",
 }
 
+type AppearanceFormValues = {
+  theme: "light" | "dark"
+  font: "inter" | "manrope" | "system"
+}
+
 export function AppearanceForm() {
+  const { t } = useTranslation()
+
+  const appearanceFormSchema = z.object({
+    theme: z.enum(["light", "dark"], {
+      required_error: t('settings.appearance.themeRequired'),
+    }),
+    font: z.enum(["inter", "manrope", "system"], {
+      invalid_type_error: t('settings.appearance.fontInvalid'),
+      required_error: t('settings.appearance.fontRequired'),
+    }),
+  })
+
   const form = useForm<AppearanceFormValues>({
     resolver: zodResolver(appearanceFormSchema),
     defaultValues,
@@ -61,7 +67,7 @@ export function AppearanceForm() {
           name="font"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Font</FormLabel>
+              <FormLabel>{t('settings.appearance.fontLabel')}</FormLabel>
               <div className="relative w-max">
                 <FormControl>
                   <select
@@ -79,7 +85,7 @@ export function AppearanceForm() {
                 <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 opacity-50" />
               </div>
               <FormDescription>
-                Set the font you want to use in the dashboard.
+                {t('settings.appearance.fontDescription')}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -90,9 +96,9 @@ export function AppearanceForm() {
           name="theme"
           render={({ field }) => (
             <FormItem className="space-y-1">
-              <FormLabel>Theme</FormLabel>
+              <FormLabel>{t('settings.appearance.themeLabel')}</FormLabel>
               <FormDescription>
-                Select the theme for the dashboard.
+                {t('settings.appearance.themeDescription')}
               </FormDescription>
               <FormMessage />
               <RadioGroup
@@ -122,7 +128,7 @@ export function AppearanceForm() {
                       </div>
                     </div>
                     <span className="block w-full p-2 text-center font-normal">
-                      Light
+                      {t('settings.appearance.lightTheme')}
                     </span>
                   </FormLabel>
                 </FormItem>
@@ -148,7 +154,7 @@ export function AppearanceForm() {
                       </div>
                     </div>
                     <span className="block w-full p-2 text-center font-normal">
-                      Dark
+                      {t('settings.appearance.darkTheme')}
                     </span>
                   </FormLabel>
                 </FormItem>
@@ -157,7 +163,7 @@ export function AppearanceForm() {
           )}
         />
 
-        <Button type="submit">Update preferences</Button>
+        <Button type="submit">{t('settings.appearance.updatePreferences')}</Button>
       </form>
     </Form>
   )

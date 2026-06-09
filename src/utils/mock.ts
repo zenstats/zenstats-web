@@ -89,9 +89,9 @@ const mockSiteList = {
   code: 200,
   message: "success",
   data: [
-    { id: 1, domain: "example.com", remark: "示例站点", role: "admin", timezone: "Asia/Shanghai" },
-    { id: 2, domain: "blog.example.com", remark: "博客", role: "viewer", timezone: "Asia/Shanghai" },
-    { id: 3, domain: "docs.example.com", remark: "文档", role: "owner", timezone: "Asia/Shanghai" },
+    { id: 1, domain: "example.com", remark: "Example Site", role: "admin", timezone: "Asia/Shanghai" },
+    { id: 2, domain: "blog.example.com", remark: "Blog", role: "viewer", timezone: "Asia/Shanghai" },
+    { id: 3, domain: "docs.example.com", remark: "Docs", role: "owner", timezone: "Asia/Shanghai" },
   ],
 };
 
@@ -269,24 +269,6 @@ const mockBreakdownExitPages = {
   },
 };
 
-const mockBreakdownScreenSizes = {
-  code: 200,
-  message: "success",
-  data: {
-    columns: ["screen_size", "visitors"],
-    data: [
-      { screen_size: "1920x1080", visitors: 4321 },
-      { screen_size: "1366x768", visitors: 2345 },
-      { screen_size: "1440x900", visitors: 1876 },
-      { screen_size: "1536x864", visitors: 1234 },
-      { screen_size: "2560x1440", visitors: 987 },
-      { screen_size: "375x812", visitors: 876 },
-      { screen_size: "414x896", visitors: 654 },
-      { screen_size: "360x780", visitors: 543 },
-    ],
-  },
-};
-
 const mockBreakdownEventNames = {
   code: 200,
   message: "success",
@@ -434,7 +416,6 @@ export function getMockResponse(url: string): BaseResponse<unknown> | null {
     if (query.includes("visit:os_version")) return mockBreakdownOS;
     if (query.includes("visit:os")) return mockBreakdownOS;
     if (query.includes("visit:device")) return mockBreakdownDevices;
-    if (query.includes("visit:screen")) return mockBreakdownScreenSizes;
     if (query.includes("visit:entry_page")) return mockBreakdownEntryPages;
     if (query.includes("visit:exit_page")) return mockBreakdownExitPages;
     if (query.includes("event:name")) return mockBreakdownEventNames;

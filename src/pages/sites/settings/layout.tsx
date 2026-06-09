@@ -2,6 +2,7 @@ import { Separator } from "@components/ui/separator"
 import { SidebarNav, type SidebarNavItem } from "./components/sidebar-nav"
 import { useNavigate, useParams } from "react-router-dom";
 import { Code2, Rocket, ShieldAlert, Target } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface SettingsLayoutProps {
   children: React.ReactNode
@@ -11,56 +12,57 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
 
   const { domain = '' } = useParams<{ domain?: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const baseUrl = `/sites/${domain}/settings`;
 
   const sidebarNavItems: SidebarNavItem[] = [
     {
       id: "general",
-      title: "General",
+      title: t('settings.layout.nav.general'),
       icon: <Rocket className="mr-2 h-4 w-4" />,
       href: `${baseUrl}/general`,
     },
     {
       id: "install",
-      title: "Install Code",
+      title: t('settings.layout.nav.installCode'),
       icon: <Code2 className="mr-2 h-4 w-4" />,
       href: `/sites/${domain}/install`,
     },
     {
       id: "conversions",
-      title: "Conversions",
+      title: t('settings.layout.nav.conversions'),
       icon: <Target className="mr-2 h-4 w-4" />,
       children: [
         {
           id: "goals",
-          title: "Goals",
+          title: t('settings.layout.nav.goals'),
           href: `${baseUrl}/goals`,
         },
         {
           id: "funnels",
-          title: "Funnels",
+          title: t('settings.layout.nav.funnels'),
           href: `${baseUrl}/funnels`,
         },
       ],
     },
     {
       id: "shields",
-      title: "Shields",
+      title: t('settings.layout.nav.shields'),
       icon: <ShieldAlert className="mr-2 h-4 w-4" />,
       children: [
         {
           id: "shields-ip_address",
-          title: "IP Address",
+          title: t('settings.layout.nav.ipAddress'),
           href: `${baseUrl}/shields/ip_address`,
         },
         {
           id: "shields-hostname",
-          title: "Hostname",
+          title: t('settings.layout.nav.hostname'),
           href: `${baseUrl}/shields/hostname`,
         },
         {
           id: "shields-countries",
-          title: "Countries",
+          title: t('settings.layout.nav.countries'),
           href: `${baseUrl}/shields/countries`,
         },
       ],
@@ -74,11 +76,11 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
           className="text-sm text-blue-500 hover:underline cursor-pointer w-fit"
           onClick={() => navigate(domain ? `/sites/${domain}/stats` : '/sites')}
         >
-          ← Back to Dashboard
+          {t('settings.layout.backToDashboard')}
         </div>
-        <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{t('settings.layout.settings')}</h2>
         <p className="text-muted-foreground">
-          Manage your site settings for <span className="font-semibold text-primary">{domain}</span>.
+          {t('settings.layout.manageSiteSettings', { domain })}
         </p>
       </div>
       <Separator className="my-6" />

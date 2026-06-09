@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
   XAxis,
   YAxis,
@@ -19,6 +19,7 @@ import type { StatsRequest, MainGraphPoint } from "@/pages/sites/types/interface
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface MainGraphProps {
   query: StatsRequest;
@@ -26,25 +27,24 @@ interface MainGraphProps {
   api: (dateRange: StatsRequest) => Promise<BaseResponse<MainGraphPoint[]>>;
 }
 
-// Metric selector tabs like Plausible
-const METRIC_OPTIONS = [
-  { key: "visitors", label: "访客" },
-  { key: "pageviews", label: "浏览量" },
-] as const;
-
-// Interval options
-const INTERVAL_OPTIONS = [
-  { key: "minute", label: "按分钟" },
-  { key: "hourly", label: "按小时" },
-  { key: "daily", label: "按天" },
-  { key: "weekly", label: "按周" },
-  { key: "monthly", label: "按月" },
-] as const;
-
 export default function MainGraph({ query, setQuery, api }: MainGraphProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<MainGraphPoint[]>([]);
   const [intervalDropdownOpen, setIntervalDropdownOpen] = useState(false);
+
+  const METRIC_OPTIONS = useMemo(() => [
+    { key: "visitors", label: t('stats.graph.visitors') },
+    { key: "pageviews", label: t('stats.graph.pageviews') },
+  ] as const, [t]);
+
+  const INTERVAL_OPTIONS = useMemo(() => [
+    { key: "minute", label: t('stats.graph.intervalByMinute') },
+    { key: "hourly", label: t('stats.graph.intervalByHour') },
+    { key: "daily", label: t('stats.graph.intervalByDay') },
+    { key: "weekly", label: t('stats.graph.intervalByWeek') },
+    { key: "monthly", label: t('stats.graph.intervalByMonth') },
+  ] as const, [t]);
 
   // Determine active metric (default visitors)
   const activeMetric = query.metrics || "visitors";
@@ -105,13 +105,13 @@ export default function MainGraph({ query, setQuery, api }: MainGraphProps) {
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</p>
         <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
           {payload[0].value.toLocaleString()}{" "}
-          {activeMetric === "visitors" ? "访客" : "浏览量"}
+          {activeMetric === "visitors" ? t('stats.graph.visitors') : t('stats.graph.pageviews')}
         </p>
       </div>
     );
   };
 
-  const intervalLabel = INTERVAL_OPTIONS.find((i) => i.key === activeInterval)?.label || "按天";
+  const intervalLabel = INTERVAL_OPTIONS.find((i) => i.key === activeInterval)?.label || t('stats.graph.intervalByDay');
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-lg">
@@ -157,7 +157,7 @@ export default function MainGraph({ query, setQuery, api }: MainGraphProps) {
 
         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
           {total.toLocaleString()}{" "}
-          {activeMetric === "visitors" ? "访客" : "浏览量"}
+          {activeMetric === "visitors" ? t('stats.graph.visitors') : t('stats.graph.pageviews')}
         </div>
       </div>
 

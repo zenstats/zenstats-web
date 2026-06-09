@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@components/ui/button";
 import {
   Form,
@@ -28,31 +29,38 @@ import timeZones from "@/constants/time-zones.json";
 import { Loader2 } from "lucide-react";
 import { AxiosError } from "axios";
 
-const timeZoneFormSchema = z.object({
-  timeZone: z.string({
-    required_error: "Please select a timezone.",
-  }),
-});
+type TimeZoneFormValues = {
+  timeZone: string;
+};
 
-const rateLimitFormSchema = z.object({
-  limit_minute: z.coerce
-    .number({
-      required_error: "Please enter a rate limit.",
-      invalid_type_error: "Please enter a valid number.",
-    })
-    .int("Must be an integer")
-    .min(0, "Cannot be negative"),
-  rateLimitUnit: z.string({
-    required_error: "Please select a rate limit unit.",
-  }),
-});
-
-type TimeZoneFormValues = z.infer<typeof timeZoneFormSchema>;
-type RateLimitFormValues = z.infer<typeof rateLimitFormSchema>;
+type RateLimitFormValues = {
+  limit_minute: number;
+  rateLimitUnit: string;
+};
 
 export function SettingsGeneralForm() {
   const [isTimeZoneLoading, setIsTimeZoneLoading] = useState(false);
   const [isRateLimitLoading, setIsRateLimitLoading] = useState(false);
+  const { t } = useTranslation();
+
+  const timeZoneFormSchema = z.object({
+    timeZone: z.string({
+      required_error: t('settings.general.timezoneRequired'),
+    }),
+  });
+
+  const rateLimitFormSchema = z.object({
+    limit_minute: z.coerce
+      .number({
+        required_error: t('settings.general.rateLimitRequired'),
+        invalid_type_error: t('settings.general.rateLimitInvalid'),
+      })
+      .int(t('settings.general.rateLimitMustBeInteger'))
+      .min(0, t('settings.general.rateLimitCannotBeNegative')),
+    rateLimitUnit: z.string({
+      required_error: t('settings.general.rateLimitUnitRequired'),
+    }),
+  });
 
   const { domain } = useParams();
   const [site, setSite] = useState<Site | null>(null);
@@ -104,14 +112,14 @@ export function SettingsGeneralForm() {
       .put(`/sites/${domain}`, { timezone: data.timeZone })
       .then(() => {
         setIsTimeZoneLoading(false);
-        toast.success("时区修改成功");
+        toast.success(t('settings.general.timezoneSuccess'));
       })
       .catch((err) => {
         setIsTimeZoneLoading(false);
         console.log(err);
-        toast.error("时区修改失败", {
+        toast.error(t('settings.general.timezoneFailed'), {
           description:
-            err instanceof AxiosError ? err.response?.data.error : "未知错误",
+            err instanceof AxiosError ? err.response?.data.error : t('common.unknownError'),
         });
       });
   }
@@ -134,14 +142,14 @@ export function SettingsGeneralForm() {
       .put(`/sites/${domain}`, submitData)
       .then(() => {
         setIsRateLimitLoading(false);
-        toast.success("速率限制修改成功");
+        toast.success(t('settings.general.rateLimitSuccess'));
       })
       .catch((err) => {
         setIsRateLimitLoading(false);
         console.log(err);
-        toast.error("速率限制修改失败", {
+        toast.error(t('settings.general.rateLimitFailed'), {
           description:
-            err instanceof AxiosError ? err.response?.data.error : "未知错误",
+            err instanceof AxiosError ? err.response?.data.error : t('common.unknownError'),
         });
       });
   }
@@ -169,8 +177,8 @@ export function SettingsGeneralForm() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>时区设置</CardTitle>
-              <CardDescription>更新您的报告时区</CardDescription>
+              <CardTitle>{t('settings.general.timezoneTitle')}</CardTitle>
+              <CardDescription>{t('settings.general.timezoneDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
               <FormField
@@ -178,14 +186,14 @@ export function SettingsGeneralForm() {
                 name="timeZone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>报告时区</FormLabel>
+                    <FormLabel>{t('settings.general.reportTimezone')}</FormLabel>
                     <select
                       value={field.value}
                       onChange={field.onChange}
                       className="w-full rounded-md border border-gray-300 px-3 py-2"
                     >
                       <option value="" disabled>
-                        选择时区
+                        {t('settings.general.selectTimezone')}
                       </option>
                       {timeZones.map((timeZone) => (
                         <option key={timeZone.value} value={timeZone.value}>
@@ -205,7 +213,7 @@ export function SettingsGeneralForm() {
                 {isTimeZoneLoading && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {isTimeZoneLoading ? "提交中..." : "更新时区设置"}
+                {isTimeZoneLoading ? t('settings.general.submitting') : t('settings.general.updateTimezone')}
               </Button>
             </CardContent>
           </Card>
@@ -220,8 +228,8 @@ export function SettingsGeneralForm() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>速率限制设置</CardTitle>
-              <CardDescription>配置API请求速率限制</CardDescription>
+              <CardTitle>{t('settings.general.rateLimitTitle')}</CardTitle>
+              <CardDescription>{t('settings.general.rateLimitDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
               <FormField
@@ -229,12 +237,12 @@ export function SettingsGeneralForm() {
                 name="limit_minute"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>速率限制</FormLabel>
+                    <FormLabel>{t('settings.general.rateLimit')}</FormLabel>
                     <div className="flex gap-2">
                       <Input
                         {...field}
                         type="number"
-                        placeholder="限制数量"
+                        placeholder={t('settings.general.limitPlaceholder')}
                         onChange={(e) => {
                           const value = e.target.value.replace(/[^0-9]/g, "");
                           field.onChange(value);
@@ -255,9 +263,9 @@ export function SettingsGeneralForm() {
                         }
                         className="w-[150px] rounded-md border border-gray-300 px-3 py-2"
                       >
-                        <option value="second">每秒</option>
-                        <option value="minute">每分钟</option>
-                        <option value="hour">每小时</option>
+                        <option value="second">{t('settings.general.perSecond')}</option>
+                        <option value="minute">{t('settings.general.perMinute')}</option>
+                        <option value="hour">{t('settings.general.perHour')}</option>
                       </select>
                     </div>
                     <FormMessage />
@@ -277,7 +285,7 @@ export function SettingsGeneralForm() {
                 {isRateLimitLoading && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {isRateLimitLoading ? "提交中..." : "更新速率限制"}
+                {isRateLimitLoading ? t('settings.general.submitting') : t('settings.general.updateRateLimit')}
               </Button>
             </CardContent>
           </Card>

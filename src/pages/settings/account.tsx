@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { User } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ import { Label } from "@/components/ui/label";
 export default function AccountSettingsPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     setName(localStorage.getItem("name") || "");
@@ -26,14 +28,14 @@ export default function AccountSettingsPage() {
     localStorage.setItem("name", name.trim());
     localStorage.setItem("email", email.trim());
     window.dispatchEvent(new Event("zenstats:user-updated"));
-    toast.success("用户设置已保存");
+    toast.success(t('account.saveSuccess'));
   };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6 space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">用户设置</h1>
-        <p className="text-muted-foreground">管理你的账户资料和偏好设置。</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('account.title')}</h1>
+        <p className="text-muted-foreground">{t('account.description')}</p>
       </div>
 
       <Card>
@@ -43,22 +45,22 @@ export default function AccountSettingsPage() {
               <User className="h-5 w-5" />
             </div>
             <div>
-              <CardTitle>个人资料</CardTitle>
-              <CardDescription>更新显示在右上角菜单中的信息。</CardDescription>
+              <CardTitle>{t('account.profile')}</CardTitle>
+              <CardDescription>{t('account.profileDescription')}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">名称</Label>
+            <Label htmlFor="name">{t('account.name')}</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">邮箱</Label>
+            <Label htmlFor="email">{t('account.email')}</Label>
             <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="flex justify-end">
-            <Button onClick={saveProfile}>保存设置</Button>
+            <Button onClick={saveProfile}>{t('account.save')}</Button>
           </div>
         </CardContent>
       </Card>

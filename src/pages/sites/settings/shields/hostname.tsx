@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Separator } from "@components/ui/separator"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@components/ui/dialog";
+import { Input } from "@components/ui/input";
+import { Label } from "@components/ui/label";
+import { Textarea } from "@components/ui/textarea";
 import axios, { type BaseResponse } from "@utils/axios";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 // Define interface for Hostname shield rule
 interface ShieldHostnameRule {
@@ -81,6 +82,7 @@ export default function SettingShieldsHostname() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const { t } = useTranslation();
   const { domain: domainParam } = useParams<Params>();
   const domain = domainParam!;
 
@@ -110,7 +112,7 @@ export default function SettingShieldsHostname() {
   };
   // Handle hostname deletion
   const handleDeleteHostname = async (id: number) => {
-    if (!domain || !window.confirm('Are you sure you want to unblock this hostname?')) return;
+    if (!domain || !window.confirm(t('settings.shields.hostname.confirmUnblock'))) return;
     setLoading(true);
     setDeletingId(id);
     try {
@@ -118,18 +120,18 @@ export default function SettingShieldsHostname() {
       // Refresh hostname list
       const updatedHostnames = await fetchHostnames(domain);
       setHostnameList(updatedHostnames);
-      toast.success('Hostname removed from allow list successfully');
+      toast.success(t('settings.shields.hostname.removeSuccess'));
     } catch (error) {
       console.error('Error deleting hostname:', error);
       if (error instanceof AxiosError) {
         const status = error.response?.status;
         const errorData = error.response?.data;
-        toast.error(`Failed to unblock hostname (${status || 'Unknown'})`, {
-          description: errorData?.message || errorData?.detail || 'Unknown error'
+        toast.error(`${t('settings.shields.hostname.removeFailed')} (${status || 'Unknown'})`, {
+          description: errorData?.message || errorData?.detail || t('common.unknownError')
         });
       } else {
-        toast.error('Failed to unblock hostname', {
-          description: 'Unknown error'
+        toast.error(t('settings.shields.hostname.removeFailed'), {
+          description: t('common.unknownError')
         });
       }
     } finally {
@@ -148,8 +150,8 @@ export default function SettingShieldsHostname() {
         setHostnameList(hostnames);
       } catch (error) {
         console.error('Error loading hostname list:', error);
-        toast.error('加载主机名列表失败', {
-          description: error instanceof AxiosError ? error.response?.data.error : '未知错误'
+        toast.error(t('settings.shields.hostname.loadFailed'), {
+          description: error instanceof AxiosError ? error.response?.data.error : t('common.unknownError')
         });
       } finally {
         setLoading(false);
@@ -164,22 +166,22 @@ export default function SettingShieldsHostname() {
     const pattern = convertWildcardToRegex(inputValue);
 
     if (!inputValue || !domain) {
-      toast.error('Please enter a hostname');
+      toast.error(t('settings.shields.hostname.enterHostname'));
       return;
     }
     // Validate regex format
     try {
       new RegExp(pattern);
     } catch {
-      toast.error('Invalid hostname format');
+      toast.error(t('settings.shields.hostname.invalidFormat'));
       return;
     }
     setLoading(true);
     try {
       // Validate hostname format
       if (!validateHostname(inputValue)) {
-        toast.error('Invalid hostname format', {
-          description: 'Wildcard (*) is only allowed at the beginning and can only appear once. Example: *.example.com or example.com'
+        toast.error(t('settings.shields.hostname.invalidFormat'), {
+          description: t('settings.shields.hostname.invalidFormatDetail')
         });
         return;
       }
@@ -190,11 +192,11 @@ export default function SettingShieldsHostname() {
       setNewHostnameInput('');
       setNewHostnameDescription('');
       setIsModalOpen(false);
-      toast.success('Hostname added to allow list successfully');
+      toast.success(t('settings.shields.hostname.addSuccess'));
     } catch (error) {
       console.error('Error adding hostname:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to add hostname';
-      toast.error('添加主机名失败', {
+      toast.error(t('settings.shields.hostname.addFailed'), {
         description: errorMessage
       });
     } finally {
@@ -204,7 +206,7 @@ export default function SettingShieldsHostname() {
 
   // Validate domain exists
   if (!domainParam) {
-    return <div>Loading...</div>;
+    return <div>{t('common.loading')}</div>;
   }
 
   return (
@@ -212,18 +214,18 @@ export default function SettingShieldsHostname() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
-            <CardTitle>Hostname Allow List</CardTitle>
-            <CardDescription>Allow incoming traffic only from specific hostnames.</CardDescription>
+            <CardTitle>{t('settings.shields.hostname.title')}</CardTitle>
+            <CardDescription>{t('settings.shields.hostname.description')}</CardDescription>
           </div>
-          <Button onClick={() => setIsModalOpen(true)}>Add Allowed Hostname</Button>
+          <Button onClick={() => setIsModalOpen(true)}>{t('settings.shields.hostname.addAllowedHostname')}</Button>
         </CardHeader>
         <CardContent>
           <Separator className="my-6" />
 
           {loading ? (
-            <div className="text-center py-8">Loading hostnames...</div>
+            <div className="text-center py-8">{t('settings.shields.hostname.loading')}</div>
           ) : hostnameList.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">No hostnames allowed yet</div>
+            <div className="text-center py-8 text-gray-500">{t('settings.shields.hostname.noHostnames')}</div>
           ) : (
             <div className="space-y-4">
               {hostnameList.map((hostname) => (
@@ -233,14 +235,14 @@ export default function SettingShieldsHostname() {
                     {hostname.description && (
                       <p className="text-sm text-gray-500 mt-1">{hostname.description}</p>
                     )}
-                    <p className="text-xs text-gray-400">Added by {hostname.added_by} on {new Date(hostname.created_at).toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">{t('settings.shields.hostname.addedBy', { addedBy: hostname.added_by, date: new Date(hostname.created_at).toLocaleString() })}</p>
                   </div>
                   <button
                     onClick={() => handleDeleteHostname(hostname.id)}
                     className="text-red-500 hover:text-red-700"
                     disabled={loading}
                   >
-                    {loading && hostname.id === deletingId ? 'Deleting...' : 'Delete'}
+                    {loading && hostname.id === deletingId ? t('settings.shields.hostname.deleting') : t('settings.shields.hostname.delete')}
                   </button>
                 </div>
               ))}
@@ -253,27 +255,27 @@ export default function SettingShieldsHostname() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Add Allowed Hostname</DialogTitle>
+            <DialogTitle>{t('settings.shields.hostname.addTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="hostname-input">Hostname <span className="text-red-500">*</span></Label>
+              <Label htmlFor="hostname-input">{t('settings.shields.hostname.hostname')} <span className="text-red-500">*</span></Label>
               <Input
                 id="hostname-input"
                 value={newHostnameInput}
                 onChange={(e) => setNewHostnameInput(e.target.value)}
-                placeholder="example.com or *.example.com"
+                placeholder={t('settings.shields.hostname.hostnamePlaceholder')}
                 disabled={loading}
               />
-              <p className="text-xs text-gray-500">You can use a single wildcard (*) ONLY at the beginning to match multiple subdomains. For example: *.example.com or example.com</p>
+              <p className="text-xs text-gray-500">{t('settings.shields.hostname.hostnameHint')}</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description (optional)</Label>
+              <Label htmlFor="description">{t('settings.shields.hostname.descriptionLabel')}</Label>
               <Textarea
                 id="description"
                 value={newHostnameDescription}
                 onChange={(e) => setNewHostnameDescription(e.target.value)}
-                placeholder="Why is this hostname allowed?"
+                placeholder={t('settings.shields.hostname.descriptionPlaceholder')}
                 className="resize-none"
                 rows={3}
                 disabled={loading}
@@ -286,10 +288,10 @@ export default function SettingShieldsHostname() {
                 onClick={() => setIsModalOpen(false)}
                 disabled={loading}
               >
-                Cancel
+                {t('settings.shields.hostname.cancel')}
               </Button>
               <Button onClick={handleAddHostname} disabled={loading || !newHostnameInput.trim()}>
-                {loading ? 'Adding...' : 'Add Hostname'}
+                {loading ? t('settings.shields.hostname.adding') : t('settings.shields.hostname.addHostname')}
               </Button>
             </DialogFooter>
           </div>

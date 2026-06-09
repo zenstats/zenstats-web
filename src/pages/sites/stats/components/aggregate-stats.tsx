@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { BaseResponse } from "@utils/axios";
 import type {
   StatsRequest,
@@ -7,6 +7,7 @@ import type {
 } from "@/pages/sites/types/interfaces";
 import { Skeleton } from "@components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface AggregateStatsProps {
   query: StatsRequest;
@@ -76,14 +77,6 @@ function StatCard({ label, value, change, isPercent, onClick, active }: StatCard
 }
 
 // Metric display config
-const METRIC_CONFIG: Record<string, { label: string; isPercent?: boolean }> = {
-  visitors: { label: "唯一身份浏览者" },
-  pageviews: { label: "总浏览量" },
-  bounce_rate: { label: "跳出率", isPercent: true },
-  visit_duration: { label: "平均访问时长" },
-  views_per_visit: { label: "每次访问页面数" },
-  events: { label: "事件数" },
-};
 
 function formatMetricValue(key: string, value: number): string {
   if (key === "visit_duration") {
@@ -106,8 +99,18 @@ export default function AggregateStats({
   setQuery,
   api,
 }: AggregateStatsProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<AggregateResponse | null>(null);
+
+  const METRIC_CONFIG: Record<string, { label: string; isPercent?: boolean }> = useMemo(() => ({
+    visitors: { label: t('stats.metrics.visitors') },
+    pageviews: { label: t('stats.metrics.pageviews') },
+    bounce_rate: { label: t('stats.metrics.bounceRate'), isPercent: true },
+    visit_duration: { label: t('stats.metrics.visitDuration') },
+    views_per_visit: { label: t('stats.metrics.viewsPerVisit') },
+    events: { label: t('stats.metrics.events') },
+  }), [t]);
 
   const fetchData = useCallback(async () => {
     try {

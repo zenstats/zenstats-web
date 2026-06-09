@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface BreakdownDetailDialogProps {
   open: boolean;
@@ -32,6 +33,7 @@ export default function BreakdownDetailDialog({
   exportApi,
   onFilterClick,
 }: BreakdownDetailDialogProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<BreakdownResponse | null>(null);
   const [page, setPage] = useState(1);
@@ -114,7 +116,7 @@ export default function BreakdownDetailDialog({
                 className="gap-1.5"
               >
                 <Download className="h-3.5 w-3.5" />
-                导出 CSV
+                {t('stats.breakdown.exportCsv')}
               </Button>
               <Button
                 variant="ghost"
@@ -140,7 +142,7 @@ export default function BreakdownDetailDialog({
               ))}
             </div>
           ) : !data || data.data.length === 0 ? (
-            <div className="p-12 text-center text-sm text-gray-400">暂无数据</div>
+            <div className="p-12 text-center text-sm text-gray-400">{t('stats.breakdown.noData')}</div>
           ) : (
             <table className="w-full text-sm">
               <thead>
@@ -212,8 +214,8 @@ export default function BreakdownDetailDialog({
         {/* Pagination */}
         <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 dark:border-gray-800 shrink-0">
           <span className="text-xs text-gray-400">
-            {data ? `第 ${page} 页 · 本页 ${data.data.length} 条` : ""}
-            {totalCount !== null ? ` · 共 ${totalCount} 条` : ""}
+            {data ? t('stats.breakdown.pageInfo', { page, count: data.data.length }) : ""}
+            {totalCount !== null ? t('stats.breakdown.totalItems', { count: totalCount }) : ""}
           </span>
           <div className="flex items-center gap-2">
             <Button
@@ -226,7 +228,7 @@ export default function BreakdownDetailDialog({
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-xs text-gray-500 min-w-[3rem] text-center">
-              第 {page} 页
+              {t('stats.breakdown.pageOf', { page })}
             </span>
             <Button
               variant="outline"

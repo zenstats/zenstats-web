@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Settings, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 export interface DimensionConfig {
   key: string;
@@ -21,55 +22,61 @@ export interface DimensionConfig {
   order: number;
 }
 
-const AVAILABLE_DIMENSIONS: Omit<DimensionConfig, "enabled" | "order">[] = [
-  // Traffic sources
-  { key: "source", label: "来源", property: "visit:source", category: "traffic" },
+const DEFAULT_ENABLED = ["source", "page", "entry_page", "country", "browser", "os", "device"];
 
-  // Pages
-  { key: "page", label: "页面路径", property: "event:page", category: "page" },
-  { key: "entry_page", label: "入口页面", property: "visit:entry_page", category: "page" },
-  { key: "exit_page", label: "退出页面", property: "visit:exit_page", category: "page" },
-
-  // Audience (geography)
-  { key: "country", label: "国家/地区", property: "visit:country", category: "audience" },
-  { key: "region", label: "地区", property: "visit:region", category: "audience" },
-  { key: "city", label: "城市", property: "visit:city", category: "audience" },
-
-  // Technology
-  { key: "browser", label: "浏览器", property: "visit:browser", category: "technology" },
-  { key: "os", label: "操作系统", property: "visit:os", category: "technology" },
-  { key: "device", label: "设备类型", property: "visit:device", category: "technology" },
-  { key: "screen_size", label: "屏幕尺寸", property: "visit:screen_size", category: "technology" },
-
-  // Events
-  { key: "event_name", label: "事件名称", property: "event:name", category: "page" },
-];
-
-const CATEGORY_LABELS: Record<string, string> = {
-  traffic: "流量来源",
-  page: "页面",
-  audience: "受众",
-  technology: "技术",
+const DIMENSION_TRANSLATION_KEYS: Record<string, string> = {
+  source: "stats.dimensionSettings.dimensions.source",
+  page: "stats.dimensionSettings.dimensions.page",
+  entry_page: "stats.dimensionSettings.dimensions.entryPage",
+  exit_page: "stats.dimensionSettings.dimensions.exitPage",
+  country: "stats.dimensionSettings.dimensions.country",
+  region: "stats.dimensionSettings.dimensions.region",
+  city: "stats.dimensionSettings.dimensions.city",
+  browser: "stats.dimensionSettings.dimensions.browser",
+  os: "stats.dimensionSettings.dimensions.os",
+  device: "stats.dimensionSettings.dimensions.device",
+  event_name: "stats.dimensionSettings.dimensions.eventName",
 };
 
-const DEFAULT_ENABLED = ["source", "page", "entry_page", "country", "browser", "os", "device"];
+const DIMENSION_DATA: Omit<DimensionConfig, "enabled" | "order" | "label">[] = [
+  { key: "source", property: "visit:source", category: "traffic" },
+  { key: "page", property: "event:page", category: "page" },
+  { key: "entry_page", property: "visit:entry_page", category: "page" },
+  { key: "exit_page", property: "visit:exit_page", category: "page" },
+  { key: "country", property: "visit:country", category: "audience" },
+  { key: "region", property: "visit:region", category: "audience" },
+  { key: "city", property: "visit:city", category: "audience" },
+  { key: "browser", property: "visit:browser", category: "technology" },
+  { key: "os", property: "visit:os", category: "technology" },
+  { key: "device", property: "visit:device", category: "technology" },
+  { key: "event_name", property: "event:name", category: "page" },
+];
 
 interface DimensionSettingsProps {
   dimensions: DimensionConfig[];
   onChange: (dimensions: DimensionConfig[]) => void;
 }
 
-export function getDefaultDimensions(): DimensionConfig[] {
-  return AVAILABLE_DIMENSIONS.map((dim, index) => ({
+export function getDefaultDimensions(t?: (key: string) => string): DimensionConfig[] {
+  return DIMENSION_DATA.map((dim, index) => ({
     ...dim,
+    label: t ? t(DIMENSION_TRANSLATION_KEYS[dim.key]) : dim.key,
     enabled: DEFAULT_ENABLED.includes(dim.key),
     order: index,
   }));
 }
 
 export default function DimensionSettings({ dimensions, onChange }: DimensionSettingsProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [localDims, setLocalDims] = useState<DimensionConfig[]>(dimensions);
+
+  const CATEGORY_LABELS: Record<string, string> = useMemo(() => ({
+    traffic: t('stats.dimensionSettings.categories.traffic'),
+    page: t('stats.dimensionSettings.categories.page'),
+    audience: t('stats.dimensionSettings.categories.audience'),
+    technology: t('stats.dimensionSettings.categories.technology'),
+  }), [t]);
 
   const handleToggle = (key: string) => {
     setLocalDims((prev) =>
@@ -83,7 +90,7 @@ export default function DimensionSettings({ dimensions, onChange }: DimensionSet
   };
 
   const handleReset = () => {
-    setLocalDims(getDefaultDimensions());
+    setLocalDims(getDefaultDimensions(t));
   };
 
   // Group by category
@@ -103,7 +110,7 @@ export default function DimensionSettings({ dimensions, onChange }: DimensionSet
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <Settings className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">维度设置</span>
+          <span className="hidden sm:inline">{t('stats.dimensionSettings.title')}</span>
           <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 rounded-full">
             {enabledCount}
           </span>
@@ -111,9 +118,9 @@ export default function DimensionSettings({ dimensions, onChange }: DimensionSet
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>自定义统计维度</DialogTitle>
+          <DialogTitle>{t('stats.dimensionSettings.dialogTitle')}</DialogTitle>
           <DialogDescription>
-            选择要在统计面板中显示的分析维度。启用的维度将出现在分解标签页中。
+            {t('stats.dimensionSettings.dialogDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -172,14 +179,14 @@ export default function DimensionSettings({ dimensions, onChange }: DimensionSet
 
         <DialogFooter className="flex-row items-center justify-between border-t pt-4">
           <Button variant="ghost" size="sm" onClick={handleReset}>
-            恢复默认
+            {t('stats.dimensionSettings.resetDefaults')}
           </Button>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
-              取消
+              {t('stats.dimensionSettings.cancel')}
             </Button>
             <Button size="sm" onClick={handleSave}>
-              保存设置
+              {t('stats.dimensionSettings.save')}
             </Button>
           </div>
         </DialogFooter>

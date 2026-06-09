@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Target, Globe, MousePointerClick } from "lucide-react";
 import axios, { type BaseResponse } from "@utils/axios";
 import type { Goal, CreateGoalRequest } from "../types/interfaces";
@@ -34,6 +35,7 @@ export default function GoalsSettings() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
   const [creating, setCreating] = useState(false);
+  const { t } = useTranslation();
 
   // Form state
   const [goalType, setGoalType] = useState<"event" | "page">("event");
@@ -49,7 +51,7 @@ export default function GoalsSettings() {
       setGoals(res.data.data || []);
     } catch (error) {
       console.error("Failed to fetch goals:", error);
-      toast.error("Failed to load goals");
+      toast.error(t('apiKeys.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -63,17 +65,17 @@ export default function GoalsSettings() {
     if (!domain) return;
 
     if (!displayName.trim()) {
-      toast.error("Display name is required");
+      toast.error(t('settings.goals.displayNameRequired'));
       return;
     }
 
     if (goalType === "event" && !eventName.trim()) {
-      toast.error("Event name is required");
+      toast.error(t('settings.goals.eventNameRequired'));
       return;
     }
 
     if (goalType === "page" && !pagePath.trim()) {
-      toast.error("Page path is required");
+      toast.error(t('settings.goals.pagePathRequired'));
       return;
     }
 
@@ -90,12 +92,12 @@ export default function GoalsSettings() {
       }
 
       await axios.post<BaseResponse<Goal>>(`/sites/${domain}/goals`, body);
-      toast.success("Goal created successfully");
+      toast.success(t('settings.goals.createSuccess'));
       setDialogOpen(false);
       resetForm();
       fetchGoals();
     } catch (error: any) {
-      const message = error?.response?.data?.message || "Failed to create goal";
+      const message = error?.response?.data?.message || t('settings.goals.createFailed');
       toast.error(message);
     } finally {
       setCreating(false);
@@ -107,12 +109,12 @@ export default function GoalsSettings() {
 
     try {
       await axios.delete(`/sites/${domain}/goals/${goalToDelete.id}`);
-      toast.success("Goal deleted successfully");
+      toast.success(t('settings.goals.deleteSuccess'));
       setDeleteDialogOpen(false);
       setGoalToDelete(null);
       fetchGoals();
     } catch (error) {
-      toast.error("Failed to delete goal");
+      toast.error(t('settings.goals.deleteFailed'));
     }
   };
 
@@ -140,15 +142,15 @@ export default function GoalsSettings() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Goals
+              {t('settings.goals.title')}
             </CardTitle>
             <CardDescription>
-              Set up conversion goals to track user actions like signups, purchases, or page visits.
+              {t('settings.goals.description')}
             </CardDescription>
           </div>
           <Button onClick={openCreateDialog} size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Add Goal
+            {t('settings.goals.addGoal')}
           </Button>
         </div>
       </CardHeader>
@@ -162,16 +164,16 @@ export default function GoalsSettings() {
         ) : goals.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No goals configured yet.</p>
-            <p className="text-sm">Create your first goal to start tracking conversions.</p>
+            <p>{t('settings.goals.noGoals')}</p>
+            <p className="text-sm">{t('settings.goals.createFirst')}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Display Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Value</TableHead>
+                <TableHead>{t('settings.goals.displayName')}</TableHead>
+                <TableHead>{t('settings.goals.type')}</TableHead>
+                <TableHead>{t('settings.goals.value')}</TableHead>
                 <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -183,12 +185,12 @@ export default function GoalsSettings() {
                     {goal.event_name ? (
                       <span className="inline-flex items-center gap-1 text-sm">
                         <MousePointerClick className="h-3.5 w-3.5" />
-                        Event
+                        {t('settings.goals.event')}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-sm">
                         <Globe className="h-3.5 w-3.5" />
-                        Page
+                        {t('settings.goals.page')}
                       </span>
                     )}
                   </TableCell>
@@ -215,24 +217,24 @@ export default function GoalsSettings() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create Goal</DialogTitle>
+              <DialogTitle>{t('settings.goals.createGoal')}</DialogTitle>
               <DialogDescription>
-                Add a new conversion goal to track user actions.
+                {t('settings.goals.dialogDescription')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="display-name">Display Name</Label>
+                <Label htmlFor="display-name">{t('settings.goals.displayName')}</Label>
                 <Input
                   id="display-name"
-                  placeholder="e.g., Signup Complete"
+                  placeholder={t('settings.goals.displayNamePlaceholder')}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Goal Type</Label>
+                <Label>{t('settings.goals.goalType')}</Label>
                 <RadioGroup
                   value={goalType}
                   onValueChange={(v) => setGoalType(v as "event" | "page")}
@@ -240,13 +242,13 @@ export default function GoalsSettings() {
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="event" id="type-event" />
                     <Label htmlFor="type-event" className="cursor-pointer">
-                      Custom Event
+                      {t('settings.goals.customEvent')}
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="page" id="type-page" />
                     <Label htmlFor="type-page" className="cursor-pointer">
-                      Page View
+                      {t('settings.goals.pageView')}
                     </Label>
                   </div>
                 </RadioGroup>
@@ -254,38 +256,38 @@ export default function GoalsSettings() {
 
               {goalType === "event" ? (
                 <div className="space-y-2">
-                  <Label htmlFor="event-name">Event Name</Label>
+                  <Label htmlFor="event-name">{t('settings.goals.eventName')}</Label>
                   <Input
                     id="event-name"
-                    placeholder="e.g., signup, purchase"
+                    placeholder={t('settings.goals.eventNamePlaceholder')}
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground">
-                    The name of the custom event to track.
+                    {t('settings.goals.eventNameHint')}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="page-path">Page Path</Label>
+                  <Label htmlFor="page-path">{t('settings.goals.pagePath')}</Label>
                   <Input
                     id="page-path"
-                    placeholder="e.g., /thank-you"
+                    placeholder={t('settings.goals.pagePathPlaceholder')}
                     value={pagePath}
                     onChange={(e) => setPagePath(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground">
-                    The page path to track (e.g., /thank-you, /pricing).
+                    {t('settings.goals.pagePathHint')}
                   </p>
                 </div>
               )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancel
+                {t('settings.goals.cancel')}
               </Button>
               <Button onClick={handleCreate} disabled={creating}>
-                {creating ? "Creating..." : "Create Goal"}
+                {creating ? t('settings.goals.creating') : t('settings.goals.createGoal')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -295,17 +297,17 @@ export default function GoalsSettings() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Delete Goal</DialogTitle>
+              <DialogTitle>{t('settings.goals.deleteTitle')}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{goalToDelete?.display_name}"? This action cannot be undone.
+                {t('settings.goals.deleteConfirm', { name: goalToDelete?.display_name })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                Cancel
+                {t('settings.goals.cancel')}
               </Button>
               <Button variant="destructive" onClick={handleDelete}>
-                Delete
+                {t('settings.goals.delete')}
               </Button>
             </DialogFooter>
           </DialogContent>

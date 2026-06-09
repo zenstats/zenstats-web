@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ interface SetupResponse {
 }
 
 export default function Setup() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<SetupFormData>({
@@ -42,23 +44,23 @@ export default function Setup() {
     let isValid = true;
 
     if (!formData.name.trim()) {
-      newErrors.name = '管理员名称不能为空';
+      newErrors.name = t('setup.validation.nameRequired');
       isValid = false;
     }
 
     if (!formData.email) {
-      newErrors.email = '邮箱不能为空';
+      newErrors.email = t('setup.validation.emailRequired');
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = '邮箱格式不正确';
+      newErrors.email = t('setup.validation.emailInvalid');
       isValid = false;
     }
 
     if (!formData.password) {
-      newErrors.password = '密码不能为空';
+      newErrors.password = t('setup.validation.passwordRequired');
       isValid = false;
     } else if (formData.password.length < 6) {
-      newErrors.password = '密码至少6位';
+      newErrors.password = t('setup.validation.passwordMinLength');
       isValid = false;
     }
 
@@ -107,15 +109,15 @@ export default function Setup() {
         localStorage.setItem("email", response.data.data.user.email)
 
         navigate('/sites', {
-          state: { success: '管理员账户创建成功' }
+          state: { success: t('setup.successMessage') }
         });
 
       } else {
-        setServerError(response.data.message || '初始化失败，请重试');
+        setServerError(response.data.message || t('setup.initFailed'));
       }
     } catch (error) {
       console.error('Setup error:', error);
-      setServerError('服务器错误，请稍后重试');
+      setServerError(t('setup.serverError'));
     } finally {
       setIsLoading(false);
     }
@@ -125,9 +127,9 @@ export default function Setup() {
     <div className="flex h-full items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">系统初始化</CardTitle>
+          <CardTitle className="text-2xl">{t('setup.title')}</CardTitle>
           <CardDescription>
-            创建管理员账户以开始使用系统
+            {t('setup.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -138,7 +140,7 @@ export default function Setup() {
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">管理员名称</Label>
+              <Label htmlFor="name">{t('setup.adminName')}</Label>
               <Input
                 id="name"
                 name="name"
@@ -151,7 +153,7 @@ export default function Setup() {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">邮箱地址</Label>
+              <Label htmlFor="email">{t('setup.email')}</Label>
               <Input
                 id="email"
                 name="email"
@@ -166,7 +168,7 @@ export default function Setup() {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">密码</Label>
+              <Label htmlFor="password">{t('setup.password')}</Label>
               <Input
                 id="password"
                 name="password"
@@ -189,7 +191,7 @@ export default function Setup() {
             onClick={handleSubmit}
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLoading ? '初始化中...' : '创建管理员账户'}
+            {isLoading ? t('setup.submitting') : t('setup.submit')}
           </Button>
         </CardFooter>
       </Card>

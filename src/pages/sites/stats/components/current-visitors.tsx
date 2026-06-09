@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { BaseResponse } from "@utils/axios";
 import type { CurrentVisitors as CurrentVisitorsType, StatsRequest } from "@/pages/sites/types/interfaces";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface CurrentVisitorsProps {
   domain: string;
@@ -10,6 +11,7 @@ interface CurrentVisitorsProps {
 }
 
 export default function CurrentVisitors({ query, api }: CurrentVisitorsProps) {
+  const { t } = useTranslation();
   const [data, setData] = useState<CurrentVisitorsType | null>(null);
   const [pulse, setPulse] = useState(false);
 
@@ -51,7 +53,7 @@ export default function CurrentVisitors({ query, api }: CurrentVisitorsProps) {
           {data.total}
         </span>
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          当前在线访客
+          {t('stats.currentVisitors')}
         </span>
       </div>
     </div>

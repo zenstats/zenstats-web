@@ -10,6 +10,7 @@ import { Textarea } from "@components/ui/textarea";
 import axios, { type BaseResponse } from "@utils/axios";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 // Define interface for IP shield rule
 interface ShieldIPRule {
@@ -82,11 +83,12 @@ export default function SettingShieldsIpAddress() {
   const [newIpDescription, setNewIpDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const { t } = useTranslation();
   const { domain: domainParam } = useParams<Params>();
   const domain = domainParam!;
   // Handle IP deletion
   const handleDeleteIP = async (id: number) => {
-    if (!domain || !window.confirm('Are you sure you want to unblock this IP address?')) return;
+    if (!domain || !window.confirm(t('settings.shields.ip.confirmUnblock'))) return;
     setLoading(true);
     setDeletingId(id);
     try {
@@ -94,18 +96,18 @@ export default function SettingShieldsIpAddress() {
       // Refresh IP list
       const updatedIPs = await fetchShieldIPs(domain);
       setIpList(updatedIPs);
-      toast.success('IP address unblocked successfully');
+      toast.success(t('settings.shields.ip.unblockSuccess'));
     } catch (error) {
       console.error('Error deleting IP address:', error);
       if (error instanceof AxiosError) {
         const status = error.response?.status;
         const errorData = error.response?.data;
-        toast.error(`Failed to unblock IP address (${status || 'Unknown'})`, {
-          description: errorData?.message || errorData?.error || 'Unknown error'
+        toast.error(`${t('settings.shields.ip.unblockFailed')} (${status || 'Unknown'})`, {
+          description: errorData?.message || errorData?.error || t('common.unknownError')
         });
       } else {
-        toast.error('Failed to unblock IP address', {
-          description: 'Unknown error'
+        toast.error(t('settings.shields.ip.unblockFailed'), {
+          description: t('common.unknownError')
         });
       }
     } finally {
@@ -124,8 +126,8 @@ export default function SettingShieldsIpAddress() {
         setIpList(ips);
       } catch (error) {
         console.error('Error loading IP list:', error);
-        toast.error('加载IP地址列表失败', {
-          description: error instanceof AxiosError ? error.response?.data.error : '未知错误'
+        toast.error(t('settings.shields.ip.loadFailed'), {
+          description: error instanceof AxiosError ? error.response?.data.error : t('common.unknownError')
         });
       } finally {
         setLoading(false);
@@ -148,11 +150,11 @@ export default function SettingShieldsIpAddress() {
       setNewIp('');
       setNewIpDescription('');
       setIsModalOpen(false);
-      toast.success('IP address blocked successfully');
+      toast.success(t('settings.shields.ip.addSuccess'));
     } catch (error) {
       console.error('Error adding IP address:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to add IP address';
-      toast.error('添加IP地址失败', {
+      toast.error(t('settings.shields.ip.addFailed'), {
         description: errorMessage
       });
     } finally {
@@ -162,7 +164,7 @@ export default function SettingShieldsIpAddress() {
 
   // Validate domain exists
   if (!domainParam) {
-    return <div>Loading...</div>;
+    return <div>{t('common.loading')}</div>;
   }
 
   return (
@@ -170,18 +172,18 @@ export default function SettingShieldsIpAddress() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
-            <CardTitle>IP Blacklist</CardTitle>
-            <CardDescription>Block incoming traffic from specific IP addresses (blacklist).</CardDescription>
+            <CardTitle>{t('settings.shields.ip.title')}</CardTitle>
+            <CardDescription>{t('settings.shields.ip.description')}</CardDescription>
           </div>
-          <Button onClick={() => setIsModalOpen(true)}>Add Blocked IP</Button>
+          <Button onClick={() => setIsModalOpen(true)}>{t('settings.shields.ip.addBlockedIp')}</Button>
         </CardHeader>
         <CardContent>
           <Separator className="my-6" />
 
           {loading ? (
-            <div className="text-center py-8">Loading IP addresses...</div>
+            <div className="text-center py-8">{t('settings.shields.ip.loading')}</div>
           ) : ipList.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">No IP addresses in blacklist yet</div>
+            <div className="text-center py-8 text-gray-500">{t('settings.shields.ip.noIps')}</div>
           ) : (
             <div className="space-y-4">
               {ipList.map((ip) => (
@@ -191,14 +193,14 @@ export default function SettingShieldsIpAddress() {
                     {ip.description && (
                       <p className="text-sm text-gray-500 mt-1">{ip.description}</p>
                     )}
-                    <p className="text-xs text-gray-400">Added by {ip.added_by} on {new Date(ip.created_at).toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">{t('settings.shields.ip.addedBy', { addedBy: ip.added_by, date: new Date(ip.created_at).toLocaleString() })}</p>
                   </div>
                   <button
                     onClick={() => handleDeleteIP(ip.id)}
                     className="text-red-500 hover:text-red-700"
                     disabled={loading}
                   >
-                    {loading && ip.id === deletingId ? 'Deleting...' : 'Delete'}
+                    {loading && ip.id === deletingId ? t('settings.shields.ip.deleting') : t('settings.shields.ip.delete')}
                   </button>
                 </div>
               ))}
@@ -211,26 +213,26 @@ export default function SettingShieldsIpAddress() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Add IP to Blacklist</DialogTitle>
+            <DialogTitle>{t('settings.shields.ip.addTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="ip-address">IP Address</Label>
+              <Label htmlFor="ip-address">{t('settings.shields.ip.ipAddress')}</Label>
               <Input
                 id="ip-address"
                 value={newIp}
                 onChange={(e) => setNewIp(e.target.value)}
-                placeholder="Enter IP address"
+                placeholder={t('settings.shields.ip.ipPlaceholder')}
                 disabled={loading}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ip-description">Description (optional)</Label>
+              <Label htmlFor="ip-description">{t('settings.shields.ip.descriptionLabel')}</Label>
               <Textarea
                 id="ip-description"
                 value={newIpDescription}
                 onChange={(e) => setNewIpDescription(e.target.value)}
-                placeholder="Why is this IP blocked?"
+                placeholder={t('settings.shields.ip.descriptionPlaceholder')}
                 className="resize-none"
                 rows={3}
                 disabled={loading}
@@ -244,10 +246,10 @@ export default function SettingShieldsIpAddress() {
               onClick={() => setIsModalOpen(false)}
               disabled={loading}
             >
-              Cancel
+              {t('settings.shields.ip.cancel')}
             </Button>
             <Button onClick={handleAddIP} disabled={loading || !newIp.trim()}>
-              {loading ? 'Adding...' : 'Add IP'}
+              {loading ? t('settings.shields.ip.adding') : t('settings.shields.ip.addIp')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Filter {
   property: string;
@@ -13,12 +14,13 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({ filters, onRemove, onClearAll }: FilterBarProps) {
+  const { t } = useTranslation();
   if (filters.length === 0) return null;
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-        筛选条件:
+        {t('stats.filterBar.filters')}
       </span>
       {filters.map((filter, index) => (
         <div
@@ -41,7 +43,7 @@ export default function FilterBar({ filters, onRemove, onClearAll }: FilterBarPr
           onClick={onClearAll}
           className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 underline"
         >
-          清除全部
+          {t('stats.filterBar.clearAll')}
         </button>
       )}
     </div>
