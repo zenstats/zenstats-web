@@ -192,6 +192,8 @@ api.interceptors.response.use(
             return Promise.reject(i18n.t('common.authFailed'));
         } else if (code === 401) {
             await handleAuthorized();
+        } else if (code !== 200) {
+            return Promise.reject(new Error(data.error || data.message || i18n.t('common.serverError')));
         }
 
         // 始终返回 AxiosResponse

@@ -25,9 +25,9 @@ import axios, { type BaseResponse } from "@utils/axios";
 import type { Site } from "../types/interfaces";
 import { useParams } from "react-router-dom";
 import { Input } from "@components/ui/input";
+import { Textarea } from "@components/ui/textarea";
 import timeZones from "@/constants/time-zones.json";
 import { Loader2 } from "lucide-react";
-import { AxiosError } from "axios";
 
 type TimeZoneFormValues = {
   timeZone: string;
@@ -38,9 +38,14 @@ type RateLimitFormValues = {
   rateLimitUnit: string;
 };
 
+type AllowedOriginsFormValues = {
+  allowed_origins: string;
+};
+
 export function SettingsGeneralForm() {
   const [isTimeZoneLoading, setIsTimeZoneLoading] = useState(false);
   const [isRateLimitLoading, setIsRateLimitLoading] = useState(false);
+  const [isAllowedOriginsLoading, setIsAllowedOriginsLoading] = useState(false);
   const { t } = useTranslation();
 
   const timeZoneFormSchema = z.object({
@@ -62,6 +67,10 @@ export function SettingsGeneralForm() {
     }),
   });
 
+  const allowedOriginsFormSchema = z.object({
+    allowed_origins: z.string(),
+  });
+
   const { domain } = useParams();
   const [site, setSite] = useState<Site | null>(null);
   const timeZoneForm = useForm<TimeZoneFormValues>({
@@ -81,6 +90,14 @@ export function SettingsGeneralForm() {
     },
   });
 
+  const allowedOriginsForm = useForm<AllowedOriginsFormValues>({
+    resolver: zodResolver(allowedOriginsFormSchema),
+    mode: "onChange",
+    defaultValues: {
+      allowed_origins: "",
+    },
+  });
+
   // 当 site 变化时，更新时区表单
   useEffect(() => {
     if (site) {
@@ -91,18 +108,37 @@ export function SettingsGeneralForm() {
   // 当 site 变化时，更新速率限制表单
   useEffect(() => {
     if (site) {
-      rateLimitForm.setValue("limit_minute", site.limit_minute ?? 1000);
-
-      // 根据 rate_seconds 设置速率限制单位
-      if (site.rate_seconds === 3600) {
-        rateLimitForm.setValue("rateLimitUnit", "hour");
-      } else if (site.rate_seconds === 60) {
-        rateLimitForm.setValue("rateLimitUnit", "minute");
+      // 如果是不限制（rate_seconds 和 limit_minute 都为 0），显示为 unlimited
+      if (site.rate_seconds === 0 && site.limit_minute === 0) {
+        rateLimitForm.setValue("limit_minute", 0);
+        rateLimitForm.setValue("rateLimitUnit", "unlimited");
       } else {
-        rateLimitForm.setValue("rateLimitUnit", "second");
+        rateLimitForm.setValue("limit_minute", site.limit_minute ?? 1000);
+
+        // 根据 rate_seconds 设置速率限制单位
+        if (site.rate_seconds === 3600) {
+          rateLimitForm.setValue("rateLimitUnit", "hour");
+        } else if (site.rate_seconds === 60) {
+          rateLimitForm.setValue("rateLimitUnit", "minute");
+        } else {
+          rateLimitForm.setValue("rateLimitUnit", "second");
+        }
       }
     }
   }, [site, rateLimitForm]);
+
+  // 当 site 变化时，更新允许的来源表单
+  useEffect(() => {
+    if (site) {
+      // 后端逗号分隔 → 前端换行分隔
+      const displayValue = (site.allowed_origins || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .join('\n');
+      allowedOriginsForm.setValue("allowed_origins", displayValue);
+    }
+  }, [site, allowedOriginsForm]);
 
   function onSubmitTimeZone(data: TimeZoneFormValues) {
     // 提交时区修改
@@ -119,7 +155,7 @@ export function SettingsGeneralForm() {
         console.log(err);
         toast.error(t('settings.general.timezoneFailed'), {
           description:
-            err instanceof AxiosError ? err.response?.data.error : t('common.unknownError'),
+            err instanceof Error ? err.message : t('common.unknownError'),
         });
       });
   }
@@ -128,13 +164,20 @@ export function SettingsGeneralForm() {
     // 提交速率限制修改
     setIsRateLimitLoading(true);
 
-    // Convert rateLimitUnit to rate_seconds for API
-    let rate_seconds = 1; // default to second
-    if (data.rateLimitUnit === "minute") rate_seconds = 60;
-    if (data.rateLimitUnit === "hour") rate_seconds = 3600;
+    let rate_seconds = 1;
+    let limit_minute = data.limit_minute;
+
+    if (data.rateLimitUnit === "unlimited") {
+      rate_seconds = 0;
+      limit_minute = 0;
+    } else if (data.rateLimitUnit === "minute") {
+      rate_seconds = 60;
+    } else if (data.rateLimitUnit === "hour") {
+      rate_seconds = 3600;
+    }
 
     const submitData = {
-      limit_minute: data.limit_minute,
+      limit_minute,
       rate_seconds,
     };
 
@@ -149,7 +192,34 @@ export function SettingsGeneralForm() {
         console.log(err);
         toast.error(t('settings.general.rateLimitFailed'), {
           description:
-            err instanceof AxiosError ? err.response?.data.error : t('common.unknownError'),
+            err instanceof Error ? err.message : t('common.unknownError'),
+        });
+      });
+  }
+
+  function onSubmitAllowedOrigins(data: AllowedOriginsFormValues) {
+    // 提交允许的来源修改
+    setIsAllowedOriginsLoading(true);
+
+    // 前端换行分隔 → 后端逗号分隔
+    const allowedOrigins = data.allowed_origins
+      .split('\n')
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+      .join(', ');
+
+    axios
+      .put(`/sites/${domain}`, { allowed_origins: allowedOrigins })
+      .then(() => {
+        setIsAllowedOriginsLoading(false);
+        toast.success(t('settings.general.allowedOriginsSuccess'));
+      })
+      .catch((err) => {
+        setIsAllowedOriginsLoading(false);
+        console.log(err);
+        toast.error(t('settings.general.allowedOriginsFailed'), {
+          description:
+            err instanceof Error ? err.message : t('common.unknownError'),
         });
       });
   }
@@ -239,20 +309,22 @@ export function SettingsGeneralForm() {
                   <FormItem>
                     <FormLabel>{t('settings.general.rateLimit')}</FormLabel>
                     <div className="flex gap-2">
-                      <Input
-                        {...field}
-                        type="number"
-                        placeholder={t('settings.general.limitPlaceholder')}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/[^0-9]/g, "");
-                          field.onChange(value);
-                        }}
-                        className={
-                          rateLimitForm.formState.errors.limit_minute
-                            ? "border-red-500"
-                            : ""
-                        }
-                      />
+                      {rateLimitForm.watch("rateLimitUnit") !== "unlimited" && (
+                        <Input
+                          {...field}
+                          type="number"
+                          placeholder={t('settings.general.limitPlaceholder')}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, "");
+                            field.onChange(value);
+                          }}
+                          className={
+                            rateLimitForm.formState.errors.limit_minute
+                              ? "border-red-500"
+                              : ""
+                          }
+                        />
+                      )}
                       <select
                         value={rateLimitForm.watch("rateLimitUnit")}
                         onChange={(e) =>
@@ -263,6 +335,7 @@ export function SettingsGeneralForm() {
                         }
                         className="w-[150px] rounded-md border border-gray-300 px-3 py-2"
                       >
+                        <option value="unlimited">{t('settings.general.unlimited')}</option>
                         <option value="second">{t('settings.general.perSecond')}</option>
                         <option value="minute">{t('settings.general.perMinute')}</option>
                         <option value="hour">{t('settings.general.perHour')}</option>
@@ -286,6 +359,51 @@ export function SettingsGeneralForm() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 {isRateLimitLoading ? t('settings.general.submitting') : t('settings.general.updateRateLimit')}
+              </Button>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
+
+      {/* 允许的来源表单 */}
+      <Form {...allowedOriginsForm}>
+        <form
+          onSubmit={allowedOriginsForm.handleSubmit(onSubmitAllowedOrigins)}
+          className="space-y-8"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('settings.general.allowedOriginsTitle')}</CardTitle>
+              <CardDescription>{t('settings.general.allowedOriginsDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={allowedOriginsForm.control}
+                name="allowed_origins"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('settings.general.allowedOrigins')}</FormLabel>
+                    <Textarea
+                      {...field}
+                      placeholder={t('settings.general.allowedOriginsPlaceholder')}
+                      className="min-h-[100px]"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {t('settings.general.allowedOriginsHint')}
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                disabled={isAllowedOriginsLoading}
+                className="mt-6"
+              >
+                {isAllowedOriginsLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {isAllowedOriginsLoading ? t('settings.general.submitting') : t('settings.general.updateAllowedOrigins')}
               </Button>
             </CardContent>
           </Card>

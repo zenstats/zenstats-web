@@ -11,7 +11,6 @@ import { Loader2 } from "lucide-react"
 import { useState } from "react"
 import { useForm, Controller } from "react-hook-form"
 import axios from "@utils/axios";
-import { AxiosError } from "axios"
 
 type FormValues = {
   domain: string;
@@ -30,6 +29,7 @@ export default function NewSitePage() {
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
@@ -37,6 +37,8 @@ export default function NewSitePage() {
       rateLimitUnit: "second"
     }
   })
+
+  const rateLimitUnit = watch("rateLimitUnit")
 
 
   const onSubmit = async (data: FormValues) => {
@@ -48,6 +50,10 @@ export default function NewSitePage() {
       case "hour":
         data.rate_seconds = 3600
         break
+      case "unlimited":
+        data.rate_seconds = 0
+        data.limit_minute = 0
+        break
       default:
         data.rate_seconds = 1
     }
@@ -56,14 +62,14 @@ export default function NewSitePage() {
       axios.post("/sites", data).then(() => {
         setIsLoading(false)
         toast.success(t('sites.new.createSuccess'))
-        navigate(`/sites/${encodeURIComponent(data.domain)}/install`)
+        navigate(`/sites/${encodeURIComponent(data.domain)}/verify`)
       }).catch((err) => {
         toast.error(t('sites.new.createFailed'), {
-          description: err instanceof AxiosError ? err.response?.data.error : t('sites.new.unknownError'),
+          description: err instanceof Error ? err.message : t('sites.new.unknownError'),
         })
       })
 
-    } catch (_err) {
+    } catch {
       toast.error(t('sites.new.createFailed'), {
           description: t('sites.new.unknownError'),
         })
@@ -113,15 +119,17 @@ export default function NewSitePage() {
           <div className="space-y-2">
             <Label htmlFor="limit_minute">{t('sites.new.rateLimit')}</Label>
             <div className="flex gap-2">
-              <Input
-                {...register("limit_minute", {
-                  valueAsNumber: true,
-                  min: 0
-                })}
-                placeholder="Limit count"
-                type="number"
-                className={errors.limit_minute ? "border-red-500" : ""}
-              />
+              {rateLimitUnit !== "unlimited" && (
+                <Input
+                  {...register("limit_minute", {
+                    valueAsNumber: true,
+                    min: 0
+                  })}
+                  placeholder="Limit count"
+                  type="number"
+                  className={errors.limit_minute ? "border-red-500" : ""}
+                />
+              )}
               <Controller
                 name="rateLimitUnit"
                 control={control}
@@ -135,6 +143,7 @@ export default function NewSitePage() {
                       <SelectValue placeholder="Unit" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="unlimited">{t('sites.new.unlimited')}</SelectItem>
                       <SelectItem value="second">{t('sites.new.perSecond')}</SelectItem>
                       <SelectItem value="minute">{t('sites.new.perMinute')}</SelectItem>
                       <SelectItem value="hour">{t('sites.new.perHour')}</SelectItem>

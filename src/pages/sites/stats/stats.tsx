@@ -146,7 +146,7 @@ export default function StatsPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectdOptionName, setSelectdOptionName] = useState<string>(t('stats.period.today'));
   const [sites, setSites] = useState<Site[]>([]);
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [hasAccess, setHasAccess] = useState<'loading' | 'granted' | 'no_access' | 'not_verified'>('loading');
   const [activeCategoryTab, setActiveCategoryTab] = useState<string>("traffic");
 
   // Dimension settings with localStorage persistence
@@ -366,7 +366,12 @@ export default function StatsPage() {
         if (response.data) {
           setSites(response.data);
           const found = response.data.some((site) => site.domain === domain);
-          setHasAccess(found);
+          if (!found) {
+            setHasAccess('no_access');
+          } else {
+            const verified = response.data.some((site) => site.domain === domain && site.is_verified);
+            setHasAccess(verified ? 'granted' : 'not_verified');
+          }
         }
       } catch (error) {
         console.error("Failed to fetch site list:", error);
@@ -458,9 +463,22 @@ export default function StatsPage() {
     }
   }, [activeCategories, activeCategoryTab]);
 
-  if (hasAccess === false) return <Forbidden />;
+  if (hasAccess === 'no_access') return <Forbidden />;
 
-  if (hasAccess === null) {
+  if (hasAccess === 'not_verified') {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h1 className="text-6xl font-bold text-gray-900 mb-4">{t('error.403')}</h1>
+        <p className="text-2xl text-gray-700 mb-4">{t('error.siteNotVerified')}</p>
+        <p className="text-gray-500 mb-8">{t('error.siteNotVerifiedHint')}</p>
+        <Button variant="default" onClick={() => navigate(`/sites/${domain}/verify`)}>
+          {t('error.goToVerify')}
+        </Button>
+      </div>
+    );
+  }
+
+  if (hasAccess === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">

@@ -8,11 +8,12 @@ import {
   CardContent,
   CardAction,
 } from "@/components/ui/card";
-import { Code2, Settings } from "lucide-react";
+import { Code2, Settings, Shield, ShieldAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState, useCallback } from "react";
 import axios, { type BaseResponse } from "@utils/axios";
+import { isSubAccount } from "@utils/auth";
 import type { Site } from "./types/interfaces";
 
 // 自定义防抖 Hook
@@ -38,6 +39,7 @@ export default function Sites() {
   const [sites, setSites] = useState([] as Site[]);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const subAccount = isSubAccount();
 
   const fetchSites = useCallback(async () => {
     const url = debouncedSearchQuery
@@ -76,9 +78,11 @@ export default function Sites() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button variant="default" onClick={() => navigate("/sites/new")}>
-          {t('sites.addSite')}
-        </Button>
+        {!subAccount && (
+          <Button variant="default" onClick={() => navigate("/sites/new")}>
+            {t('sites.addSite')}
+          </Button>
+        )}
       </div>
 
       {/* 站点卡片列表 */}
@@ -87,42 +91,51 @@ export default function Sites() {
           // 为 Card 添加点击事件，跳转到 state 页面
           <Card
             key={site.id}
-            onClick={() => navigate(`/sites/${site.domain}/stats`)}
+            onClick={() => navigate(site.is_verified ? `/sites/${site.domain}/stats` : `/sites/${site.domain}/verify`)}
             className="cursor-pointer"
           >
             <CardHeader className="relative">
-              <CardTitle>{site.domain}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                {site.domain}
+                {site.is_verified ? (
+                  <span title="Verified"><Shield className="h-4 w-4 text-emerald-500" /></span>
+                ) : (
+                  <span title="Not verified"><ShieldAlert className="h-4 w-4 text-amber-500" /></span>
+                )}
+              </CardTitle>
               <CardDescription>{site.remark}</CardDescription>
-              <CardAction>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="link"
-                    className="cursor-pointer hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-40"
-                    title={t('sites.installTrackingCode')}
-                    aria-label={t('sites.installTrackingCode')}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/sites/${site.domain}/install`);
-                    }}
-                  >
-                    <Code2 />
-                  </Button>
-                  <Button
-                    disabled={site.role === "viewer"}
-                    variant="link"
-                    className="cursor-pointer hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-40"
-                    title={t('sites.siteSettings')}
-                    aria-label={t('sites.siteSettings')}
-                    // 为设置按钮添加点击事件，跳转到设置页面
-                    onClick={(e) => {
-                      e.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击事件
-                      navigate(`/sites/${site.domain}/settings/general`);
-                    }}
-                  >
-                    <Settings />
-                  </Button>
-                </div>
-              </CardAction>
+              {!subAccount && (
+                <CardAction>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="link"
+                      className="cursor-pointer hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-40"
+                      title={t('sites.installTrackingCode')}
+                      aria-label={t('sites.installTrackingCode')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/sites/${site.domain}/install`);
+                      }}
+                    >
+                      <Code2 />
+                    </Button>
+                    <Button
+                      disabled={site.role === "viewer"}
+                      variant="link"
+                      className="cursor-pointer hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-40"
+                      title={t('sites.siteSettings')}
+                      aria-label={t('sites.siteSettings')}
+                      // 为设置按钮添加点击事件，跳转到设置页面
+                      onClick={(e) => {
+                        e.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击事件
+                        navigate(`/sites/${site.domain}/settings/general`);
+                      }}
+                    >
+                      <Settings />
+                    </Button>
+                  </div>
+                </CardAction>
+              )}
             </CardHeader>
             <CardContent>{/* 这里暂时先显示一个空卡片 */}</CardContent>
           </Card>

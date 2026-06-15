@@ -6,6 +6,16 @@ export interface Site {
   timezone?: string;
   limit_minute?: number;
   rate_seconds?: number;
+  allowed_origins?: string;
+  is_verified?: boolean;
+  verified_at?: string;
+}
+
+export interface VerificationStatus {
+  domain: string;
+  is_verified: boolean;
+  verification_token?: string;
+  verified_at?: string;
 }
 
 export interface TimeRangeVisitor {

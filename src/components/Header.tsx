@@ -23,7 +23,12 @@ import {
   User,
   LayoutGrid,
   ChevronDown,
+  Shield,
+  Search,
+  Users,
+  CreditCard,
 } from "lucide-react";
+import { isSubAccount } from "@utils/auth";
 
 interface UserInfo {
   email: string;
@@ -79,7 +84,7 @@ function UserAvatar({ name }: { name: string }) {
 }
 
 // Enhanced User dropdown
-function UserDropdown({ user, onLogout }: { user: { name: string; email: string }; onLogout: () => void }) {
+function UserDropdown({ user, onLogout, isAdmin, isSubAccount }: { user: { name: string; email: string }; onLogout: () => void; isAdmin: boolean; isSubAccount: boolean }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const initial = user.name ? user.name.charAt(0).toUpperCase() : "U";
@@ -140,7 +145,41 @@ function UserDropdown({ user, onLogout }: { user: { name: string; email: string 
           <Settings className="h-4 w-4 text-gray-500" />
           <span className="text-sm">{t('header.settings')}</span>
         </DropdownMenuItem>
+        {!isSubAccount && (
+          <>
+            <DropdownMenuItem
+              onClick={() => navigate("/user/search-engines")}
+              className="flex items-center gap-2.5 py-2 cursor-pointer"
+            >
+              <Search className="h-4 w-4 text-gray-500" />
+              <span className="text-sm">{t('header.searchEngines')}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => navigate("/user/sub-accounts")}
+              className="flex items-center gap-2.5 py-2 cursor-pointer"
+            >
+              <Users className="h-4 w-4 text-gray-500" />
+              <span className="text-sm">{t('header.subAccounts')}</span>
+            </DropdownMenuItem>
+          </>
+        )}
+        <DropdownMenuItem
+          onClick={() => navigate("/user/quota")}
+          className="flex items-center gap-2.5 py-2 cursor-pointer"
+        >
+          <CreditCard className="h-4 w-4 text-gray-500" />
+          <span className="text-sm">{t('header.myPlan')}</span>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
+        {isAdmin && (
+          <DropdownMenuItem
+            onClick={() => navigate("/admin")}
+            className="flex items-center gap-2.5 py-2 cursor-pointer"
+          >
+            <Shield className="h-4 w-4 text-gray-500" />
+            <span className="text-sm">Admin</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={onLogout}
           className="flex items-center gap-2.5 py-2 cursor-pointer text-red-600"
@@ -193,6 +232,8 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const scrolled = useScroll(10);
   const { t, i18n } = useTranslation();
+  const isAdmin = localStorage.getItem("is_admin") === "true";
+  const subAccount = isSubAccount();
 
   useEffect(() => {
     const loadUser = () => {
@@ -259,7 +300,7 @@ export default function Header() {
             <LanguageSwitcher />
 
             {user?.name ? (
-              <UserDropdown user={user} onLogout={logout} />
+              <UserDropdown user={user} onLogout={logout} isAdmin={isAdmin} isSubAccount={subAccount} />
             ) : (
               <Button
                 variant="outline"
@@ -344,6 +385,57 @@ export default function Header() {
                 <Settings className="h-4 w-4 text-gray-500" />
                 {t('header.settings')}
               </Button>
+        {!isSubAccount && (
+                <>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-2.5 h-11"
+                    onClick={() => {
+                      navigate("/user/search-engines");
+                      setOpen(false);
+                    }}
+                  >
+                    <Search className="h-4 w-4 text-gray-500" />
+                    {t('header.searchEngines')}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-2.5 h-11"
+                    onClick={() => {
+                      navigate("/user/sub-accounts");
+                      setOpen(false);
+                    }}
+                  >
+                    <Users className="h-4 w-4 text-gray-500" />
+                    {t('header.subAccounts')}
+                  </Button>
+                </>
+              )}
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2.5 h-11"
+                onClick={() => {
+                  navigate("/user/quota");
+                  setOpen(false);
+                }}
+              >
+                <CreditCard className="h-4 w-4 text-gray-500" />
+                {t('header.myPlan')}
+              </Button>
+
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2.5 h-11"
+                  onClick={() => {
+                    navigate("/admin");
+                    setOpen(false);
+                  }}
+                >
+                  <Shield className="h-4 w-4 text-gray-500" />
+                  Admin
+                </Button>
+              )}
 
               <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
 

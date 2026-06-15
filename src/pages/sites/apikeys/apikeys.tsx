@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
+import { isSubAccount } from "@utils/auth";
 
 interface APIKeyInfo {
   id: number;
@@ -51,6 +52,7 @@ export default function APIKeysPage() {
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyExpiry, setNewKeyExpiry] = useState("");
   const [creating, setCreating] = useState(false);
+  const subAccount = isSubAccount();
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
@@ -147,13 +149,14 @@ export default function APIKeysPage() {
               {t('apiKeys.description')}
             </p>
           </div>
-          <Dialog open={createOpen} onOpenChange={handleCreateDialogClose}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                {t('apiKeys.createKey')}
-              </Button>
-            </DialogTrigger>
+          {!subAccount && (
+            <Dialog open={createOpen} onOpenChange={handleCreateDialogClose}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  {t('apiKeys.createKey')}
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>
@@ -250,6 +253,7 @@ export default function APIKeysPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          )}
         </div>
 
         {/* API Key list */}
@@ -329,35 +333,37 @@ export default function APIKeysPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    {deleteConfirm === apiKey.id ? (
-                      <div className="flex items-center gap-2 ml-2">
-                        <span className="text-xs text-red-500">{t('apiKeys.confirmDelete')}</span>
+                    {!subAccount && (
+                      deleteConfirm === apiKey.id ? (
+                        <div className="flex items-center gap-2 ml-2">
+                          <span className="text-xs text-red-500">{t('apiKeys.confirmDelete')}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => handleDelete(apiKey.id)}
+                          >
+                            {t('apiKeys.delete')}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => setDeleteConfirm(null)}
+                          >
+                            {t('apiKeys.deleteCancel')}
+                          </Button>
+                        </div>
+                      ) : (
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => handleDelete(apiKey.id)}
+                          size="icon"
+                          className="h-8 w-8 text-gray-400 hover:text-red-500"
+                          onClick={() => setDeleteConfirm(apiKey.id)}
                         >
-                          {t('apiKeys.delete')}
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={() => setDeleteConfirm(null)}
-                        >
-                          {t('apiKeys.deleteCancel')}
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-gray-400 hover:text-red-500"
-                        onClick={() => setDeleteConfirm(apiKey.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      )
                     )}
                   </div>
                 </div>
