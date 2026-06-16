@@ -113,8 +113,9 @@ export default function GoalsSettings() {
       setDeleteDialogOpen(false);
       setGoalToDelete(null);
       fetchGoals();
-    } catch (error) {
-      toast.error(t('settings.goals.deleteFailed'));
+    } catch (error: any) {
+      const message = error?.response?.data?.message || t('settings.goals.deleteFailed');
+      toast.error(message);
     }
   };
 

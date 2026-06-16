@@ -113,8 +113,9 @@ export default function FunnelsSettings() {
       setDeleteDialogOpen(false);
       setFunnelToDelete(null);
       fetchData();
-    } catch (error) {
-      toast.error(t('settings.funnels.deleteFailed'));
+    } catch (error: any) {
+      const message = error?.response?.data?.message || t('settings.funnels.deleteFailed');
+      toast.error(message);
     }
   };
 
