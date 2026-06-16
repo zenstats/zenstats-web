@@ -1,7 +1,7 @@
 import { Separator } from "@components/ui/separator"
 import { SidebarNav, type SidebarNavItem } from "./components/sidebar-nav"
 import { useNavigate, useParams } from "react-router-dom";
-import { Code2, Rocket, ShieldAlert, Target } from "lucide-react";
+import { Code2, Database, Rocket, ShieldAlert, Target } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 interface SettingsLayoutProps {
@@ -27,6 +27,12 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
       title: t('settings.layout.nav.installCode'),
       icon: <Code2 className="mr-2 h-4 w-4" />,
       href: `/sites/${domain}/install`,
+    },
+    {
+      id: "import",
+      title: t('settings.layout.nav.import'),
+      icon: <Database className="mr-2 h-4 w-4" />,
+      href: `/sites/${domain}/import`,
     },
     {
       id: "conversions",

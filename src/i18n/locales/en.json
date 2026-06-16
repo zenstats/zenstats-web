@@ -442,7 +442,13 @@
         "device": "Device Type",
         "screenSize": "Screen Size",
         "eventName": "Event Name"
-      }
+      },
+      "collapseForm": "Collapse Form",
+      "expandForm": "Expand Form",
+      "totalRows": "{{total}} total results",
+      "prev": "Previous",
+      "next": "Next",
+      "vsPrevious": "vs previous"
     },
     "dimensions": {
       "source": "Source",
@@ -465,6 +471,75 @@
     "dateRange": {
       "cancel": "Cancel",
       "confirm": "Confirm"
+    },
+    "compare": {
+      "toggle": "Compare",
+      "vs": "vs",
+      "label": "Comparison",
+      "previousPeriod": "Previous period",
+      "customRange": "Custom range...",
+      "selectCompareRange": "Select comparison range",
+      "pickDateHint": "Pick end date (auto-matches current {{days}}-day range)"
+    },
+    "sidebar": {
+      "stats": "Stats",
+      "goals": "Goals",
+      "properties": "Properties",
+      "funnels": "Funnels",
+      "customQuery": "Custom Query"
+    },
+    "goals": {
+      "title": "Goals",
+      "description": "View conversion data for each goal",
+      "loadFailed": "Failed to load goals",
+      "manage": "Manage Goals",
+      "noGoals": "No goals yet",
+      "noGoalsHint": "Create goals to track specific page visits or event triggers",
+      "createGoal": "Create Goal",
+      "name": "Name",
+      "type": "Type",
+      "value": "Match Value",
+      "conversions": "Conversions",
+      "eventGoal": "Event",
+      "pageGoal": "Page"
+    },
+    "properties": {
+      "title": "Properties",
+      "description": "Break down events and visits by different dimensions",
+      "exportCsv": "Export CSV",
+      "selectHint": "Select a dimension to load data",
+      "noData": "No data",
+      "group": {
+        "event": "Events",
+        "visit": "Visits"
+      },
+      "dimensions": {
+        "eventName": "Event Name",
+        "pagePath": "Page Path",
+        "source": "Source",
+        "country": "Country/Region",
+        "region": "Region",
+        "city": "City",
+        "browser": "Browser",
+        "os": "Operating System",
+        "device": "Device Type",
+        "entryPage": "Entry Page",
+        "exitPage": "Exit Page"
+      }
+    },
+    "funnels": {
+      "title": "Funnels",
+      "description": "Analyze user drop-off through conversion funnels",
+      "selectFunnel": "Select funnel...",
+      "fullAnalysis": "Full Analysis",
+      "manage": "Manage Funnels",
+      "noFunnels": "No funnels yet",
+      "noFunnelsHint": "Create funnels to analyze conversion rates across multiple steps",
+      "createFunnel": "Create Funnel",
+      "totalVisitors": "Total Visitors",
+      "conversionRate": "Overall Conversion",
+      "steps": "Steps",
+      "noData": "No analysis data"
     }
   },
   "settings": {
@@ -476,6 +551,7 @@
       "nav": {
         "general": "General",
         "installCode": "Install Code",
+        "import": "Data Import",
         "conversions": "Conversions",
         "goals": "Goals",
         "funnels": "Funnels",
@@ -899,5 +975,30 @@
     "disabled": "Disabled",
     "unlimited": "Unlimited",
     "loadFailed": "Failed to load quota info"
+  },
+  "import": {
+    "title": "Data Import",
+    "description": "Import historical data from Google Analytics 4 into ZenStats.",
+    "uploadCard": {
+      "title": "Upload CSV File",
+      "description": "Upload a CSV file exported from Google Analytics 4. The system will parse it and store the data in the database.",
+      "dropHint": "Drag & drop a CSV file here, or click to select",
+      "autoDetect": "Auto Detect",
+      "import": "Start Import",
+      "importSuccess": "Successfully imported {{rows}} rows ({{type}})"
+    },
+    "stats": {
+      "title": "Imported Data Overview",
+      "noData": "No imported data found for the selected date range."
+    },
+    "breakdown": {
+      "title": "Breakdown",
+      "noData": "No breakdown data available."
+    },
+    "timeseries": {
+      "title": "Time Series",
+      "date": "Date",
+      "noData": "No time series data available."
+    }
   }
 }

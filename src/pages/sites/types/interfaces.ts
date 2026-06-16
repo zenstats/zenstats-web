@@ -50,6 +50,9 @@ export interface StatsRequest {
   date?: string;
   from?: string;
   to?: string;
+  compare?: string;       // "1" = auto compare vs previous period
+  compare_from?: string;  // explicit compare range start
+  compare_to?: string;    // explicit compare range end
   interval?: Interval;
   metrics?: string;
   property?: string;

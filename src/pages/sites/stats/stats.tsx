@@ -32,6 +32,9 @@ import {
   Laptop,
   Chrome,
   MapIcon,
+  Target,
+  Layers,
+  Filter,
 } from "lucide-react";
 import i18n from '@/i18n';
 import axios, { type BaseResponse } from "@utils/axios";
@@ -44,7 +47,7 @@ import type {
   MainGraphPoint,
   CurrentVisitors as CurrentVisitorsType,
   BreakdownResponse,
-} from "../types/interfaces"; // BreakdownResponse used in api type
+} from "../types/interfaces";
 import AggregateStats from "./components/aggregate-stats";
 import MainGraph from "./components/main-graph";
 import BreakdownTable from "./components/breakdown-table";
@@ -55,6 +58,9 @@ import DimensionSettings, {
   type DimensionConfig,
   getDefaultDimensions,
 } from "./components/dimension-settings";
+import GoalsPanel from "./components/goals-panel";
+import PropertiesPanel from "./components/properties-panel";
+import FunnelsPanel from "./components/funnels-panel";
 import Forbidden from "@components/403";
 import { cn } from "@/lib/utils";
 
@@ -148,6 +154,18 @@ export default function StatsPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [hasAccess, setHasAccess] = useState<'loading' | 'granted' | 'no_access' | 'not_verified'>('loading');
   const [activeCategoryTab, setActiveCategoryTab] = useState<string>("traffic");
+  const [activePanel, setActivePanel] = useState<"stats" | "goals" | "properties" | "funnels" | "custom-query">("stats");
+
+  // Local metric selection (separate from query to avoid triggering all panels)
+  const [activeMetric, setActiveMetric] = useState("visitors");
+
+  // Compare mode: toggle on → auto vs previous period; dropdown to pick another range
+  const [compareEnabled, setCompareEnabled] = useState(false);
+  const [compareMode, setCompareMode] = useState<"auto" | "custom">("auto");
+  const [compareLabel, setCompareLabel] = useState("");
+  const [isCompareDropdownOpen, setIsCompareDropdownOpen] = useState(false);
+  const [compareCustomDate, setCompareCustomDate] = useState<Date | undefined>(undefined);
+  const [isCompareDatePickerOpen, setIsCompareDatePickerOpen] = useState(false);
 
   // Dimension settings with localStorage persistence
   const storageKey = `zenstats-dimensions-${domain}`;
@@ -348,6 +366,59 @@ export default function StatsPage() {
     [selectedDateRange, setQuery],
   );
 
+  // Compute primary period length in days (for matching compare range)
+  const primaryPeriodDays = useMemo(() => {
+    const period = query.period;
+    if (period === "day" || period === "yesterday") return 1;
+    if (period === "p7") return 7;
+    if (period === "p14") return 14;
+    if (period === "p30") return 30;
+    if (period === "custom" && query.from && query.to) {
+      return dayjs(query.to).diff(dayjs(query.from), "day") + 1;
+    }
+    return 1;
+  }, [query.period, query.from, query.to]);
+
+  // Change compare mode: "auto" = previous period, or pick a specific range
+  const handleCompareMode = useCallback((mode: "auto" | "custom" | string) => {
+    if (mode === "auto") {
+      setCompareMode("auto");
+      setCompareLabel("");
+      setQuery((q) => ({
+        ...q,
+        compare: "1",
+        compare_from: undefined,
+        compare_to: undefined,
+        refresh: new Date(),
+      }));
+    } else if (mode === "custom") {
+      // Open picker — no pre-selection, user picks freely
+      setCompareCustomDate(undefined);
+      setIsCompareDatePickerOpen(true);
+    }
+    setIsCompareDropdownOpen(false);
+  }, [setQuery, primaryPeriodDays]);
+
+  // Handle compare custom date: compute full range matching primary period length
+  useEffect(() => {
+    if (compareCustomDate) {
+      const endDate = dayjs(compareCustomDate);
+      const startDate = endDate.subtract(primaryPeriodDays - 1, "day");
+      const fromStr = startDate.format("YYYY-MM-DD");
+      const toStr = endDate.format("YYYY-MM-DD");
+      setCompareMode("custom");
+      setCompareLabel(`${startDate.format(shortDateFormat)} - ${endDate.format(shortDateFormat)}`);
+      setQuery((q) => ({
+        ...q,
+        compare: "1",
+        compare_from: fromStr,
+        compare_to: toStr,
+        refresh: new Date(),
+      }));
+      setIsCompareDatePickerOpen(false);
+    }
+  }, [compareCustomDate, setQuery, primaryPeriodDays]);
+
   useEffect(() => {
     if (selectedDateRange.from && selectedDateRange.to) {
       if (selectedDateRange.from == selectedDateRange.to) {
@@ -547,9 +618,6 @@ export default function StatsPage() {
 
           {/* Right side controls */}
           <div className="flex items-center gap-2">
-            {/* Dimension settings */}
-            <DimensionSettings dimensions={dimensions} onChange={handleDimensionsChange} />
-
             {/* Current visitors */}
             <CurrentVisitorsComponent
               domain={domain!}
@@ -594,6 +662,113 @@ export default function StatsPage() {
                     }}
                   >
                     {t('stats.confirm')}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Compare toggle + mode selector */}
+            <div className="flex items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setCompareEnabled((prev) => {
+                    const next = !prev;
+                    if (next) {
+                      setCompareMode("auto");
+                      setCompareLabel("");
+                      setQuery((q) => ({
+                        ...q,
+                        compare: "1",
+                        compare_from: undefined,
+                        compare_to: undefined,
+                        refresh: new Date(),
+                      }));
+                    } else {
+                      setQuery((q) => {
+                        const { compare, compare_from, compare_to, ...rest } = q as any;
+                        return { ...rest, refresh: new Date() };
+                      });
+                    }
+                    return next;
+                  });
+                }}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 text-sm font-medium border transition-colors",
+                  compareEnabled
+                    ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 rounded-l-lg"
+                    : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg"
+                )}
+              >
+                <ArrowLeftRight className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('stats.compare.toggle')}</span>
+              </button>
+              {compareEnabled && (
+                <DropdownMenu open={isCompareDropdownOpen} onOpenChange={setIsCompareDropdownOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        "flex items-center gap-1 px-2 py-2 text-sm font-medium border border-l-0 transition-colors rounded-r-lg",
+                        "bg-white dark:bg-gray-900 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400",
+                        "hover:bg-indigo-50 dark:hover:bg-indigo-950/20"
+                      )}
+                    >
+                      <span className="text-xs truncate max-w-[120px]">
+                        {compareMode === "auto" ? t('stats.compare.previousPeriod') : compareLabel}
+                      </span>
+                      <ChevronDown className="h-3 w-3 shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-48" align="end">
+                    <DropdownMenuItem
+                      onClick={() => handleCompareMode("auto")}
+                      className={cn(compareMode === "auto" && "bg-gray-50 dark:bg-gray-800")}
+                    >
+                      {t('stats.compare.previousPeriod')}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => handleCompareMode("custom")}
+                      className={cn(compareMode === "custom" && "bg-gray-50 dark:bg-gray-800")}
+                    >
+                      {t('stats.compare.customRange')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+
+            {/* Compare custom date picker dialog — single date, range auto-matches primary period */}
+            <Dialog open={isCompareDatePickerOpen} onOpenChange={setIsCompareDatePickerOpen}>
+              <DialogContent className="sm:max-w-auto w-auto p-0" showCloseButton={false}>
+                <DialogHeader className="sr-only">
+                  <DialogTitle>{t('stats.compare.selectCompareRange')}</DialogTitle>
+                </DialogHeader>
+                <div className="px-3 pt-3 text-sm text-gray-500">
+                  {t('stats.compare.pickDateHint', { days: primaryPeriodDays })}
+                </div>
+                <Calendar
+                  mode="single"
+                  showOutsideDays={false}
+                  onSelect={(day: Date | undefined) => {
+                    if (day) setCompareCustomDate(day);
+                  }}
+                  selected={compareCustomDate}
+                  disabled={(date: Date) =>
+                    date > new Date() || date < new Date("1900-01-01")
+                  }
+                />
+                <div className="flex items-center justify-end gap-2 p-3 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsCompareDatePickerOpen(false);
+                      setCompareCustomDate(undefined);
+                    }}
+                  >
+                    {t('stats.cancel')}
                   </Button>
                 </div>
               </DialogContent>
@@ -661,80 +836,147 @@ export default function StatsPage() {
           onClearAll={handleClearAllFilters}
         />
 
-        {/* Aggregate stats */}
-        <div className="mb-4 mt-3">
-          <AggregateStats
-            query={query}
-            setQuery={setQuery}
-            api={api.getAggregate}
-          />
+        {/* Section tabs (Stats / Goals / Properties / Funnels / Custom Query) */}
+        <div className="flex items-center gap-1 overflow-x-auto pb-1 mt-3 mb-4">
+          {([
+            { key: "stats", label: t("stats.sidebar.stats"), icon: <BarChart3 className="h-3.5 w-3.5" /> },
+            { key: "goals", label: t("stats.sidebar.goals"), icon: <Target className="h-3.5 w-3.5" /> },
+            { key: "properties", label: t("stats.sidebar.properties"), icon: <Layers className="h-3.5 w-3.5" /> },
+            { key: "funnels", label: t("stats.sidebar.funnels"), icon: <Filter className="h-3.5 w-3.5" /> },
+            { key: "custom-query", label: t("stats.sidebar.customQuery"), icon: <Code2 className="h-3.5 w-3.5" /> },
+          ] as const).map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActivePanel(tab.key)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors",
+                activePanel === tab.key
+                  ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm border border-gray-200 dark:border-gray-700"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-900/50"
+              )}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Main graph */}
-        <div className="mb-4">
-          <MainGraph
-            query={query}
-            setQuery={setQuery}
-            api={api.getMainGraph}
-          />
-        </div>
+        {/* Panel content */}
+        <div>
+          {/* Stats panel */}
+          {activePanel === "stats" && (
+            <>
+              {/* Dimension settings (inline for stats panel) */}
+              <div className="flex items-center justify-end mb-3">
+                <DimensionSettings dimensions={dimensions} onChange={handleDimensionsChange} />
+              </div>
 
-        {/* Breakdown section */}
-        <div className="mb-4">
-          {/* Category tab bar */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-1 overflow-x-auto pb-1">
-              {activeCategories.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveCategoryTab(tab.key)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors",
-                    activeCategoryTab === tab.key
-                      ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm border border-gray-200 dark:border-gray-700"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-900/50"
+                {/* Aggregate stats */}
+                <div className="mb-4">
+                  <AggregateStats
+                    query={query}
+                    activeMetric={activeMetric}
+                    onMetricChange={setActiveMetric}
+                    api={api.getAggregate}
+                  />
+                </div>
+
+                {/* Main graph */}
+                <div className="mb-4">
+                  <MainGraph
+                    query={query}
+                    activeMetric={activeMetric}
+                    onMetricChange={setActiveMetric}
+                    api={api.getMainGraph}
+                  />
+                </div>
+
+                {/* Breakdown section */}
+                <div className="mb-4">
+                  {/* Category tab bar */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-1 overflow-x-auto pb-1">
+                      {activeCategories.map((tab) => (
+                        <button
+                          key={tab.key}
+                          onClick={() => setActiveCategoryTab(tab.key)}
+                          className={cn(
+                            "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors",
+                            activeCategoryTab === tab.key
+                              ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm border border-gray-200 dark:border-gray-700"
+                              : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-900/50"
+                          )}
+                        >
+                          {tab.icon}
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Breakdown tables for current category */}
+                  {currentCategoryDimensions.length === 0 ? (
+                    <div className="text-center py-12 text-sm text-gray-400 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                      {t('stats.emptyDimensions')}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {currentCategoryDimensions.map((dim: DimensionConfig) => (
+                        <BreakdownTable
+                          key={dim.key}
+                          title={dim.label}
+                          keyName={dim.label}
+                          limit={9}
+                          query={{ ...query, property: dim.property }}
+                          setQuery={setQuery}
+                          api={api.getBreakdown}
+                          exportApi={api.exportBreakdown}
+                          icon={DIMENSION_ICONS[dim.key] || <BarChart3 className="h-4 w-4" />}
+                        />
+                      ))}
+                    </div>
                   )}
-                >
-                  {tab.icon}
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
+                </div>
+              </>
+            )}
 
-          {/* Breakdown tables for current category */}
-          {currentCategoryDimensions.length === 0 ? (
-            <div className="text-center py-12 text-sm text-gray-400 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-              {t('stats.emptyDimensions')}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {currentCategoryDimensions.map((dim: DimensionConfig) => (
-                <BreakdownTable
-                  key={dim.key}
-                  title={dim.label}
-                  keyName={dim.label}
-                  limit={9}
-                  query={{ ...query, property: dim.property }}
-                  setQuery={setQuery}
-                  api={api.getBreakdown}
-                  exportApi={api.exportBreakdown}
-                  icon={DIMENSION_ICONS[dim.key] || <BarChart3 className="h-4 w-4" />}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+            {/* Goals panel */}
+            {activePanel === "goals" && (
+              <GoalsPanel
+                query={query}
+                domain={domain!}
+                aggregateApi={api.getAggregate}
+              />
+            )}
 
-        {/* Custom Query Section */}
-        <div className="mb-4">
-          <CustomQuery
-            query={query}
-            domain={domain!}
-            breakdownApi={api.getBreakdown}
-            aggregateApi={api.getAggregate}
-            exportApi={api.exportBreakdown}
-          />
+            {/* Properties panel */}
+            {activePanel === "properties" && (
+              <PropertiesPanel
+                query={query}
+                domain={domain!}
+                breakdownApi={api.getBreakdown}
+                exportApi={api.exportBreakdown}
+              />
+            )}
+
+            {/* Funnels panel */}
+            {activePanel === "funnels" && (
+              <FunnelsPanel
+                query={query}
+                domain={domain!}
+              />
+            )}
+
+            {/* Custom Query panel */}
+            {activePanel === "custom-query" && (
+              <CustomQuery
+                query={query}
+                domain={domain!}
+                breakdownApi={api.getBreakdown}
+                aggregateApi={api.getAggregate}
+                exportApi={api.exportBreakdown}
+              />
+            )}
         </div>
 
         {/* Footer */}

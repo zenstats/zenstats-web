@@ -322,7 +322,9 @@
       "traffic": "流量来源",
       "page": "页面",
       "audience": "受众",
-      "technology": "技术"
+      "technology": "技术",
+      "events": "事件",
+      "visit": "访问"
     },
     "metrics": {
       "visitors": "唯一身份浏览者",
@@ -440,21 +442,27 @@
         "matches": "匹配",
         "matchesNot": "不匹配"
       },
-      "metricUnavailable": "当前查询类型或分组维度不支持该指标"
-    },
-    "dimensions": {
-      "source": "来源",
-      "page": "页面路径",
-      "entryPage": "入口页面",
-      "exitPage": "退出页面",
-      "country": "国家/地区",
-      "region": "地区",
-      "city": "城市",
-      "browser": "浏览器",
-      "os": "操作系统",
-      "device": "设备类型",
-      "screenSize": "屏幕尺寸",
-      "eventName": "事件名称"
+      "metricUnavailable": "当前查询类型或分组维度不支持该指标",
+      "dimensions": {
+        "source": "来源",
+        "page": "页面路径",
+        "entryPage": "入口页面",
+        "exitPage": "退出页面",
+        "country": "国家/地区",
+        "region": "地区",
+        "city": "城市",
+        "browser": "浏览器",
+        "os": "操作系统",
+        "device": "设备类型",
+        "screenSize": "屏幕尺寸",
+        "eventName": "事件名称"
+      },
+      "collapseForm": "收起表单",
+      "expandForm": "展开表单",
+      "totalRows": "共 {{total}} 条结果",
+      "prev": "上一页",
+      "next": "下一页",
+      "vsPrevious": "较上期"
     },
     "siteSettings": "站点设置",
     "installTrackingCode": "安装统计代码",
@@ -463,6 +471,75 @@
     "dateRange": {
       "cancel": "取消",
       "confirm": "确定"
+    },
+    "compare": {
+      "toggle": "对比",
+      "vs": "对比",
+      "label": "对比期",
+      "previousPeriod": "上一周期",
+      "customRange": "自定义范围...",
+      "selectCompareRange": "选择对比时间范围",
+      "pickDateHint": "选择对比截止日期（自动匹配当前 {{days}} 天范围）"
+    },
+    "sidebar": {
+      "stats": "统计",
+      "goals": "目标",
+      "properties": "属性",
+      "funnels": "漏斗",
+      "customQuery": "自定义查询"
+    },
+    "goals": {
+      "title": "目标转化",
+      "description": "查看每个目标的转化数据",
+      "loadFailed": "加载目标数据失败",
+      "manage": "管理目标",
+      "noGoals": "暂无目标",
+      "noGoalsHint": "创建目标来跟踪特定的页面访问或事件触发",
+      "createGoal": "创建目标",
+      "name": "名称",
+      "type": "类型",
+      "value": "匹配值",
+      "conversions": "转化数",
+      "eventGoal": "事件",
+      "pageGoal": "页面"
+    },
+    "properties": {
+      "title": "属性分析",
+      "description": "按不同维度分解查看事件和访问数据",
+      "exportCsv": "导出 CSV",
+      "selectHint": "选择分组维度后自动加载数据",
+      "noData": "暂无数据",
+      "group": {
+        "event": "事件",
+        "visit": "访问"
+      },
+      "dimensions": {
+        "eventName": "事件名称",
+        "pagePath": "页面路径",
+        "source": "来源",
+        "country": "国家/地区",
+        "region": "地区",
+        "city": "城市",
+        "browser": "浏览器",
+        "os": "操作系统",
+        "device": "设备类型",
+        "entryPage": "入口页面",
+        "exitPage": "退出页面"
+      }
+    },
+    "funnels": {
+      "title": "漏斗分析",
+      "description": "分析用户在转化漏斗中的流失情况",
+      "selectFunnel": "选择漏斗...",
+      "fullAnalysis": "全屏分析",
+      "manage": "管理漏斗",
+      "noFunnels": "暂无漏斗",
+      "noFunnelsHint": "创建漏斗来分析用户在多个步骤间的转化率",
+      "createFunnel": "创建漏斗",
+      "totalVisitors": "总访客数",
+      "conversionRate": "总体转化率",
+      "steps": "步骤数",
+      "noData": "暂无分析数据"
     }
   },
   "settings": {
@@ -474,6 +551,7 @@
       "nav": {
         "general": "通用",
         "installCode": "安装代码",
+        "import": "数据导入",
         "conversions": "转化",
         "goals": "目标",
         "funnels": "漏斗",
@@ -897,5 +975,30 @@
     "disabled": "未启用",
     "unlimited": "无限制",
     "loadFailed": "加载配额信息失败"
+  },
+  "import": {
+    "title": "数据导入",
+    "description": "将 Google Analytics 4 的历史数据导入到 ZenStats。",
+    "uploadCard": {
+      "title": "上传 CSV 文件",
+      "description": "上传从 Google Analytics 4 导出的 CSV 文件，系统将自动解析并存入数据库。",
+      "dropHint": "拖拽 CSV 文件到此处，或点击选择",
+      "autoDetect": "自动检测",
+      "import": "开始导入",
+      "importSuccess": "成功导入 {{rows}} 行数据（{{type}}）"
+    },
+    "stats": {
+      "title": "导入数据概览",
+      "noData": "所选日期范围内没有导入数据。"
+    },
+    "breakdown": {
+      "title": "维度明细",
+      "noData": "暂无维度明细数据。"
+    },
+    "timeseries": {
+      "title": "时间序列",
+      "date": "日期",
+      "noData": "暂无时间序列数据。"
+    }
   }
 }

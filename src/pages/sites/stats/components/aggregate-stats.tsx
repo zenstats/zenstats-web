@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { BaseResponse } from "@utils/axios";
 import type {
   StatsRequest,
@@ -8,10 +8,12 @@ import type {
 import { Skeleton } from "@components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface AggregateStatsProps {
   query: StatsRequest;
-  setQuery: Dispatch<SetStateAction<StatsRequest>>;
+  activeMetric: string;
+  onMetricChange: (metric: string) => void;
   api: (dateRange: StatsRequest) => Promise<BaseResponse<AggregateResponse>>;
 }
 
@@ -19,74 +21,81 @@ interface StatCardProps {
   label: string;
   value: string | number;
   change?: number | null;
+  comparisonValue?: number | null;
   isPercent?: boolean;
   onClick?: () => void;
   active?: boolean;
 }
 
-function StatCard({ label, value, change, isPercent, onClick, active }: StatCardProps) {
+function StatCard({ label, value, change, comparisonValue, isPercent, onClick, active }: StatCardProps) {
   const isPositive = (change ?? 0) > 0;
   const isNegative = (change ?? 0) < 0;
+  const hasChange = change !== undefined && change !== null;
 
   return (
-    <div
+    <button
       className={cn(
-        "group relative flex flex-col gap-1 p-3 rounded-lg transition-colors cursor-pointer",
-        "hover:bg-gray-50 dark:hover:bg-gray-800/50",
-        active && "bg-gray-50 dark:bg-gray-800/50"
+        "group relative flex flex-col items-start w-full text-left px-4 py-3 transition-colors",
+        "border-t-2 -mt-[1px]", // top border for active indicator, negative margin to align
+        active
+          ? "border-indigo-500 bg-gray-50/80 dark:bg-gray-800/50"
+          : "border-transparent hover:bg-gray-50/50 dark:hover:bg-gray-800/30",
+        // Subtle right divider between cards (except last handled by parent)
       )}
       onClick={onClick}
     >
-      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+      {/* Label */}
+      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
         {label}
       </span>
-      <div className="flex items-baseline gap-2">
-        <span className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+
+      {/* Value row */}
+      <div className="flex items-baseline gap-1.5 flex-wrap">
+        <span className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight tabular-nums">
           {typeof value === "number" ? value.toLocaleString() : value}
         </span>
-        {change !== undefined && change !== null && (
+        {isPercent && (
+          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">%</span>
+        )}
+      </div>
+
+      {/* Change / Comparison row */}
+      <div className="flex items-center gap-1.5 mt-1">
+        {hasChange && !isPercent && (
           <span
             className={cn(
-              "text-xs font-medium",
-              isPercent
-                ? ""
-                : isPositive
-                  ? "text-green-600 dark:text-green-400"
-                  : isNegative
-                    ? "text-red-600 dark:text-red-400"
-                    : "text-gray-400"
+              "inline-flex items-center gap-0.5 text-xs font-medium rounded-full px-1.5 py-px",
+              isPositive
+                ? "text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30"
+                : isNegative
+                  ? "text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30"
+                  : "text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800"
             )}
           >
-            {isPercent
-              ? `${value}`
-              : `${isPositive ? "+" : ""}${change?.toFixed(1)}%`}
+            {isPositive ? <TrendingUp className="h-3 w-3" /> : isNegative ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+            {Math.abs(change).toFixed(1)}%
+          </span>
+        )}
+        {comparisonValue !== undefined && comparisonValue !== null && (
+          <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">
+            vs {typeof comparisonValue === "number" ? comparisonValue.toLocaleString() : comparisonValue}
           </span>
         )}
       </div>
-      {/* bottom border indicator */}
-      <div
-        className={cn(
-          "absolute bottom-0 left-3 right-3 h-0.5 rounded-full transition-colors",
-          active
-            ? "bg-indigo-500"
-            : "bg-transparent group-hover:bg-gray-200 dark:group-hover:bg-gray-700"
-        )}
-      />
-    </div>
+    </button>
   );
 }
 
-// Metric display config
+// Metric display helpers
 
 function formatMetricValue(key: string, value: number): string {
   if (key === "visit_duration") {
-    // Format seconds to M S
     const minutes = Math.floor(value / 60);
     const seconds = Math.round(value % 60);
-    return minutes > 0 ? `${minutes}M ${seconds}S` : `${seconds}S`;
+    return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
   }
   if (key === "bounce_rate") {
-    return `${value.toFixed(1)}%`;
+    return value.toFixed(1);
   }
   if (key === "views_per_visit") {
     return value.toFixed(2);
@@ -96,7 +105,8 @@ function formatMetricValue(key: string, value: number): string {
 
 export default function AggregateStats({
   query,
-  setQuery,
+  activeMetric,
+  onMetricChange,
   api,
 }: AggregateStatsProps) {
   const { t } = useTranslation();
@@ -134,12 +144,12 @@ export default function AggregateStats({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
+      <div className="flex flex-wrap divide-x divide-gray-100 dark:divide-gray-800 border-b border-gray-200 dark:border-gray-700">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="p-3">
+          <div key={i} className="flex-1 min-w-[120px] px-4 py-3">
             <Skeleton className="h-3 w-16 mb-2" />
-            <Skeleton className="h-6 w-24 mb-1" />
-            <Skeleton className="h-3 w-12" />
+            <Skeleton className="h-7 w-20 mb-1.5" />
+            <Skeleton className="h-4 w-12" />
           </div>
         ))}
       </div>
@@ -148,7 +158,6 @@ export default function AggregateStats({
 
   if (!data?.results) return null;
 
-  // Display metrics in order
   const displayOrder = [
     "visitors",
     "pageviews",
@@ -158,7 +167,7 @@ export default function AggregateStats({
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
+    <div className="flex flex-wrap divide-x divide-gray-100 dark:divide-gray-800 border-b border-gray-200 dark:border-gray-700">
       {displayOrder.map((key) => {
         const metric: AggregateMetric | undefined = data.results[key];
         if (!metric) return null;
@@ -167,15 +176,17 @@ export default function AggregateStats({
           typeof metric.value === "number" ? metric.value : Number(metric.value) || 0;
 
         return (
-          <StatCard
-            key={key}
-            label={config.label}
-            value={formatMetricValue(key, numericValue)}
-            change={metric.change}
-            isPercent={config.isPercent}
-            active={query.metrics === key}
-            onClick={() => setQuery((prev) => ({ ...prev, metrics: key }))}
-          />
+          <div key={key} className="flex-1 min-w-[120px]">
+            <StatCard
+              label={config.label}
+              value={formatMetricValue(key, numericValue)}
+              change={metric.change}
+              comparisonValue={metric.comparison_value}
+              isPercent={config.isPercent}
+              active={activeMetric === key}
+              onClick={() => onMetricChange(key)}
+            />
+          </div>
         );
       })}
     </div>

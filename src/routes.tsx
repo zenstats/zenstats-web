@@ -21,6 +21,7 @@ import SettingShieldsHostname from './pages/sites/settings/shields/hostname';
 import SettingShieldsCountries from './pages/sites/settings/shields/countries';
 import GoalsSettings from './pages/sites/settings/goals';
 import FunnelsSettings from './pages/sites/settings/funnels';
+import ImportPage from './pages/sites/import/import';
 
 // Admin pages
 import AdminGuard from '@/components/admin-guard';
@@ -119,6 +120,10 @@ const routes: RouteObject[] = [
           {
             path: ":domain/funnel-analysis",
             element: <FunnelAnalysisPage />
+          },
+          {
+            path: ":domain/import",
+            element: <ImportPage />
           },
           {
             path: ":domain/settings",
