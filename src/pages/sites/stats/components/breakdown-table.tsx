@@ -25,6 +25,7 @@ export default function BreakdownTable({
   exportApi,
   icon,
 }: BreakdownTableProps) {
+  const INITIAL_DISPLAY = 9;
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<BreakdownResponse | null>(null);
   const { t } = useTranslation();
@@ -34,7 +35,7 @@ export default function BreakdownTable({
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const result = await api(query);
+      const result = await api({ ...query, limit });
       if (result.data) {
         setData(result.data);
       }
@@ -43,7 +44,7 @@ export default function BreakdownTable({
     } finally {
       setLoading(false);
     }
-  }, [api, query]);
+  }, [api, query, limit]);
 
   useEffect(() => {
     if (query.refresh !== undefined) {
@@ -53,7 +54,7 @@ export default function BreakdownTable({
 
   const rows = data?.data || [];
   const columns = data?.columns || (rows.length > 0 ? Object.keys(rows[0]) : []);
-  const displayRows = showMore ? rows : rows.slice(0, limit);
+  const displayRows = showMore ? rows : rows.slice(0, INITIAL_DISPLAY);
 
   // First column is the dimension key, rest are metrics
   const keyColumn = columns[0] || "";
@@ -165,8 +166,8 @@ export default function BreakdownTable({
             );
           })}
 
-          {/* More / Detail buttons */}
-          {rows.length >= limit && (
+          {/* More / Detail buttons — show when there are more rows than initial display */}
+          {rows.length > INITIAL_DISPLAY && (
             <div className="flex items-center border-t border-gray-100 dark:border-gray-800">
               <button
                 onClick={() => setShowMore(!showMore)}
@@ -182,8 +183,8 @@ export default function BreakdownTable({
               </button>
             </div>
           )}
-          {/* When below limit, show detail button + item count */}
-          {rows.length > 0 && rows.length < limit && (
+          {/* When within initial display, show detail button + item count */}
+          {rows.length > 0 && rows.length <= INITIAL_DISPLAY && (
             <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
               <span className="px-4 py-2.5 text-xs text-gray-400">
                 {t('stats.breakdown.totalItems', { count: rows.length })}
