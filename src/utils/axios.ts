@@ -122,6 +122,11 @@ api.interceptors.request.use(
 // response 拦截器
 api.interceptors.response.use(
     async (response: AxiosResponse<BaseResponse>) => {
+        // 二进制响应（blob / file download）直接放行
+        if (response.config.responseType === 'blob' || response.config.responseType === 'arraybuffer') {
+            return response;
+        }
+
         const { data: originalData, status } = response;
         const data = originalData;
 
