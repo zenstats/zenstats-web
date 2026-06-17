@@ -90,7 +90,7 @@ export default function NewSitePage() {
               {...register("domain", {
                 required: t('sites.new.validation.domainRequired'),
                 pattern: {
-                  value: /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/,
+                  value: /^(?:localhost|[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,})$/,
                   message: t('sites.new.validation.domainInvalid')
                 }
               })}
