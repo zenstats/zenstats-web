@@ -1,19 +1,34 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 import path from "path";
 
 // https://vite.dev/config/
-export default defineConfig({
-  server: {
-    host: "0.0.0.0",
-  },
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const dataDomain = env.VITE_DATA_DOMAIN || "localhost";
 
-  plugins: [react(), tsconfigPaths(), tailwindcss()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+  return {
+    server: {
+      host: "0.0.0.0",
     },
-  },
+
+    plugins: [
+      react(),
+      tsconfigPaths(),
+      tailwindcss(),
+      {
+        name: "inject-data-domain",
+        transformIndexHtml(html) {
+          return html.replace("__DATA_DOMAIN__", dataDomain);
+        },
+      },
+    ],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
+  };
 });
