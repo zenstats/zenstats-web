@@ -166,7 +166,7 @@ export default function BreakdownTable({
           })}
 
           {/* More / Detail buttons */}
-          {rows.length > limit && (
+          {rows.length >= limit && (
             <div className="flex items-center border-t border-gray-100 dark:border-gray-800">
               <button
                 onClick={() => setShowMore(!showMore)}
@@ -182,9 +182,12 @@ export default function BreakdownTable({
               </button>
             </div>
           )}
-          {/* Show detail button even when rows <= limit (no expand needed) */}
-          {rows.length <= limit && (
-            <div className="flex items-center justify-end border-t border-gray-100 dark:border-gray-800">
+          {/* When below limit, show detail button + item count */}
+          {rows.length > 0 && rows.length < limit && (
+            <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
+              <span className="px-4 py-2.5 text-xs text-gray-400">
+                {t('stats.breakdown.totalItems', { count: rows.length })}
+              </span>
               <button
                 onClick={() => setDetailOpen(true)}
                 className="px-4 py-2.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
