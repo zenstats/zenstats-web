@@ -267,6 +267,37 @@
       "instruction": "Add the ZenStats tracking code to every page of",
       "instructionSuffix": "Recommended placement inside the <head> tag.",
       "trackingCode": "Tracking Code",
+      "featureLabel": "Script Features",
+      "features": {
+        "none": "None (basic pageview tracking only)",
+        "all": "All features (recommended)",
+        "recommended": "✓ Full version — all features enabled",
+        "selectedScript": "Custom: {name}",
+        "taggedEvents": {
+          "label": "Tagged Events",
+          "desc": "Track clicks on elements with CSS class event-name=..."
+        },
+        "outboundLinks": {
+          "label": "Outbound Links",
+          "desc": "Track clicks on links pointing to other domains"
+        },
+        "fileDownloads": {
+          "label": "File Downloads",
+          "desc": "Track downloads of documents, media & archives"
+        },
+        "hash": {
+          "label": "Hash-based Routing",
+          "desc": "SPA support: trigger pageview on hashchange instead of pushState"
+        },
+        "exclusions": {
+          "label": "Page Exclusions",
+          "desc": "Exclude or include pages by path pattern via data-include / data-exclude attributes"
+        },
+        "manual": {
+          "label": "Manual Pageview URL",
+          "desc": "Allow overriding the tracked URL via options.u or options.url"
+        }
+      },
       "copyCode": "Copy Code",
       "copied": "Copied",
       "copyFailed": "Copy failed, please copy manually",

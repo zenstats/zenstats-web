@@ -21,6 +21,7 @@ import {
   ChevronDown, ChevronUp, Code2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import axios from "@utils/axios";
 
 const DEFAULT_BREAKDOWN_METRICS = ["visitors", "events"];
 const BREAKDOWN_UNSUPPORTED_METRICS = new Set(["views_per_visit"]);
@@ -107,6 +108,48 @@ export default function CustomQuery({
     { value: "matches", label: t('stats.customQuery.operators.matches') },
     { value: "matches_not", label: t('stats.customQuery.operators.matchesNot') },
   ], [t]);
+
+  // Custom props state
+  const [propKeys, setPropKeys] = useState<{ value: string; label: string }[]>([]);
+  const CUSTOM_PROPS_PREFIX = "event:props:";
+
+  // Build dimension options including dynamic custom props
+  const effectiveDimensionOptions = useMemo(() => {
+    const groups = [...DIMENSION_OPTIONS];
+    if (propKeys.length > 0) {
+      groups.push({
+        group: t('stats.categories.customProps'),
+        items: propKeys.map((pk) => ({
+          value: CUSTOM_PROPS_PREFIX + pk.value,
+          label: pk.value,
+        })),
+      });
+    }
+    return groups;
+  }, [DIMENSION_OPTIONS, propKeys, t]);
+
+  // Fetch available custom prop keys
+  useEffect(() => {
+    if (!domain) return;
+    const params: Record<string, string> = {
+      filter_name: "prop_key",
+      period: baseQuery.period || "p30",
+    };
+    if (baseQuery.date) params.date = baseQuery.date;
+    if (baseQuery.from) params.from = baseQuery.from;
+    if (baseQuery.to) params.to = baseQuery.to;
+
+    axios.get<BaseResponse<{ value: string; label: string }[]>>(
+      "/stats/" + domain + "/suggestions",
+      { params },
+    )
+      .then((res) => {
+        if (res.data?.data && Array.isArray(res.data.data)) {
+          setPropKeys(res.data.data);
+        }
+      })
+      .catch(() => {});
+  }, [domain, baseQuery.period, baseQuery.date, baseQuery.from, baseQuery.to]);
 
   // Query form state
   const [property, setProperty] = useState("event:name");
@@ -319,7 +362,7 @@ export default function CustomQuery({
   const querySummary = useMemo(() => {
     if (!lastQueryRef.current) return null;
     const last = lastQueryRef.current;
-    const dimLabel = DIMENSION_OPTIONS.flatMap(g => g.items).find(i => i.value === last.property)?.label || last.property;
+    const dimLabel = effectiveDimensionOptions.flatMap(g => g.items).find(i => i.value === last.property)?.label || last.property;
     const metricLabels = sanitizeMetrics(last.selectedMetrics, last.resultType, last.property)
       .map(m => METRIC_OPTIONS.find(o => o.value === m)?.label || m);
     const filterCount = last.filtersStr ? JSON.parse(last.filtersStr).length : 0;
@@ -397,7 +440,7 @@ export default function CustomQuery({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {DIMENSION_OPTIONS.map((group) => (
+                      {effectiveDimensionOptions.map((group) => (
                         <SelectGroup key={group.group}>
                           <SelectLabel>{group.group}</SelectLabel>
                           {group.items.map((item) => (
@@ -482,7 +525,7 @@ export default function CustomQuery({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {DIMENSION_OPTIONS.map((group) => (
+                          {effectiveDimensionOptions.map((group) => (
                             <SelectGroup key={group.group}>
                               <SelectLabel>{group.group}</SelectLabel>
                               {group.items.map((item) => (

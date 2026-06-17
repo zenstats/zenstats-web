@@ -267,6 +267,37 @@
       "instruction": "将下面的 ZenStats 统计代码添加到",
       "instructionSuffix": "的每个页面中，建议放在 <head> 内。",
       "trackingCode": "统计代码",
+      "featureLabel": "脚本功能选择",
+      "features": {
+        "none": "无（仅基础页面浏览追踪）",
+        "all": "全部功能（推荐）",
+        "recommended": "✓ 完整版 — 已启用全部功能",
+        "selectedScript": "自定义：{name}",
+        "taggedEvents": {
+          "label": "自定义事件",
+          "desc": "追踪带有 CSS 类名 event-name=... 的元素点击"
+        },
+        "outboundLinks": {
+          "label": "站外链接",
+          "desc": "追踪指向其他域名的链接点击"
+        },
+        "fileDownloads": {
+          "label": "文件下载",
+          "desc": "追踪文档、媒体和压缩包等文件下载"
+        },
+        "hash": {
+          "label": "Hash 路由模式",
+          "desc": "SPA 支持：使用 hashchange 而非 pushState 触发页面浏览"
+        },
+        "exclusions": {
+          "label": "页面排除规则",
+          "desc": "通过 data-include / data-exclude 属性按路径模式排除或包含页面"
+        },
+        "manual": {
+          "label": "手动 Pageview URL",
+          "desc": "允许通过 options.u 或 options.url 手动覆盖追踪 URL"
+        }
+      },
       "copyCode": "复制代码",
       "copied": "已复制",
       "copyFailed": "复制失败，请手动复制代码",

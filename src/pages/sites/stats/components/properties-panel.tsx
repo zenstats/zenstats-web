@@ -23,7 +23,13 @@ import { Button } from "@/components/ui/button";
 import { Download, BarChart3, Layers } from "lucide-react";
 import type { StatsRequest } from "../../types/interfaces";
 import type { BaseResponse } from "@utils/axios";
+import axios from "@utils/axios";
 import { cn } from "@/lib/utils";
+
+interface PropKeyItem {
+  value: string;
+  label: string;
+}
 
 interface PropertiesPanelProps {
   query: StatsRequest;
@@ -50,7 +56,7 @@ const PROPERTY_OPTIONS = [
   ]},
 ];
 
-const DEFAULT_PROPERTY = "event:name";
+const DEFAULT_PROPERTY = "event:page";
 
 export default function PropertiesPanel({ query, domain, breakdownApi, exportApi }: PropertiesPanelProps) {
   const { t } = useTranslation();
@@ -59,6 +65,33 @@ export default function PropertiesPanel({ query, domain, breakdownApi, exportApi
   const [data, setData] = useState<Record<string, unknown>[] | null>(null);
   const [columns, setColumns] = useState<string[]>([]);
   const [hasRun, setHasRun] = useState(false);
+
+  // Custom props state
+  const [propKeys, setPropKeys] = useState<PropKeyItem[]>([]);
+  const CUSTOM_PROPS_PREFIX = "event:props:";
+
+  // Fetch available custom prop keys
+  useEffect(() => {
+    if (!domain) return;
+    const params: Record<string, string> = {
+      filter_name: "prop_key",
+      period: query.period || "p30",
+    };
+    if (query.date) params.date = query.date;
+    if (query.from) params.from = query.from;
+    if (query.to) params.to = query.to;
+
+    axios.get<BaseResponse<PropKeyItem[]>>("/stats/" + domain + "/suggestions", { params })
+      .then((res) => {
+        if (res.data?.data && Array.isArray(res.data.data)) {
+          setPropKeys(res.data.data);
+        }
+      })
+      .catch(() => {});
+  }, [domain, query.period, query.date, query.from, query.to]);
+
+  const isCustomProp = property.startsWith(CUSTOM_PROPS_PREFIX);
+  const propKey = isCustomProp ? property.slice(CUSTOM_PROPS_PREFIX.length) : "";
 
   const fetchData = useCallback(async () => {
     if (!domain) return;
@@ -127,14 +160,18 @@ export default function PropertiesPanel({ query, domain, breakdownApi, exportApi
           <div>
             <CardTitle className="flex items-center gap-2">
               <Layers className="h-5 w-5" />
-              {t("stats.properties.title")}
+              {isCustomProp ? `${t("stats.properties.customProp", "Property")}: ${propKey}` : t("stats.properties.title")}
             </CardTitle>
-            <CardDescription>{t("stats.properties.description")}</CardDescription>
+            <CardDescription>
+              {isCustomProp
+                ? t("stats.properties.customPropDesc", "Values for custom property")
+                : t("stats.properties.description")}
+            </CardDescription>
           </div>
         </div>
         <div className="flex items-center gap-3 mt-3">
           <Select value={property} onValueChange={(v) => { setProperty(v); setHasRun(false); }}>
-            <SelectTrigger className="h-9 text-sm w-[220px]">
+            <SelectTrigger className="h-9 text-sm w-[240px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -143,11 +180,22 @@ export default function PropertiesPanel({ query, domain, breakdownApi, exportApi
                   <SelectLabel>{t(group.labelKey)}</SelectLabel>
                   {group.items.map((item) => (
                     <SelectItem key={item.value} value={item.value}>
-                      {item.value}
+                      {t(item.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectGroup>
               ))}
+              {/* Custom Properties group */}
+              {propKeys.length > 0 && (
+                <SelectGroup key="custom-props">
+                  <SelectLabel>{t("stats.properties.group.customProps", "Custom Properties")}</SelectLabel>
+                  {propKeys.map((pk) => (
+                    <SelectItem key={CUSTOM_PROPS_PREFIX + pk.value} value={CUSTOM_PROPS_PREFIX + pk.value}>
+                      {pk.value}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              )}
             </SelectContent>
           </Select>
           {data && data.length > 0 && (

@@ -271,6 +271,20 @@ export default function StatsPage() {
         });
         return response.data;
       },
+      // Suggestions for filter autocomplete (prop keys and values)
+      getSuggestions: async (filterName: string, searchQuery?: string, period?: string, date?: string) => {
+        const params: Record<string, string> = {
+          filter_name: filterName,
+          period: period || "p30",
+        };
+        if (searchQuery) params.q = searchQuery;
+        if (date) params.date = date;
+        const response = await axios.get<BaseResponse<{ value: string; label: string }[]>>(
+          "/stats/" + domain + "/suggestions",
+          { params },
+        );
+        return response.data;
+      },
       getSiteList: async () => {
         const response = await axios.get<BaseResponse<Site[]>>("/sites");
         return response.data;

@@ -12,6 +12,68 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+
+// ---------------------------------------------------------------------------
+// Feature flag definitions — must match tracker/compile.js exactly
+// ---------------------------------------------------------------------------
+const FEATURES = [
+  { id: 'ex', i18nKey: 'exclusions',     flag: 'COMPILE_EXCLUSIONS' },
+  { id: 'fd', i18nKey: 'fileDownloads',  flag: 'COMPILE_FILE_DOWNLOADS' },
+  { id: 'ha', i18nKey: 'hash',           flag: 'COMPILE_HASH' },
+  { id: 'ma', i18nKey: 'manual',         flag: 'COMPILE_MANUAL' },
+  { id: 'ol', i18nKey: 'outboundLinks',  flag: 'COMPILE_OUTBOUND_LINKS' },
+  { id: 'te', i18nKey: 'taggedEvents',   flag: 'COMPILE_TAGGED_EVENTS' },
+] as const;
+
+type FeatureId = (typeof FEATURES)[number]['id'];
+
+// ---------------------------------------------------------------------------
+// Canonical file name — must match tracker/compile.js exactly
+// Abbreviated feature IDs: ex, fd, ha, ma, ol, te
+// Backward-compat: all features → script.js / script.hash.js
+// Collision disambiguation: script.ha → script.ha.bare.js (since script.hash.js already exists)
+// ---------------------------------------------------------------------------
+const BACKWARD_COMPAT_TARGETS = new Set(['script', 'script.hash'])
+
+function getScriptFileName(enabled: FeatureId[]): string {
+  if (enabled.length === 0) return 'script.bare.js'
+
+  const allIds = FEATURES.map(f => f.id)
+  // All features except hash → backward-compat "script.js"
+  if (enabled.every(id => id !== 'ha') && allIds.filter(id => id !== 'ha').every(id => enabled.includes(id))) {
+    return 'script.js'
+  }
+  // All features including hash → backward-compat "script.hash.js"
+  if (allIds.every(id => enabled.includes(id))) {
+    return 'script.hash.js'
+  }
+
+  const sorted = [...enabled].sort()
+  const name = `script.${sorted.join('.')}`
+
+  // Disambiguation: script.ha collides with backward-compat script.hash
+  if (BACKWARD_COMPAT_TARGETS.has(name)) {
+    return name + '.bare.js'
+  }
+
+  return name + '.js'
+}
+
+// ---------------------------------------------------------------------------
+// Human-readable label for the selected combination
+// ---------------------------------------------------------------------------
+function getScriptLabel(enabled: FeatureId[], t: (key: string) => string): string {
+  if (enabled.length === 0) return t('sites.install.features.none')
+  if (enabled.length === FEATURES.length) return t('sites.install.features.all')
+  return enabled
+    .map(id => {
+      const f = FEATURES.find(f => f.id === id)
+      return f ? t(`sites.install.features.${f.i18nKey}.label`) : id
+    })
+    .join(' + ')
+}
 
 export default function SiteInstallPage() {
   const navigate = useNavigate();
@@ -19,13 +81,30 @@ export default function SiteInstallPage() {
   const { domain = "" } = useParams<{ domain: string }>();
   const [copied, setCopied] = useState(false);
 
+  // All features enabled by default (full version, backward compat)
+  const [enabledFeatures, setEnabledFeatures] = useState<FeatureId[]>(
+    FEATURES.map(f => f.id)
+  );
+
+  const toggleFeature = (id: FeatureId, checked: boolean) => {
+    setEnabledFeatures(prev =>
+      checked
+        ? [...prev, id]
+        : prev.filter(f => f !== id)
+    )
+  }
+
+  const fileName = useMemo(() => getScriptFileName(enabledFeatures), [enabledFeatures])
+
   const scriptSnippet = useMemo(
     () => {
-      const scriptUrl = `${window.location.origin}/js/zenstats.js`;
+      const scriptUrl = `${window.location.origin}/js/${fileName}`;
       return `<script defer crossorigin="anonymous" data-domain="${domain}" src="${scriptUrl}"></script>`;
     },
-    [domain],
+    [domain, fileName],
   );
+
+  const isFullVersion = enabledFeatures.length === FEATURES.length
 
   const copySnippet = async () => {
     try {
@@ -54,6 +133,50 @@ export default function SiteInstallPage() {
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {/* Feature checkboxes */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">{t('sites.install.featureLabel')}</Label>
+            <div className="rounded-lg border p-4 space-y-4">
+              {FEATURES.map((feat) => {
+                const checked = enabledFeatures.includes(feat.id)
+                return (
+                  <div key={feat.id} className="flex items-start gap-3">
+                    <Checkbox
+                      id={`feat-${feat.id}`}
+                      checked={checked}
+                      onCheckedChange={(val) => toggleFeature(feat.id, val === true)}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <Label
+                        htmlFor={`feat-${feat.id}`}
+                        className="text-sm font-medium cursor-pointer"
+                      >
+                        {t(`sites.install.features.${feat.i18nKey}.label`)}
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t(`sites.install.features.${feat.i18nKey}.desc`)}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* Selected script summary */}
+              <div className="border-t pt-3 text-xs text-muted-foreground">
+                {isFullVersion ? (
+                  <span className="text-emerald-600 font-medium">{t('sites.install.features.recommended')}</span>
+                ) : (
+                  <>
+                    {t('sites.install.features.selectedScript', {
+                      name: getScriptLabel(enabledFeatures, t),
+                    })}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium">{t('sites.install.trackingCode')}</h3>
