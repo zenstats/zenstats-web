@@ -18,7 +18,7 @@ interface BreakdownTableProps {
 
 export default function BreakdownTable({
   title,
-  limit = 9,
+  limit = 50,
   query,
   setQuery,
   api,

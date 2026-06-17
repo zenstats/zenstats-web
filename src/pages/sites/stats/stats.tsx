@@ -940,7 +940,7 @@ export default function StatsPage() {
                           key={dim.key}
                           title={dim.label}
                           keyName={dim.label}
-                          limit={9}
+                          limit={50}
                           query={{ ...query, property: dim.property }}
                           setQuery={setQuery}
                           api={api.getBreakdown}
