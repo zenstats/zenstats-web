@@ -91,6 +91,7 @@ export interface BreakdownColumn {
 export interface BreakdownResponse {
   columns: string[];
   data: Record<string, string | number>[];
+  total_rows?: number;
 }
 
 // Current Visitors API types

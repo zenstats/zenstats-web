@@ -51,11 +51,13 @@ export default function BreakdownDetailDialog({
       const result = await api(request);
       if (result.data) {
         setData(result.data);
-        // Estimate total count: if we got a full page, there's likely more
-        if (result.data.data.length === PAGE_SIZE) {
-          setTotalCount(null); // unknown, need to keep paging
-        } else {
+        // Use server-provided total_rows when available
+        if (result.data.total_rows !== undefined && result.data.total_rows > 0) {
+          setTotalCount(result.data.total_rows);
+        } else if (result.data.data.length < PAGE_SIZE) {
           setTotalCount((p - 1) * PAGE_SIZE + result.data.data.length);
+        } else {
+          setTotalCount(null); // full page, unknown total
         }
       }
     } catch (error) {
