@@ -14,6 +14,7 @@ import APIKeysPage from "@/pages/sites/apikeys/apikeys";
 import AccountSettingsPage from "@/pages/settings/account";
 import Setup from '@/pages/login/setup';
 import NotFoundPage from '@/pages/404';
+import LandingPage from '@/pages/landing/LandingPage';
 import SettingsLayout from './pages/sites/settings/layout';
 import { SettingsGeneralForm } from './pages/sites/settings/general-form';
 import SettingShieldsIpAddress from './pages/sites/settings/shields/ip_address';
@@ -44,13 +45,13 @@ import VerifyEmailSuccess from './pages/verify-email/verify-email-success';
 import PendingVerification from './pages/pending-verification';
 import EmailGuard from '@/components/email-guard';
 
-// Root redirect component that checks login state
+// Root redirect component: show landing page for guests, dashboard for logged-in users
 function RootRedirect() {
   const token = localStorage.getItem("token");
   if (token) {
     return <Navigate to="/sites" replace />;
   }
-  return <Navigate to="/login" replace />;
+  return <LandingPage />;
 }
 
 const routes: RouteObject[] = [
