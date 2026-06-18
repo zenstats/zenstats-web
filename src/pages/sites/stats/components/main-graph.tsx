@@ -109,6 +109,16 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
     setIntervalDropdownOpen(false);
   };
 
+  const metricLabel =
+    currentMetric === "visitors" ? t('stats.graph.visitors') :
+    currentMetric === "pageviews" ? t('stats.graph.pageviews') :
+    currentMetric === "visits" ? t('stats.graph.visits') :
+    currentMetric === "events" ? t('stats.graph.events') :
+    currentMetric === "bounce_rate" ? t('stats.graph.bounceRate') :
+    currentMetric === "visit_duration" ? t('stats.graph.visitDuration') :
+    currentMetric === "views_per_visit" ? t('stats.graph.viewsPerVisit') :
+    currentMetric;
+
   const CustomTooltip = ({
     active,
     payload,
@@ -126,7 +136,7 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</p>
         <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
           {mainVal?.toLocaleString()}{" "}
-          {currentMetric === "visitors" ? t('stats.graph.visitors') : t('stats.graph.pageviews')}
+          {metricLabel}
         </p>
         {compVal !== undefined && (
           <p className="text-xs font-medium text-amber-600 dark:text-amber-400 mt-0.5">

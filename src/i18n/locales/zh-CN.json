@@ -368,6 +368,11 @@
     "graph": {
       "visitors": "访客",
       "pageviews": "浏览量",
+      "visits": "访问数",
+      "events": "事件数",
+      "bounceRate": "跳出率",
+      "visitDuration": "访问时长",
+      "viewsPerVisit": "页/访",
       "intervalByMinute": "按分钟",
       "intervalByHour": "按小时",
       "intervalByDay": "按天",

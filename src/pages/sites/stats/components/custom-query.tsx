@@ -348,7 +348,10 @@ export default function CustomQuery({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${domain}_${last.property}_${new Date().toISOString().slice(0, 10)}.csv`;
+      const d = params.date;
+      const from = params.from, to = params.to;
+      const datePart = from && to ? `${from}_${to}` : (d || new Date().toISOString().slice(0, 10));
+      link.download = `${domain}_${last.property}_${datePart}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

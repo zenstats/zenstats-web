@@ -137,7 +137,10 @@ export default function PropertiesPanel({ query, domain, breakdownApi, exportApi
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${domain}_${property}_${new Date().toISOString().slice(0, 10)}.csv`;
+      const d = query.date;
+      const from = query.from, to = query.to;
+      const datePart = from && to ? `${from}_${to}` : (d || new Date().toISOString().slice(0, 10));
+      link.download = `${domain}_${property}_${datePart}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

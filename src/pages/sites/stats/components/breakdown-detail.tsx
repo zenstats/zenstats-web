@@ -79,6 +79,13 @@ export default function BreakdownDetailDialog({
     fetchData(newPage);
   };
 
+  const getDateLabel = () => {
+    const d = query.date;
+    const from = query.from, to = query.to;
+    if (from && to) return `${from}_${to}`;
+    return d || new Date().toISOString().slice(0, 10);
+  };
+
   const handleExportCSV = async () => {
     if (!exportApi) return;
     try {
@@ -86,7 +93,7 @@ export default function BreakdownDetailDialog({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${title}_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.download = `${title}_${getDateLabel()}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

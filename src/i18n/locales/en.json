@@ -368,6 +368,11 @@
     "graph": {
       "visitors": "Visitors",
       "pageviews": "Pageviews",
+      "visits": "Visits",
+      "events": "Events",
+      "bounceRate": "Bounce Rate",
+      "visitDuration": "Visit Duration",
+      "viewsPerVisit": "Views/Visit",
       "intervalByMinute": "By Minute",
       "intervalByHour": "By Hour",
       "intervalByDay": "By Day",
