@@ -53,6 +53,7 @@ import MainGraph from "./components/main-graph";
 import BreakdownTable from "./components/breakdown-table";
 import CurrentVisitorsComponent from "./components/current-visitors";
 import FilterBar from "./components/filter-bar";
+import FilterMenu from "./components/filter-menu";
 import CustomQuery from "./components/custom-query";
 import DimensionSettings, {
   type DimensionConfig,
@@ -83,9 +84,19 @@ const DIMENSION_ICONS: Record<string, React.ReactNode> = {
 };
 
 interface ParsedFilter {
-  property: string;
+  /** Display-friendly label, e.g. "country" or "plan" */
   label: string;
+  /** Full dimension name, e.g. "visit:country", "event:props:plan" */
+  dimension: string;
+  /** Operator: is, is_not, contains, etc. */
+  operator: string;
+  /** Display value */
   value: string;
+  /** Position info for precise removal from the nested filter structure */
+  _groupIndex: number;   // index in outer array; -1 means top-level filter
+  _subIndex: number;     // index in inner array; -1 means not nested
+  /** The raw filter tuple ["is","visit:country",["US"]] */
+  _raw: unknown[];
 }
 
 function parseFilters(filtersStr: string | undefined): ParsedFilter[] {
@@ -93,25 +104,21 @@ function parseFilters(filtersStr: string | undefined): ParsedFilter[] {
   try {
     const parsed = JSON.parse(filtersStr);
     const result: ParsedFilter[] = [];
-    // Handle [["is","visit:country",["US"]]] format
     if (Array.isArray(parsed)) {
-      for (const item of parsed) {
-        if (Array.isArray(item) && item.length >= 3) {
-          result.push({
-            property: item[1],
-            label: item[1].split(":").pop() || item[1],
-            value: Array.isArray(item[2]) ? item[2].join(", ") : String(item[2]),
-          });
-        }
-        // Handle ["and", [...]] or ["or", [...]] format
-        if (Array.isArray(item) && item.length >= 2 && (item[0] === "and" || item[0] === "or")) {
-          for (const sub of item[1]) {
-            if (Array.isArray(sub) && sub.length >= 3) {
-              result.push({
-                property: sub[1],
-                label: sub[1].split(":").pop() || sub[1],
-                value: Array.isArray(sub[2]) ? sub[2].join(", ") : String(sub[2]),
-              });
+      for (let gi = 0; gi < parsed.length; gi++) {
+        const item = parsed[gi];
+        if (Array.isArray(item) && item.length >= 3 && item.length <= 4) {
+          // Top-level flat filter: ["is","visit:country",["US"]]
+          result.push(makeParsedFilter(item, gi, -1));
+        } else if (Array.isArray(item) && item.length >= 2 && (item[0] === "and" || item[0] === "or")) {
+          // Nested group: ["and", [["is",...], ["is",...]]]
+          const subs = item[1] as unknown[];
+          if (Array.isArray(subs)) {
+            for (let si = 0; si < subs.length; si++) {
+              const sub = subs[si];
+              if (Array.isArray(sub) && sub.length >= 3) {
+                result.push(makeParsedFilter(sub, gi, si));
+              }
             }
           }
         }
@@ -121,6 +128,28 @@ function parseFilters(filtersStr: string | undefined): ParsedFilter[] {
   } catch {
     return [];
   }
+}
+
+function makeParsedFilter(tuple: unknown[], groupIndex: number, subIndex: number): ParsedFilter {
+  const operator = String(tuple[0] || "is");
+  const dimension = String(tuple[1] || "");
+  const values = tuple[2];
+  const valueStr = Array.isArray(values) ? values.join(", ") : String(values ?? "");
+  const raw = groupIndex >= 0 && subIndex >= 0
+    ? [operator, dimension, Array.isArray(values) ? values : [valueStr]]
+    : [operator, dimension, Array.isArray(values) ? values : [valueStr]];
+  // Build display label: for event:goal show "Goal: value", others use dimension suffix
+  const rawLabel = dimension.includes(":") ? dimension.split(":").pop() || dimension : dimension;
+  const label = dimension === "event:goal" ? `Goal: ${valueStr}` : rawLabel;
+  return {
+    label,
+    dimension,
+    operator,
+    value: valueStr,
+    _groupIndex: groupIndex,
+    _subIndex: subIndex,
+    _raw: raw,
+  };
 }
 
 export default function StatsPage() {
@@ -522,23 +551,58 @@ export default function StatsPage() {
   // Filter management
   const handleRemoveFilter = (index: number) => {
     setQuery((prev) => {
-      if (!prev.filters) return prev;
+      const parsed = parseFilters(prev.filters);
+      if (index < 0 || index >= parsed.length) return prev;
+      const target = parsed[index];
+      let original: unknown[];
       try {
-        const parsed = JSON.parse(prev.filters);
-        parsed.splice(index, 1);
-        return {
-          ...prev,
-          filters: parsed.length > 0 ? JSON.stringify(parsed) : undefined,
-          refresh: new Date(),
-        };
+        original = JSON.parse(prev.filters || "[]");
       } catch {
         return { ...prev, filters: undefined, refresh: new Date() };
       }
+      if (!Array.isArray(original) || original.length === 0) return prev;
+
+      if (target._groupIndex >= 0 && target._subIndex >= 0) {
+        // Nested group filter: remove from ["and"/"or", [subs]]
+        const group = original[target._groupIndex];
+        if (Array.isArray(group) && Array.isArray(group[1])) {
+          const subs = [...(group[1] as unknown[])];
+          subs.splice(target._subIndex, 1);
+          if (subs.length <= 1) {
+            // Degrade: only one sub left, promote it to top level
+            original.splice(target._groupIndex, 1, subs[0] as unknown[]);
+          } else {
+            group[1] = subs;
+          }
+        }
+      } else {
+        // Top-level flat filter
+        original.splice(target._groupIndex, 1);
+      }
+
+      return {
+        ...prev,
+        filters: original.length > 0 ? JSON.stringify(original) : undefined,
+        refresh: new Date(),
+      };
     });
   };
 
   const handleClearAllFilters = () => {
     setQuery((prev) => ({ ...prev, filters: undefined, refresh: new Date() }));
+  };
+
+  const handleAddFilter = (dimension: string, operator: string, _label: string, values: string[]) => {
+    setQuery((prev) => {
+      const existing = (() => {
+        try { return JSON.parse(prev.filters || "[]"); } catch { return []; }
+      })();
+      if (!Array.isArray(existing)) return prev;
+
+      const newFilter = [operator, dimension, values.length === 1 ? [values[0]] : values];
+      const next = [...existing, newFilter];
+      return { ...prev, filters: JSON.stringify(next), refresh: new Date() };
+    });
   };
 
   // Ensure activeCategoryTab is valid
@@ -831,6 +895,13 @@ export default function StatsPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Filter Menu button */}
+            <FilterMenu
+              domain={domain!}
+              query={query}
+              onAddFilter={handleAddFilter}
+            />
+
             {/* Refresh */}
             <Button
               variant="ghost"
@@ -960,6 +1031,7 @@ export default function StatsPage() {
                 query={query}
                 domain={domain!}
                 aggregateApi={api.getAggregate}
+                onAddFilter={handleAddFilter}
               />
             )}
 

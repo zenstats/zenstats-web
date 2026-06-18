@@ -125,12 +125,14 @@ export interface Goal {
   event_name?: string;
   page_path?: string;
   display_name: string;
+  custom_props?: Record<string, string>;
 }
 
 export interface CreateGoalRequest {
   event_name?: string;
   page_path?: string;
   display_name: string;
+  custom_props?: Record<string, string>;
 }
 
 // Funnel types

@@ -16,11 +16,13 @@ import { toast } from "sonner";
 import { Target, ExternalLink, Globe, MousePointerClick } from "lucide-react";
 import axios, { type BaseResponse } from "@utils/axios";
 import type { Goal, StatsRequest, AggregateResponse } from "../../types/interfaces";
+import GoalDetailDialog from "./goal-detail-dialog";
 
 interface GoalsPanelProps {
   query: StatsRequest;
   domain: string;
   aggregateApi: (params: StatsRequest) => Promise<BaseResponse<AggregateResponse>>;
+  onAddFilter: (dimension: string, operator: string, label: string, values: string[]) => void;
 }
 
 interface GoalWithStats extends Goal {
@@ -28,11 +30,15 @@ interface GoalWithStats extends Goal {
   loading: boolean;
 }
 
-export default function GoalsPanel({ query, domain, aggregateApi }: GoalsPanelProps) {
+export default function GoalsPanel({ query, domain, aggregateApi, onAddFilter }: GoalsPanelProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [goals, setGoals] = useState<GoalWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Detail dialog state
+  const [detailGoal, setDetailGoal] = useState<Goal | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const fetchGoals = useCallback(async () => {
     if (!domain) return;
@@ -161,7 +167,11 @@ export default function GoalsPanel({ query, domain, aggregateApi }: GoalsPanelPr
             </TableHeader>
             <TableBody>
               {goals.map((goal) => (
-                <TableRow key={goal.id}>
+                <TableRow
+                  key={goal.id}
+                  className="cursor-pointer hover:bg-indigo-50/30 dark:hover:bg-indigo-950/10"
+                  onClick={() => { setDetailGoal(goal); setDetailOpen(true); }}
+                >
                   <TableCell>{goalTypeIcon(goal)}</TableCell>
                   <TableCell className="font-medium">{goal.display_name}</TableCell>
                   <TableCell>
@@ -191,6 +201,17 @@ export default function GoalsPanel({ query, domain, aggregateApi }: GoalsPanelPr
           </Table>
         )}
       </CardContent>
+
+      {/* Goal detail drill-down dialog */}
+      <GoalDetailDialog
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        goal={detailGoal}
+        domain={domain}
+        query={query}
+        aggregateApi={aggregateApi}
+        onAddFilter={onAddFilter}
+      />
     </Card>
   );
 }
