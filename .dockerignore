@@ -1,0 +1,26 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build output
+dist
+
+# Git
+.git
+.gitignore
+.gitkeep
+
+# IDE
+.idea
+.vscode
+*.sw?
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docs
+*.md
+*.task.md

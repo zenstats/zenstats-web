@@ -1,31 +1,51 @@
-# ---- Frontend Build Stage ----
-# Build context should be set to the zenstats-web directory
-FROM node:20-alpine AS frontend-builder
+# syntax=docker/dockerfile:1.7
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# ---- Stage 1: Compile Tracker Script ----
+FROM --platform=$BUILDPLATFORM node:22-alpine AS tracker-builder
+
+ARG NPM_REGISTRY=https://registry.npmmirror.com
+RUN npm config set registry ${NPM_REGISTRY}
+
+WORKDIR /build/tracker
+
+COPY tracker/package.json tracker/package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci
+
+COPY tracker/compile.js .
+COPY tracker/src ./src
+
+RUN npm run deploy
+
+# ---- Stage 2: Build Frontend ----
+FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend-builder
+
+ARG NPM_REGISTRY=https://registry.npmmirror.com
+ARG VITE_DATA_DOMAIN=localhost
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+ENV VITE_DATA_DOMAIN=${VITE_DATA_DOMAIN}
+
+RUN corepack enable && corepack prepare pnpm@10.13.1 --activate \
+  && pnpm config set registry ${NPM_REGISTRY} \
+  && pnpm config set store-dir /pnpm/store
 
 WORKDIR /build
 
-# Cache dependencies
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+  pnpm install --frozen-lockfile --ignore-scripts --prefer-offline && pnpm rebuild
 
-# Copy source and build
 COPY . .
+COPY --from=tracker-builder /build/tracker/dist /build/public/js
+
 RUN pnpm build
 
-# ---- Runtime Stage (Nginx) ----
-FROM nginx:alpine
+# ---- Stage 3: Caddy Runtime ----
+FROM --platform=$TARGETPLATFORM caddy:2-alpine
 
-# 移除默认配置
-RUN rm /etc/nginx/conf.d/default.conf
+COPY --from=frontend-builder /build/dist /srv
+COPY Caddyfile /etc/caddy/Caddyfile
 
-# 添加 SPA 配置（从 zenstats 项目复制）
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80 443 443/udp
 
-# 复制构建产物
-COPY --from=frontend-builder /build/dist /usr/share/nginx/html
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
