@@ -1,168 +1,71 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://img.shields.io/badge/ZenStats%20Web-%F0%9F%93%8A%20Analytics%20Dashboard-6C5CE7?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cGF0aCBkPSJNMjAgM0wxIDMzbDE5LTEwIDE5IDEweiIgZmlsbD0iIzhCOEJGQiIvPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjgiIGZpbGw9IiM2QzVDRTciLz48L3N2Zz4=&logoWidth=32">
-    <img src="https://img.shields.io/badge/ZenStats%20Web-%F0%9F%93%8A%20Analytics%20Dashboard-6C5CE7?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cGF0aCBkPSJNMjAgM0wxIDMzbDE5LTEwIDE5IDEweiIgZmlsbD0iIzhCOEJGQiIvPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjgiIGZpbGw9IiM2QzVDRTciLz48L3N2Zz4=&logoWidth=32" alt="ZenStats Web">
-  </picture>
-</p>
+# ZenStats Web
 
-<h3 align="center">
-  ZenStats Web — Analytics Dashboard (React SPA)
-</h3>
+ZenStats 前端面板 + Tracker JS SDK。React 19 + TypeScript + Vite，Docker 构建 Caddy 网关镜像。
 
-<p align="center">
-  The frontend dashboard for <a href="https://github.com/your-org/zenstats">ZenStats</a> — a self-hosted, privacy-first web analytics platform.
-</p>
+## 技术栈
 
-<p align="center">
-  <em>This is a git submodule of the <code>zenstats/</code> monorepo.</em>
-</p>
+- **框架**: React 19, TypeScript
+- **构建**: Vite 7
+- **UI**: Tailwind CSS 4, shadcn/ui
+- **图表**: ECharts + Recharts
+- **路由**: React Router 6
+- **状态**: Zustand
+- **国际化**: react-i18next
 
-<p align="center">
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react" alt="React">
-  <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat&logo=typescript" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Vite-7-646CFF?style=flat&logo=vite" alt="Vite">
-  <img src="https://img.shields.io/badge/Tailwind-4-38BDF8?style=flat&logo=tailwindcss" alt="Tailwind CSS">
-  <img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License">
-</p>
-
----
-
-## Features
-
-| | Capability |
-|---|---|
-| 📊 **Dashboard** | Aggregate metrics (visitors, pageviews, visits, bounce rate, visit duration) |
-| 📈 **Time Series** | Interactive main graph with period comparison (day/7d/14d/30d/custom) |
-| 🔍 **Breakdown Explorer** | Drill down by page, source, country, browser, OS, device, screen size, etc. |
-| 🗺️ **Geo Map** | World map visualization of visitor distribution |
-| 🎯 **Goals & Funnels** | Convertion tracking and multi-step funnel analysis |
-| 🚦 **Real-time** | Live visitor counter (last 30 minutes) |
-| 🛡️ **Shield Rules** | Traffic filtering by IP, hostname, country, user-agent |
-| 👥 **Team** | Multi-user management with role-based access, sub-accounts |
-| 🔑 **API Keys** | Generate and manage REST API tokens |
-| 🔧 **Site Settings** | General config, goals, funnels, import/export |
-| 🌐 **i18n** | English and Chinese (zh-CN) UI |
-| 🌓 **Dark Mode** | Automatic / light / dark theme |
-
----
-
-## Tech Stack
-
-- **Framework**: [React 19](https://react.dev/)
-- **Language**: [TypeScript 5.8](https://www.typescriptlang.org/)
-- **Build**: [Vite 7](https://vite.dev/) + [SWC](https://swc.rs/)
-- **UI**: [Tailwind CSS 4](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)
-- **Routing**: [React Router v6](https://reactrouter.com/) (BrowserRouter)
-- **State**: [Zustand](https://zustand.docs.pmnd.rs/)
-- **Charts**: [ECharts](https://echarts.apache.org/) + [Recharts](https://recharts.org/)
-- **Maps**: [react-simple-maps](https://www.react-simple-maps.io/)
-- **Forms**: [react-hook-form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
-- **i18n**: [react-i18next](https://react.i18next.com/)
-- **HTTP**: [Axios](https://axios-http.com/)
-- **Icons**: [Lucide](https://lucide.dev/)
-- **Animation**: [Motion](https://motion.dev/) (formerly Framer Motion)
-- **Date**: [date-fns](https://date-fns.org/) + [dayjs](https://day.js.org/)
-- **Lint**: ESLint + Prettier
-
----
-
-## Quick Start
+## 快速开始
 
 ```bash
-# Prerequisites
-# - Node.js >= 18
-# - pnpm (recommended), npm, or yarn
-# - The zenstats Go backend running on localhost:8080
+git clone https://git.potawang.cn/zenstats/zenstats-web.git
+cd zenstats-web
 
-# Install dependencies
 pnpm install
-
-# Start dev server (default: http://localhost:5173)
-pnpm dev
+pnpm dev          # http://localhost:5173
 ```
 
-The dev server proxies API requests to `localhost:8080` via Vite's proxy config.
+## 项目结构
 
-### Using Mock Data
+```
+zenstats-web/
+├── src/                # React 应用源码
+│   ├── pages/          # 页面组件 (login, sites, stats, settings)
+│   ├── components/     # 通用 UI 组件
+│   ├── store/          # Zustand 状态管理
+│   └── utils/          # Axios 封装、工具函数
+├── tracker/            # Tracker JS SDK
+│   ├── src/            # 追踪脚本源码
+│   ├── compile.js      # 64 变体编译脚本
+│   └── dist/           # 编译产物 (gitignore)
+├── public/             # 静态资源（Tracker JS 编译后注入到 public/js/）
+├── Dockerfile          # 三阶段构建 (tracker → frontend → caddy)
+├── Caddyfile           # Caddy 网关配置 (SPA + /js/ + /api/ 代理)
+└── .gitea/             # CI 工作流（多架构 buildx → ghcr.io）
+```
+
+## Docker 镜像
 
 ```bash
-VITE_USE_MOCK=true pnpm dev
+docker build -t zenstats-web .
 ```
 
-Runs the app with in-memory mock data — no backend needed for UI development.
+CI 自动构建多架构镜像推送到 `ghcr.io/zenstats/zenstats-web`。
 
----
+镜像包含：
+- **Caddy 2** 网关（自动 SSL、反向代理）
+- **Tracker JS** 64 变体（`/js/script.js` 等）
+- **SPA 静态文件**（React 管理面板）
 
-## Build
+## Tracker SDK
+
+追踪脚本文档：[docs/tracker.md](docs/tracker.md) (EN) / [docs/tracker_zh.md](docs/tracker_zh.md) (中文)
+
+## 部署
+
+本仓库只负责前端镜像构建。完整部署请使用 [zenstats-deploy](https://git.potawang.cn/zenstats/zenstats-deploy)：
 
 ```bash
-pnpm build
+docker compose up -d   # 自动拉取前端 + API 镜像
 ```
-
-> **Note**: The build command uses `tsc -b` (project references mode), **not** `tsc --noEmit`.
-> The `-b` flag enables strict cross-project type checking that `--noEmit` doesn't trigger.
-> Always validate types with `npx tsc -b` before committing.
-
----
-
-## Scripts
-
-| Script | Description |
-|---|---|
-| `pnpm dev` | Start development server |
-| `pnpm build` | Type-check (`tsc -b`) + production build |
-| `pnpm preview` | Preview production build locally |
-| `pnpm lint` | Run ESLint |
-
----
-
-## Project Structure
-
-```
-web/
-├── public/                 # Static assets (served as-is)
-│   └── js/                 # Tracker SDK compiled scripts (copied by Docker build)
-├── src/
-│   ├── components/         # Reusable UI components (shadcn/ui + custom)
-│   ├── constants/          # Global constants
-│   ├── i18n/               # Internationalization (en / zh-CN)
-│   │   └── locales/        # Translation JSON files
-│   ├── lib/                # Utility helpers (cn, api client, ...)
-│   ├── pages/
-│   │   ├── login/          # Login, forgot/reset password, setup wizard
-│   │   ├── register/       # User registration
-│   │   ├── sites/          # Site management
-│   │   │   ├── stats/      # ⭐ Main analytics dashboard + breakdown explorer
-│   │   │   ├── funnel-analysis/
-│   │   │   ├── settings/   # General, goals, funnels, shields
-│   │   │   ├── import/     # Data import
-│   │   │   ├── apikeys/
-│   │   │   ├── install.tsx # Tracker script installation guide
-│   │   │   └── verify.tsx  # Domain verification
-│   │   ├── settings/       # User account settings
-│   │   ├── admin/          # Admin panel (users, groups, sites, system config)
-│   │   ├── user/           # Sub-accounts, search engines, quota
-│   │   └── 404.tsx         # Not found
-│   ├── store/              # Zustand stores
-│   ├── utils/              # Mock data, helpers
-│   ├── App.tsx             # Root component + layout
-│   ├── main.tsx            # Entry point
-│   └── routes.tsx          # Route definitions (~40 routes)
-├── index.html              # HTML entry (with self-tracking script)
-├── vite.config.ts          # Vite configuration
-├── tsconfig.json           # TypeScript config
-└── package.json            # Dependencies & scripts
-```
-
----
-
-## Related
-
-- [ZenStats Backend](https://github.com/zenstats/zenstats) — Go API server, ClickHouse analytics, PostgreSQL business data
-- [ZenStats Tracker](https://github.com/zenstats/zenstats/tree/main/tracker) — Browser-side JS instrumentation SDK
-
----
 
 ## License
 
-**Apache 2.0** — See [LICENSE](https://www.apache.org/licenses/LICENSE-2.0) for details.
+Apache 2.0
