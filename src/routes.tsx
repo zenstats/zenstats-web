@@ -35,7 +35,7 @@ import AdminSettings from './pages/admin/settings';
 
 // User pages
 import Register from './pages/register/register';
-import UserSearchEngines from './pages/user/search-engines';
+import UserSources from './pages/user/sources';
 import UserSubAccounts from './pages/user/sub-accounts';
 import UserQuota from './pages/user/quota';
 
@@ -187,8 +187,8 @@ const routes: RouteObject[] = [
         element: <AccountSettingsPage />
       },
       {
-        path: "/user/search-engines",
-        element: <UserSearchEngines />
+        path: "/user/sources",
+        element: <UserSources />
       },
       {
         path: "/user/sub-accounts",

@@ -148,7 +148,7 @@ function UserDropdown({ user, onLogout, isAdmin, isSubAccount }: { user: { name:
         {!isSubAccount && (
           <>
             <DropdownMenuItem
-              onClick={() => navigate("/user/search-engines")}
+              onClick={() => navigate("/user/sources")}
               className="flex items-center gap-2.5 py-2 cursor-pointer"
             >
               <Search className="h-4 w-4 text-gray-500" />
@@ -391,7 +391,7 @@ export default function Header() {
                     variant="ghost"
                     className="w-full justify-start gap-2.5 h-11"
                     onClick={() => {
-                      navigate("/user/search-engines");
+                      navigate("/user/sources");
                       setOpen(false);
                     }}
                   >

@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useEffect, useState, useCallback } from "react";
 import axios, { type BaseResponse } from "@utils/axios";
 import { isSubAccount } from "@utils/auth";
+import SiteSparkline from "@/components/SiteSparkline";
 import type { Site } from "./types/interfaces";
 
 // 自定义防抖 Hook
@@ -92,7 +93,7 @@ export default function Sites() {
           <Card
             key={site.id}
             onClick={() => navigate(site.is_verified ? `/sites/${site.domain}/stats` : `/sites/${site.domain}/verify`)}
-            className="cursor-pointer"
+            className="cursor-pointer group"
           >
             <CardHeader className="relative">
               <CardTitle className="flex items-center gap-2">
@@ -137,7 +138,9 @@ export default function Sites() {
                 </CardAction>
               )}
             </CardHeader>
-            <CardContent>{/* 这里暂时先显示一个空卡片 */}</CardContent>
+            <CardContent>
+              <SiteSparkline domain={site.domain} />
+            </CardContent>
           </Card>
         ))}
       </div>

@@ -23,7 +23,7 @@ interface SearchEngineListResponse {
   has_permission: boolean
 }
 
-export default function UserSearchEngines() {
+export default function UserSources() {
   const { t } = useTranslation()
   const [engines, setEngines] = useState<CustomSearchEngine[]>([])
   const [hasPermission, setHasPermission] = useState(true)
@@ -41,7 +41,7 @@ export default function UserSearchEngines() {
         setHasPermission(data.data.has_permission)
       }
     } catch {
-      toast.error(t('searchEngines.loadFailed'))
+      toast.error(t('customSources.loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -67,15 +67,15 @@ export default function UserSearchEngines() {
     try {
       if (editingEngine) {
         await axios.put(`/user/search-engines/${editingEngine.id}`, formData)
-        toast.success(t('searchEngines.updateSuccess'))
+        toast.success(t('customSources.updateSuccess'))
       } else {
         await axios.post("/user/search-engines", formData)
-        toast.success(t('searchEngines.createSuccess'))
+        toast.success(t('customSources.createSuccess'))
       }
       setDialogOpen(false)
       fetchEngines()
     } catch {
-      toast.error(t('searchEngines.saveFailed'))
+      toast.error(t('customSources.saveFailed'))
     }
   }
 
@@ -83,10 +83,10 @@ export default function UserSearchEngines() {
     if (!confirm(t('common.confirm'))) return
     try {
       await axios.delete(`/user/search-engines/${engineId}`)
-      toast.success(t('searchEngines.deleteSuccess'))
+      toast.success(t('customSources.deleteSuccess'))
       fetchEngines()
     } catch {
-      toast.error(t('searchEngines.deleteFailed'))
+      toast.error(t('customSources.deleteFailed'))
     }
   }
 
@@ -99,10 +99,10 @@ export default function UserSearchEngines() {
       <Card>
         <CardContent className="py-8 text-center">
           <p className="text-muted-foreground">
-            {t('searchEngines.noPermission')}
+            {t('customSources.noPermission')}
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            {t('searchEngines.upgradeHint')}
+            {t('customSources.upgradeHint')}
           </p>
         </CardContent>
       </Card>
@@ -114,22 +114,22 @@ export default function UserSearchEngines() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>{t('searchEngines.title')}</CardTitle>
+            <CardTitle>{t('customSources.title')}</CardTitle>
             <CardDescription>
-              {t('searchEngines.description')}
+              {t('customSources.description')}
             </CardDescription>
           </div>
           {!subAccount && (
-            <Button onClick={openCreateDialog}>{t('searchEngines.addEngine')}</Button>
+            <Button onClick={openCreateDialog}>{t('customSources.addEngine')}</Button>
           )}
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('searchEngines.domain')}</TableHead>
-                <TableHead>{t('searchEngines.name')}</TableHead>
-                {!subAccount && <TableHead>{t('searchEngines.actions')}</TableHead>}
+                <TableHead>{t('customSources.domain')}</TableHead>
+                <TableHead>{t('customSources.name')}</TableHead>
+                {!subAccount && <TableHead>{t('customSources.actions')}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -160,27 +160,27 @@ export default function UserSearchEngines() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingEngine ? t('searchEngines.editEngine') : t('searchEngines.addEngine')}</DialogTitle>
+              <DialogTitle>{editingEngine ? t('customSources.editEngine') : t('customSources.addEngine')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>{t('searchEngines.domain')}</Label>
+                <Label>{t('customSources.domain')}</Label>
                 <Input
                   value={formData.domain}
                   onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                  placeholder={t('searchEngines.domainPlaceholder')}
+                  placeholder={t('customSources.domainPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('searchEngines.name')}</Label>
+                <Label>{t('customSources.name')}</Label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={t('searchEngines.namePlaceholder')}
+                  placeholder={t('customSources.namePlaceholder')}
                 />
               </div>
               <Button onClick={handleSaveEngine} className="w-full">
-                {editingEngine ? t('common.save') : t('searchEngines.addEngine')}
+                {editingEngine ? t('common.save') : t('customSources.addEngine')}
               </Button>
             </div>
           </DialogContent>

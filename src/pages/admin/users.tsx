@@ -16,6 +16,7 @@ interface AdminUser {
   name: string
   is_admin: boolean
   status: string
+  group_id: number
   group_name: string
   created_at: string
   updated_at: string
@@ -97,6 +98,7 @@ export default function AdminUsers() {
 
   const openEditDialog = (user: AdminUser) => {
     setSelectedUser(user)
+    setSelectedGroupId(user.group_id || 0)
     setSelectedStatus(user.status)
     setEditDialogOpen(true)
   }
