@@ -6,6 +6,7 @@
     "users": "Users",
     "groups": "Groups",
     "sites": "Sites",
+    "sources": "Sources",
     "settings": "Settings",
     "backToSites": "Back to Sites",
     "dashboardPage": {
@@ -109,6 +110,18 @@
       "deleteSuccess": "Site deleted successfully",
       "deleteFailed": "Failed to delete site"
     }
+  },
+  "adminSources": {
+    "title": "Built-in Sources",
+    "description": "Manage global traffic sources, effective for all users",
+    "addSource": "Add Source",
+    "editSource": "Edit Source",
+    "domain": "Domain",
+    "name": "Name",
+    "actions": "Actions",
+    "createSuccess": "Source added",
+    "updateSuccess": "Source updated",
+    "deleteSuccess": "Source deleted"
   },
   "register": {
     "title": "Create Account",

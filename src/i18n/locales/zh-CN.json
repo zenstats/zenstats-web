@@ -6,6 +6,7 @@
     "users": "用户",
     "groups": "分组",
     "sites": "站点",
+    "sources": "内置来源",
     "settings": "设置",
     "backToSites": "返回站点",
     "dashboardPage": {
@@ -109,6 +110,18 @@
       "deleteSuccess": "站点删除成功",
       "deleteFailed": "删除站点失败"
     }
+  },
+  "adminSources": {
+    "title": "内置来源管理",
+    "description": "管理全局内置流量来源，所有用户的统计中生效",
+    "addSource": "添加来源",
+    "editSource": "编辑来源",
+    "domain": "域名",
+    "name": "名称",
+    "actions": "操作",
+    "createSuccess": "来源已添加",
+    "updateSuccess": "来源已更新",
+    "deleteSuccess": "来源已删除"
   },
   "register": {
     "title": "创建账户",

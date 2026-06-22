@@ -31,6 +31,7 @@ import AdminDashboard from './pages/admin/dashboard';
 import AdminUsers from './pages/admin/users';
 import AdminGroups from './pages/admin/groups';
 import AdminSites from './pages/admin/sites';
+import AdminSources from './pages/admin/sources';
 import AdminSettings from './pages/admin/settings';
 
 // User pages
@@ -221,6 +222,10 @@ const routes: RouteObject[] = [
           {
             path: "sites",
             element: <AdminLayout><AdminSites /></AdminLayout>
+          },
+          {
+            path: "sources",
+            element: <AdminLayout><AdminSources /></AdminLayout>
           },
           {
             path: "settings",
