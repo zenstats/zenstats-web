@@ -287,7 +287,7 @@
         },
         "hash": {
           "label": "Hash 路由模式",
-          "desc": "SPA 支持：使用 hashchange 而非 pushState 触发页面浏览"
+          "desc": "适用于 # 号路由的老式站点（如 example.com/#/page）。现代 SPA 使用无 # 的干净 URL 时请关闭此项。"
         },
         "exclusions": {
           "label": "页面排除规则",

@@ -81,9 +81,10 @@ export default function SiteInstallPage() {
   const { domain = "" } = useParams<{ domain: string }>();
   const [copied, setCopied] = useState(false);
 
-  // All features enabled by default (full version, backward compat)
+  // All features except hash enabled by default
+  // Hash mode is off by default — modern SPAs use pushState, not #/ routes
   const [enabledFeatures, setEnabledFeatures] = useState<FeatureId[]>(
-    FEATURES.map(f => f.id)
+    FEATURES.filter(f => f.id !== 'ha').map(f => f.id)
   );
 
   const toggleFeature = (id: FeatureId, checked: boolean) => {

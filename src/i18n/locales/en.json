@@ -287,7 +287,7 @@
         },
         "hash": {
           "label": "Hash-based Routing",
-          "desc": "SPA support: trigger pageview on hashchange instead of pushState"
+          "desc": "For sites with #/ routes (e.g. example.com/#/page). If your SPA uses clean URLs without #, keep this OFF."
         },
         "exclusions": {
           "label": "Page Exclusions",

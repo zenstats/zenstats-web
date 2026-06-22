@@ -22,6 +22,47 @@ pnpm install
 pnpm dev          # http://localhost:5173
 ```
 
+## 本地开发
+
+### Mock 模式（无需后端，推荐前端开发首选）
+
+所有 API 调用返回内置模拟数据，无需启动数据库或后端：
+
+```bash
+VITE_USE_MOCK=true pnpm dev
+```
+
+访问 `http://localhost:5173`，自动以 Demo 用户登录，所有页面（统计面板、漏斗分析、站点管理等）均可正常浏览。Mock 数据定义在 `src/utils/mock.ts`。
+
+### 连接本地后端
+
+确保后端已在 `localhost:8080` 运行（参考 [zenstats/README.md](../zenstats/README.md) 的 Quick Start）：
+
+```bash
+pnpm dev     # Vite 开发服务器，/api/* 请求代理到 localhost:8080
+```
+
+Vite 代理配置在 `vite.config.ts` 中，默认将 `/api`、`/swagger` 等路径转发到后端。
+
+### 全栈开发（推荐）
+
+使用 `zenstats-deploy` 一键启动完整后端栈，前端单独开发：
+
+```bash
+# 终端 1：启动后端栈（PG + CH + API + Caddy）
+cd ../zenstats-deploy
+cp .env.local .env
+make local
+
+# 终端 2：启动前端开发服务器
+cd zenstats-web
+pnpm dev          # → http://localhost:5173
+
+# 或者仅启动数据库，在宿主机运行 API（方便 IDE 调试）:
+# make db-up
+# cd ../zenstats && go run main.go server
+```
+
 ## 项目结构
 
 ```
@@ -68,4 +109,4 @@ docker compose up -d   # 自动拉取前端 + API 镜像
 
 ## License
 
-Apache 2.0
+**AGPL-3.0** — See [LICENSE.md](LICENSE.md) for details.
