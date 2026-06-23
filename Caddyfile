@@ -51,12 +51,11 @@
 		reverse_proxy zenstats:8080
 	}
 
-	# SPA 静态文件 + 路由回退（不再代理到 nginx）
 	handle {
+		try_files {path} /index.html
 		file_server {
 			root /srv
 		}
-		try_files {path} /index.html
 	}
 
 	# 安全头
