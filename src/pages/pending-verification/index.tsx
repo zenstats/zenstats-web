@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Mail } from "lucide-react"
 import { toast } from "sonner"
-import axios from "@utils/axios"
+import axios, { type BaseResponse } from "@utils/axios"
 
 export default function PendingVerification() {
   const { t } = useTranslation()
@@ -23,6 +23,28 @@ export default function PendingVerification() {
     if (emailVerified || isAdmin) {
       navigate("/sites", { replace: true })
     }
+  }, [navigate])
+
+  // 轮询验证状态：用户在另一个标签页完成验证后自动检测并跳转
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (!token) return
+
+    const interval = setInterval(async () => {
+      try {
+        const { data } = await axios.get<BaseResponse<{ email_verified: boolean; is_admin: boolean }>>("/auth/verification-status")
+        const status = data.data
+        if (status?.email_verified || status?.is_admin) {
+          localStorage.setItem("email_verified", "true")
+          if (status?.is_admin) localStorage.setItem("is_admin", "true")
+          navigate("/sites", { replace: true })
+        }
+      } catch {
+        // 轮询失败静默忽略，等待下次重试
+      }
+    }, 5000)
+
+    return () => clearInterval(interval)
   }, [navigate])
 
   const handleResend = async () => {
