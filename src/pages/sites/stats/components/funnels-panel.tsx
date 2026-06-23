@@ -102,7 +102,7 @@ export default function FunnelsPanel({ query, domain }: FunnelsPanelProps) {
   };
 
   return (
-    <Card>
+    <Card className="dark:bg-gray-900">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

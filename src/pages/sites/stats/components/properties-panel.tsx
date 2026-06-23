@@ -157,7 +157,7 @@ export default function PropertiesPanel({ query, domain, breakdownApi, exportApi
   };
 
   return (
-    <Card>
+    <Card className="dark:bg-gray-900">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

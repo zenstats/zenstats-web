@@ -15,6 +15,8 @@ import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { useScroll } from "@/components/ui/use-scroll";
 import { cn } from "@/lib/utils";
 import Logo from "@/assets/logo.svg";
+import LogoDark from "@/assets/logo-dark.svg";
+import { useTheme } from "next-themes";
 import {
   Globe,
   Key,
@@ -232,6 +234,32 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const scrolled = useScroll(10);
   const { t, i18n } = useTranslation();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const logoSrc = isDark ? LogoDark : Logo;
+  const toggleTheme = () => {
+    // Get the toggle button position for radial reveal origin
+    const btn = document.querySelector('[data-theme-toggle]');
+    if (btn) {
+      const rect = btn.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      document.documentElement.style.setProperty('--tx', `${x}px`);
+      document.documentElement.style.setProperty('--ty', `${y}px`);
+    }
+    // Use View Transition API for smooth radial animation
+    if (document.startViewTransition) {
+      document.documentElement.classList.add('theme-transitioning');
+      document.startViewTransition(() => {
+        setTheme(isDark ? "light" : "dark");
+      });
+      setTimeout(() => {
+        document.documentElement.classList.remove('theme-transitioning');
+      }, 600);
+    } else {
+      setTheme(isDark ? "light" : "dark");
+    }
+  };
   const isAdmin = localStorage.getItem("is_admin") === "true";
   const subAccount = isSubAccount();
 
@@ -278,7 +306,7 @@ export default function Header() {
             className="flex items-center gap-2.5 cursor-pointer"
             onClick={() => navigate("/sites")}
           >
-            <img className="block h-8 w-auto" src={Logo} alt="ZenStats" />
+            <img className="block h-8 w-auto" src={logoSrc} alt="ZenStats" />
             <span className="font-semibold text-lg hidden sm:inline-block text-gray-900 dark:text-gray-100">
               ZenStats
             </span>
@@ -298,6 +326,26 @@ export default function Header() {
             </Button>
 
             <LanguageSwitcher />
+
+            {/* Theme toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              data-theme-toggle
+              onClick={toggleTheme}
+              className="text-gray-600 dark:text-gray-400"
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {isDark ? (
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </Button>
 
             {user?.name ? (
               <UserDropdown user={user} onLogout={logout} isAdmin={isAdmin} isSubAccount={subAccount} />
@@ -438,6 +486,25 @@ export default function Header() {
               )}
 
               <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
+
+              {/* Mobile theme toggle */}
+              <button
+                className="w-full flex items-center gap-2.5 py-2 px-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+                onClick={() => {
+                  setTheme(isDark ? "light" : "dark");
+                }}
+              >
+                {isDark ? (
+                  <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+                {isDark ? "Light Mode" : "Dark Mode"}
+              </button>
 
               <button
                 className="w-full flex items-center gap-2.5 py-2 px-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"

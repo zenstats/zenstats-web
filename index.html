@@ -2,9 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/svg+xml" href="/logo-dark.svg" media="(prefers-color-scheme: dark)" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zenstats</title>
+    <script>
+      // Prevent flash of wrong theme (next-themes)
+      (function () {
+        try {
+          var d = document.documentElement;
+          var s = localStorage.getItem('theme');
+          if (s === 'dark' || (!s && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            d.classList.add('dark');
+          } else {
+            d.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <script defer crossorigin="anonymous" data-domain="__DATA_DOMAIN__" src="/js/script.js"></script>
   </head>
   <body>

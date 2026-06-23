@@ -85,7 +85,7 @@ export default function SiteVerifyPage() {
       <div className="mx-auto max-w-3xl px-4 py-10">
         <Card className="border-0 shadow-sm">
           <CardHeader className="space-y-3 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
               <Shield className="h-6 w-6" />
             </div>
             <CardTitle className="text-2xl">{t('sites.verify.verifiedTitle')}</CardTitle>
@@ -109,7 +109,7 @@ export default function SiteVerifyPage() {
     <div className="mx-auto max-w-3xl px-4 py-10">
       <Card className="border-0 shadow-sm">
         <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
             <ShieldAlert className="h-6 w-6" />
           </div>
           <CardTitle className="text-2xl">{t('sites.verify.title')}</CardTitle>
@@ -129,7 +129,7 @@ export default function SiteVerifyPage() {
                 {copied ? t('sites.verify.copied') : t('sites.verify.copyToken')}
               </Button>
             </div>
-            <div className="rounded-lg bg-slate-50 p-4 text-sm">
+            <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-4 text-sm">
               <p className="mb-2 text-muted-foreground">{t('sites.verify.filePath')}:</p>
               <code className="block rounded bg-slate-950 p-2 text-slate-50">/.well-known/zenstats-verification.txt</code>
             </div>
@@ -138,7 +138,7 @@ export default function SiteVerifyPage() {
             </pre>
           </div>
 
-          <div className="rounded-lg border bg-white p-4 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 text-sm text-muted-foreground">
             <p className="font-medium text-foreground">{t('sites.verify.steps')}</p>
             <ol className="mt-2 list-decimal space-y-1 pl-5">
               <li>{t('sites.verify.step1')}</li>

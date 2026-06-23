@@ -378,7 +378,7 @@ export default function CustomQuery({
   }, [DIMENSION_OPTIONS, METRIC_OPTIONS, t]);
 
   return (
-    <Card>
+    <Card className="dark:bg-gray-900">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

@@ -65,8 +65,8 @@ export default function Sites() {
     <div className="container mx-auto px-4 py-8">
       {/* 标题部分 */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">{t('sites.title')}</h1>
-        <div className="border-b border-gray-200 mt-4"></div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('sites.title')}</h1>
+        <div className="border-b border-gray-200 dark:border-gray-700 mt-4"></div>
       </div>
 
       {/* 搜索和添加按钮行 */}
@@ -75,7 +75,7 @@ export default function Sites() {
           <Input
             placeholder={t('sites.searchPlaceholder')}
             value={searchQuery}
-            className="bg-white"
+            className="bg-white dark:bg-gray-900"
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>

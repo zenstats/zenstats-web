@@ -18,7 +18,7 @@ export default function App() {
         richColors
         toastOptions={{ className: "toaster-offset" }}
       />
-      <div className={`flex min-h-[calc(100vh-64px)] ${isLanding ? "" : "bg-gray-100"}`}>
+      <div className={`flex min-h-[calc(100vh-64px)] ${isLanding ? "" : "bg-gray-100 dark:bg-gray-950"}`}>
         <div className={`${isLanding ? "" : "max-w-7xl"} w-full mx-auto`}>{useRoutes(routes)}</div>
       </div>
     </div>
