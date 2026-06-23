@@ -286,7 +286,7 @@ localStorage.removeItem('zenstats_ignore')
 | Collected | Not Collected |
 |-----------|--------------|
 | Page URL | Personal information |
-| Referrer | Raw IP addresses (hashed) |
+| Referrer | |
 | Browser & OS | Cookies |
 | Screen size | |
 | Country / city (from IP) | |

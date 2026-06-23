@@ -286,7 +286,7 @@ localStorage.removeItem('zenstats_ignore')
 | 收集 | 不收集 |
 |------|--------|
 | 页面 URL | 个人信息 |
-| 来源（Referrer） | 原始 IP 地址（哈希处理） |
+| 来源（Referrer） | |
 | 浏览器与操作系统 | Cookie |
 | 屏幕尺寸 | |
 | 国家/城市（基于 IP） | |
