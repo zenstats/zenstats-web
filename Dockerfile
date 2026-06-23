@@ -45,7 +45,9 @@ FROM --platform=$TARGETPLATFORM caddy:2-alpine
 
 COPY --from=frontend-builder /build/dist /srv
 COPY Caddyfile /etc/caddy/Caddyfile
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 80 443 443/udp
 
-CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+ENTRYPOINT ["/entrypoint.sh"]

@@ -21,7 +21,12 @@ export default defineConfig(({ mode }) => {
       {
         name: "inject-data-domain",
         transformIndexHtml(html) {
-          return html.replace("__DATA_DOMAIN__", dataDomain);
+          // 开发模式：直接替换为环境变量值
+          // 生产构建：保留占位符 __DATA_DOMAIN__，由容器 entrypoint 在启动时替换
+          if (mode === "development") {
+            return html.replace("__DATA_DOMAIN__", dataDomain);
+          }
+          return html;
         },
       },
     ],
