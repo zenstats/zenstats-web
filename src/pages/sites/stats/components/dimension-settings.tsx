@@ -22,10 +22,16 @@ export interface DimensionConfig {
   order: number;
 }
 
-const DEFAULT_ENABLED = ["source", "page", "entry_page", "country", "browser", "os", "device"];
+const DEFAULT_ENABLED = ["source", "medium", "utm_source", "utm_campaign", "page", "entry_page", "country", "browser", "os", "device"];
 
 const DIMENSION_TRANSLATION_KEYS: Record<string, string> = {
   source: "stats.dimensionSettings.dimensions.source",
+  medium: "stats.dimensionSettings.dimensions.medium",
+  utm_source: "stats.dimensionSettings.dimensions.utmSource",
+  utm_campaign: "stats.dimensionSettings.dimensions.utmCampaign",
+  utm_medium: "stats.dimensionSettings.dimensions.utmMedium",
+  utm_content: "stats.dimensionSettings.dimensions.utmContent",
+  utm_term: "stats.dimensionSettings.dimensions.utmTerm",
   page: "stats.dimensionSettings.dimensions.page",
   entry_page: "stats.dimensionSettings.dimensions.entryPage",
   exit_page: "stats.dimensionSettings.dimensions.exitPage",
@@ -40,6 +46,12 @@ const DIMENSION_TRANSLATION_KEYS: Record<string, string> = {
 
 const DIMENSION_DATA: Omit<DimensionConfig, "enabled" | "order" | "label">[] = [
   { key: "source", property: "visit:source", category: "traffic" },
+  { key: "medium", property: "visit:medium", category: "traffic" },
+  { key: "utm_source", property: "event:utm_source", category: "traffic" },
+  { key: "utm_medium", property: "event:utm_medium", category: "traffic" },
+  { key: "utm_campaign", property: "event:utm_campaign", category: "traffic" },
+  { key: "utm_content", property: "event:utm_content", category: "traffic" },
+  { key: "utm_term", property: "event:utm_term", category: "traffic" },
   { key: "page", property: "event:page", category: "page" },
   { key: "entry_page", property: "visit:entry_page", category: "page" },
   { key: "exit_page", property: "visit:exit_page", category: "page" },

@@ -449,6 +449,13 @@
       "save": "Save Settings",
       "dimensions": {
         "source": "Source",
+        "referrer": "Referrer",
+        "medium": "Medium",
+        "utmSource": "UTM Source",
+        "utmMedium": "UTM Medium",
+        "utmCampaign": "UTM Campaign",
+        "utmContent": "UTM Content",
+        "utmTerm": "UTM Term",
         "page": "Page Path",
         "entryPage": "Entry Page",
         "exitPage": "Exit Page",

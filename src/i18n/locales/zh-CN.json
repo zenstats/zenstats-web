@@ -449,6 +449,13 @@
       "save": "保存设置",
       "dimensions": {
         "source": "来源",
+        "referrer": "引荐来源",
+        "medium": "渠道媒介",
+        "utmSource": "UTM 来源",
+        "utmMedium": "UTM 媒介",
+        "utmCampaign": "UTM 广告系列",
+        "utmContent": "UTM 内容",
+        "utmTerm": "UTM 关键词",
         "page": "页面路径",
         "entryPage": "入口页面",
         "exitPage": "退出页面",

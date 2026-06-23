@@ -31,6 +31,7 @@ import {
   BarChart3,
   Laptop,
   Chrome,
+  Tag,
   MapIcon,
   Target,
   Layers,
@@ -71,6 +72,13 @@ const shortDateFormat = i18n.language === 'zh-CN' ? "MM月DD日" : "MM-DD";
 // Map dimension keys to icons
 const DIMENSION_ICONS: Record<string, React.ReactNode> = {
   source: <Globe className="h-4 w-4" />,
+  referrer: <Link className="h-4 w-4" />,
+  medium: <Tag className="h-4 w-4" />,
+  utm_source: <Link className="h-4 w-4" />,
+  utm_medium: <Tag className="h-4 w-4" />,
+  utm_campaign: <Target className="h-4 w-4" />,
+  utm_content: <Layout className="h-4 w-4" />,
+  utm_term: <Filter className="h-4 w-4" />,
   page: <Layout className="h-4 w-4" />,
   entry_page: <ArrowLeftRight className="h-4 w-4" />,
   exit_page: <ArrowLeftRight className="h-4 w-4" />,
