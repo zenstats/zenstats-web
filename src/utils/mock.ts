@@ -95,8 +95,6 @@ const mockSiteList = {
   ],
 };
 
-// ===== New Plausible-compatible APIs =====
-
 // Mock aggregate response (GET /stats/:d/aggregate)
 const mockAggregateResponse = {
   code: 200,

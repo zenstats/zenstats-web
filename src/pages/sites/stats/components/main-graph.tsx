@@ -151,7 +151,6 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-lg">
-      {/* Metric tabs and interval selector - Plausible style */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-1">
           {METRIC_OPTIONS.map((opt) => (
