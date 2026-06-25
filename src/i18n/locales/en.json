@@ -647,7 +647,10 @@
         "shields": "Shields",
         "ipAddress": "IP Address",
         "hostname": "Hostname",
-        "countries": "Countries"
+        "countries": "Countries",
+        "referrer": "Spam Referrer",
+        "emailReports": "Email Reports",
+        "trafficAlert": "Traffic Alerts"
       }
     },
     "general": {
@@ -862,7 +865,40 @@
         "codeHint": "Use ISO 3166-1 alpha-2 country codes (2 uppercase letters)",
         "loadFailed": "Failed to load countries",
         "addedBy": "Added by {{addedBy}} on {{date}}"
+      },
+      "referrer": {
+        "title": "Spam Referrer Blacklist",
+        "desc": "Block traffic from known spam referrer domains.",
+        "addTitle": "Add Spam Referrer",
+        "hostname": "Domain",
+        "description": "Description",
+        "createdAt": "Created",
+        "addSuccess": "Referrer added to blacklist",
+        "addFailed": "Failed to add referrer",
+        "removeSuccess": "Referrer removed from blacklist"
       }
+    },
+    "emailReports": {
+      "title": "Email Reports",
+      "desc": "Configure automated weekly and monthly email reports.",
+      "weeklyReport": "Weekly Report",
+      "weeklyDesc": "Receive a summary every Monday at 8:00 AM",
+      "monthlyReport": "Monthly Report",
+      "monthlyDesc": "Receive a summary on the 1st of each month at 9:00 AM"
+    },
+    "trafficAlert": {
+      "title": "Traffic Alerts",
+      "desc": "Get notified when your site traffic changes significantly compared to the same day last week.",
+      "enable": "Enable Alerts",
+      "enableDesc": "Receive email alerts when traffic spikes or drops beyond the threshold",
+      "threshold": "Alert Threshold",
+      "thresholdDesc": "Minimum percentage change to trigger an alert (compared to same day last week)",
+      "recipients": "Additional Recipients",
+      "recipientsDesc": "Comma-separated email addresses. Site owner is always notified.",
+      "interval": "Comparison Period",
+      "intervalHourly": "Hourly (compare last hour vs last week)",
+      "intervalDaily": "Daily (compare today vs same day last week)",
+      "intervalDesc": "How far back to compare traffic for anomaly detection."
     },
     "appearance": {
       "title": "Appearance",
@@ -1004,6 +1040,9 @@
     "loading": "Loading...",
     "submitting": "Submitting...",
     "noData": "No data",
+    "empty": "No data",
+    "add": "Add",
+    "optional": "Optional",
     "back": "Back",
     "unknownError": "Unknown error",
     "serverError": "Server error",
@@ -1014,7 +1053,10 @@
     "selectOption": "Select an option",
     "search": "Search...",
     "noOptions": "No options found",
-    "copied": "Copied"
+    "copied": "Copied",
+    "error": "Operation failed",
+    "create": "Create",
+    "saved": "Saved successfully"
   },
   "verifyEmail": {
     "title": "Email Verification",

@@ -1,7 +1,7 @@
 import { Separator } from "@components/ui/separator"
 import { SidebarNav, type SidebarNavItem } from "./components/sidebar-nav"
 import { useNavigate, useParams } from "react-router-dom";
-import { Code2, Database, Rocket, ShieldAlert, Target } from "lucide-react";
+import { Code2, Database, Mail, Rocket, ShieldAlert, Target, BellRing } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 interface SettingsLayoutProps {
@@ -71,7 +71,24 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
           title: t('settings.layout.nav.countries'),
           href: `${baseUrl}/shields/countries`,
         },
+        {
+          id: "shields-referrer",
+          title: t('settings.layout.nav.referrer'),
+          href: `${baseUrl}/shields/referrer`,
+        },
       ],
+    },
+    {
+      id: "email-reports",
+      title: t('settings.layout.nav.emailReports'),
+      icon: <Mail className="mr-2 h-4 w-4" />,
+      href: `${baseUrl}/email-reports`,
+    },
+    {
+      id: "traffic-alert",
+      title: t('settings.layout.nav.trafficAlert'),
+      icon: <BellRing className="mr-2 h-4 w-4" />,
+      href: `${baseUrl}/traffic-alert`,
     },
   ];
 

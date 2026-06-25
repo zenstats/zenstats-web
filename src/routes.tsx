@@ -20,8 +20,11 @@ import { SettingsGeneralForm } from './pages/sites/settings/general-form';
 import SettingShieldsIpAddress from './pages/sites/settings/shields/ip_address';
 import SettingShieldsHostname from './pages/sites/settings/shields/hostname';
 import SettingShieldsCountries from './pages/sites/settings/shields/countries';
+import SettingShieldsReferrer from './pages/sites/settings/shields/referrer';
 import GoalsSettings from './pages/sites/settings/goals';
 import FunnelsSettings from './pages/sites/settings/funnels';
+import EmailReportsSettings from './pages/sites/settings/email-reports';
+import TrafficAlertSettings from './pages/sites/settings/traffic-alert';
 import ImportPage from './pages/sites/import/import';
 
 // Admin pages
@@ -173,7 +176,25 @@ const routes: RouteObject[] = [
                       <SettingShieldsCountries />
                     </SettingsLayout>,
                   },
+                  {
+                    path: "referrer",
+                    element: <SettingsLayout>
+                      <SettingShieldsReferrer />
+                    </SettingsLayout>,
+                  },
                 ]
+              },
+              {
+                path: "email-reports",
+                element: <SettingsLayout>
+                  <EmailReportsSettings />
+                </SettingsLayout>,
+              },
+              {
+                path: "traffic-alert",
+                element: <SettingsLayout>
+                  <TrafficAlertSettings />
+                </SettingsLayout>,
               },
             ]
           }

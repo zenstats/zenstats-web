@@ -647,7 +647,10 @@
         "shields": "屏蔽",
         "ipAddress": "IP 地址",
         "hostname": "主机名",
-        "countries": "国家/地区"
+        "countries": "国家/地区",
+        "referrer": "垃圾来源",
+        "emailReports": "邮件报告",
+        "trafficAlert": "流量告警"
       }
     },
     "general": {
@@ -862,7 +865,40 @@
         "codeHint": "使用 ISO 3166-1 alpha-2 国家代码（2 个大写字母）",
         "loadFailed": "加载国家/地区列表失败",
         "addedBy": "由 {{addedBy}} 于 {{date}} 添加"
+      },
+      "referrer": {
+        "title": "垃圾来源黑名单",
+        "desc": "阻止来自已知垃圾来源域名的流量。",
+        "addTitle": "添加垃圾来源",
+        "hostname": "域名",
+        "description": "备注",
+        "createdAt": "创建时间",
+        "addSuccess": "来源已添加至黑名单",
+        "addFailed": "添加来源失败",
+        "removeSuccess": "来源已从黑名单移除"
       }
+    },
+    "emailReports": {
+      "title": "邮件报告",
+      "desc": "配置自动发送的周报和月报。",
+      "weeklyReport": "周报",
+      "weeklyDesc": "每周一上午 8:00 发送统计摘要",
+      "monthlyReport": "月报",
+      "monthlyDesc": "每月 1 日上午 9:00 发送统计摘要"
+    },
+    "trafficAlert": {
+      "title": "流量告警",
+      "desc": "当网站流量相比上周同日出现显著变化时发送邮件通知。",
+      "enable": "启用告警",
+      "enableDesc": "流量变化超过阈值时发送邮件告警",
+      "threshold": "告警阈值",
+      "thresholdDesc": "触发告警的最小变化百分比（与上周同日对比）",
+      "recipients": "额外收件人",
+      "recipientsDesc": "逗号分隔的邮箱地址。站点所有者始终会收到告警。",
+      "interval": "对比周期",
+      "intervalHourly": "按小时（上一小时 vs 上周同时段）",
+      "intervalDaily": "按天（今天 vs 上周同日）",
+      "intervalDesc": "选择流量对比的时间粒度。"
     },
     "appearance": {
       "title": "外观",
@@ -1004,6 +1040,9 @@
     "loading": "加载中...",
     "submitting": "提交中...",
     "noData": "暂无数据",
+    "empty": "暂无数据",
+    "add": "添加",
+    "optional": "可选",
     "back": "返回",
     "unknownError": "未知错误",
     "serverError": "服务器异常",
@@ -1014,7 +1053,10 @@
     "selectOption": "请选择",
     "search": "搜索...",
     "noOptions": "无匹配选项",
-    "copied": "已复制"
+    "copied": "已复制",
+    "error": "操作失败",
+    "create": "创建",
+    "saved": "保存成功"
   },
   "verifyEmail": {
     "title": "邮箱验证",
