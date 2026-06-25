@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -82,6 +82,11 @@ export default function DimensionSettings({ dimensions, onChange }: DimensionSet
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [localDims, setLocalDims] = useState<DimensionConfig[]>(dimensions);
+
+  // Sync localDims when parent's dimensions change (e.g. language switch re-translates labels)
+  useEffect(() => {
+    setLocalDims(dimensions);
+  }, [dimensions]);
 
   const CATEGORY_LABELS: Record<string, string> = useMemo(() => ({
     traffic: t('stats.dimensionSettings.categories.traffic'),

@@ -244,6 +244,18 @@ export default function StatsPage() {
     localStorage.setItem(storageKey, JSON.stringify(newDims));
   };
 
+  // Re-translate dimension labels when language changes
+  useEffect(() => {
+    const defaults = getDefaultDimensions(t);
+    const labelByKey = new Map(defaults.map((d) => [d.key, d.label]));
+    setDimensions((prev) =>
+      prev.map((d) => ({
+        ...d,
+        label: labelByKey.get(d.key) ?? d.label,
+      }))
+    );
+  }, [i18n.language]);
+
   const [query, setQuery] = useState<StatsRequest>({
     period: "day",
   });

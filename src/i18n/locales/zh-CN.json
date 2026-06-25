@@ -253,6 +253,9 @@
     "installTrackingCode": "安装统计代码",
     "siteSettings": "站点设置",
     "not_verified": "站点未验证",
+    "noSites": "没有找到站点",
+    "todayVisitors": "访客",
+    "todayPageviews": "浏览",
     "new": {
       "title": "创建新站点",
       "domain": "站点域名",

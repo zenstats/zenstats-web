@@ -253,6 +253,9 @@
     "installTrackingCode": "Install tracking code",
     "siteSettings": "Site settings",
     "not_verified": "Site is not verified",
+    "noSites": "No sites found",
+    "todayVisitors": "visitors",
+    "todayPageviews": "pv",
     "new": {
       "title": "Create New Site",
       "domain": "Site Domain",
