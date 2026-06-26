@@ -100,6 +100,17 @@ function formatMetricValue(key: string, value: number): string {
   if (key === "views_per_visit") {
     return value.toFixed(2);
   }
+  if (key === "time_on_page") {
+    const minutes = Math.floor(value / 60);
+    const seconds = Math.round(value % 60);
+    return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+  }
+  if (key === "scroll_depth") {
+    return value.toFixed(1);
+  }
+  if (key === "exit_rate") {
+    return value.toFixed(1);
+  }
   return value.toLocaleString();
 }
 
@@ -120,6 +131,9 @@ export default function AggregateStats({
     visit_duration: { label: t('stats.metrics.visitDuration') },
     views_per_visit: { label: t('stats.metrics.viewsPerVisit') },
     events: { label: t('stats.metrics.events') },
+    time_on_page: { label: t('stats.metrics.timeOnPage') },
+    scroll_depth: { label: t('stats.metrics.scrollDepth'), isPercent: true },
+    exit_rate: { label: t('stats.metrics.exitRate'), isPercent: true },
   }), [t]);
 
   const fetchData = useCallback(async () => {
@@ -164,6 +178,9 @@ export default function AggregateStats({
     "bounce_rate",
     "visit_duration",
     "views_per_visit",
+    "time_on_page",
+    "scroll_depth",
+    "exit_rate",
   ];
 
   return (

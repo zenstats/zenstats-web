@@ -48,6 +48,7 @@ import type {
   MainGraphPoint,
   CurrentVisitors as CurrentVisitorsType,
   BreakdownResponse,
+  Segment,
 } from "../types/interfaces";
 import AggregateStats from "./components/aggregate-stats";
 import MainGraph from "./components/main-graph";
@@ -625,6 +626,27 @@ export default function StatsPage() {
     });
   };
 
+  // Segment state
+  const [segments, setSegments] = useState<Segment[]>([]);
+  const [activeSegment, setActiveSegment] = useState<Segment | null>(null);
+
+  useEffect(() => {
+    if (!domain) return;
+    axios.get<BaseResponse<Segment[]>>(`/sites/${domain}/segments`)
+      .then((res) => setSegments(res.data.data || []))
+      .catch(() => {});
+  }, [domain]);
+
+  const handleApplySegment = (seg: Segment) => {
+    setActiveSegment(seg);
+    setQuery((prev) => ({ ...prev, filters: seg.filters, refresh: new Date() }));
+  };
+
+  const handleClearSegment = () => {
+    setActiveSegment(null);
+    setQuery((prev) => ({ ...prev, filters: undefined, refresh: new Date() }));
+  };
+
   // Ensure activeCategoryTab is valid
   useEffect(() => {
     if (activeCategories.length > 0 && !activeCategories.some((t) => t.key === activeCategoryTab)) {
@@ -915,6 +937,54 @@ export default function StatsPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Segment selector */}
+            {segments.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border transition-colors",
+                      activeSegment
+                        ? "bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800"
+                        : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    )}
+                  >
+                    <Layers className="h-4 w-4" />
+                    <span className="hidden sm:inline max-w-[100px] truncate">
+                      {activeSegment ? activeSegment.name : t("stats.segment.label")}
+                    </span>
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  {segments.map((seg) => (
+                    <DropdownMenuItem
+                      key={seg.id}
+                      onClick={() => handleApplySegment(seg)}
+                      className={cn(
+                        "flex flex-col items-start gap-0.5",
+                        activeSegment?.id === seg.id && "bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300"
+                      )}
+                    >
+                      <span className="text-sm font-medium">{seg.name}</span>
+                      {seg.description && (
+                        <span className="text-xs text-muted-foreground">{seg.description}</span>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                  {activeSegment && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleClearSegment} className="text-gray-500">
+                        {t("stats.segment.clear")}
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
             {/* Filter Menu button */}
             <FilterMenu
               domain={domain!}
@@ -933,6 +1003,22 @@ export default function StatsPage() {
             </Button>
           </div>
         </div>
+
+        {/* Active segment badge */}
+        {activeSegment && (
+          <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-100 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 text-xs font-medium">
+              <Layers className="h-3 w-3" />
+              <span>{activeSegment.name}</span>
+              <button
+                onClick={handleClearSegment}
+                className="ml-0.5 hover:text-violet-900 dark:hover:text-violet-100 transition-colors"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Filter bar */}
         <FilterBar

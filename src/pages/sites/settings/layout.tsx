@@ -1,7 +1,7 @@
 import { Separator } from "@components/ui/separator"
 import { SidebarNav, type SidebarNavItem } from "./components/sidebar-nav"
 import { useNavigate, useParams } from "react-router-dom";
-import { Code2, Database, Mail, Rocket, ShieldAlert, Target, BellRing } from "lucide-react";
+import { Code2, Database, Mail, Rocket, ShieldAlert, Target, BellRing, Link, Layers } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 interface SettingsLayoutProps {
@@ -89,6 +89,18 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
       title: t('settings.layout.nav.trafficAlert'),
       icon: <BellRing className="mr-2 h-4 w-4" />,
       href: `${baseUrl}/traffic-alert`,
+    },
+    {
+      id: "shared-links",
+      title: t('settings.layout.nav.sharedLinks'),
+      icon: <Link className="mr-2 h-4 w-4" />,
+      href: `${baseUrl}/shared-links`,
+    },
+    {
+      id: "segments",
+      title: t('settings.layout.nav.segments'),
+      icon: <Layers className="mr-2 h-4 w-4" />,
+      href: `${baseUrl}/segments`,
     },
   ];
 

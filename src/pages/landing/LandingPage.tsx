@@ -1,56 +1,62 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "next-themes";
+import {
+  BarChart2, Globe, Target, Shield, Users, Server,
+  Zap, Eye, Moon, Sun, BookOpen,
+} from "lucide-react";
 import LogoHorizontal from "@/assets/logo-h.svg";
 import LogoHorizontalDark from "@/assets/logo-h-dark.svg";
 
 type Lang = "zh" | "en";
-type Bilingual = Record<Lang, string>;
+type T = Record<Lang, string>;
 
-const features: { icon: string; title: Bilingual; desc: Bilingual }[] = [
+const i = (zh: string, en: string): T => ({ zh, en });
+
+const features: { icon: React.ReactNode; title: T; desc: T }[] = [
   {
-    icon: "🍪",
-    title: { zh: "Cookieless", en: "Cookieless" },
-    desc: { zh: "无需 Cookie 横幅，开箱即用 GDPR 合规", en: "No cookie banners required — GDPR compliant out of the box" },
+    icon: <Shield className="w-5 h-5" />,
+    title: i("Cookieless", "Cookieless"),
+    desc: i("无需 Cookie 横幅，不依赖第三方 Cookie 追踪用户", "No cookie banners. Tracking without third-party cookies."),
   },
   {
-    icon: "⚡",
-    title: { zh: "轻量追踪", en: "Lightweight Tracking" },
-    desc: { zh: "~3KB gzipped，Lighthouse 满分，性能零影响", en: "~3KB gzipped, perfect Lighthouse score, zero performance impact" },
+    icon: <Zap className="w-5 h-5" />,
+    title: i("轻量追踪脚本", "Lightweight Script"),
+    desc: i("~3 KB gzipped，对 Lighthouse 评分零影响", "~3 KB gzipped. Zero impact on Lighthouse scores."),
   },
   {
-    icon: "📊",
-    title: { zh: "实时仪表板", en: "Real-time Dashboard" },
-    desc: { zh: "实时访客与浏览量，交互式可视化图表", en: "Live visitors & pageviews with interactive charts" },
+    icon: <Eye className="w-5 h-5" />,
+    title: i("实时仪表板", "Real-time Dashboard"),
+    desc: i("实时访客与浏览量，交互式可视化图表", "Live visitors & pageviews with interactive charts."),
   },
   {
-    icon: "🌍",
-    title: { zh: "GeoIP + 设备检测", en: "GeoIP + Device Detection" },
-    desc: { zh: "访客地理位置、浏览器、OS、设备类型", en: "Visitor location, browser, OS, and device type" },
+    icon: <Globe className="w-5 h-5" />,
+    title: i("GeoIP + 设备", "GeoIP + Device"),
+    desc: i("访客地理位置、浏览器、操作系统、设备类型", "Visitor location, browser, OS, and device type."),
   },
   {
-    icon: "🎯",
-    title: { zh: "目标与漏斗", en: "Goals & Funnels" },
-    desc: { zh: "转化追踪、自定义事件目标、多步骤漏斗", en: "Conversion tracking, custom event goals, multi-step funnels" },
+    icon: <Target className="w-5 h-5" />,
+    title: i("目标与漏斗", "Goals & Funnels"),
+    desc: i("自定义事件目标、多步骤转化漏斗", "Custom event goals and multi-step conversion funnels."),
   },
   {
-    icon: "🔐",
-    title: { zh: "团队管理", en: "Team Management" },
-    desc: { zh: "多用户 + 角色权限 + 子账号", en: "Multi-user, role-based access, sub-accounts" },
+    icon: <Users className="w-5 h-5" />,
+    title: i("团队权限", "Team Access"),
+    desc: i("多用户、角色权限、子账号管理", "Multi-user, role-based access, sub-accounts."),
   },
   {
-    icon: "🛡️",
-    title: { zh: "屏蔽规则", en: "Shield Rules" },
-    desc: { zh: "IP / 域名 / 国家多维度过滤无效流量", en: "Filter traffic by IP, hostname, or country" },
+    icon: <BarChart2 className="w-5 h-5" />,
+    title: i("数据段 & 分享", "Segments & Sharing"),
+    desc: i("保存过滤器组合为数据段，一键生成公开分享链接", "Save filter sets as segments, share dashboards publicly."),
   },
   {
-    icon: "🐳",
-    title: { zh: "一行部署", en: "One-line Deploy" },
-    desc: { zh: "Docker Compose + Caddy 自动 SSL", en: "Docker Compose + Caddy with auto SSL" },
+    icon: <Server className="w-5 h-5" />,
+    title: i("一行部署", "One-line Deploy"),
+    desc: i("Docker Compose + Caddy 自动 SSL，数据完全自控", "Docker Compose + Caddy auto SSL. Your data, your server."),
   },
 ];
 
-const techs = ["Go", "React", "TypeScript", "PostgreSQL", "ClickHouse", "Docker", "Caddy", "Tailwind CSS"];
+const techs = ["Go", "Gin", "React", "TypeScript", "PostgreSQL", "ClickHouse", "Docker", "Caddy", "Tailwind CSS"];
 
 const repoBase = "https://github.com/zenstats";
 
@@ -59,191 +65,205 @@ export default function LandingPage() {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
-  const t = (b: Bilingual) => b[lang];
+  const t = (b: T) => b[lang];
   const toggleLang = () => setLang((l) => (l === "zh" ? "en" : "zh"));
   const toggleTheme = () => {
-    const btn = document.querySelector('[data-theme-toggle]');
+    const btn = document.querySelector("[data-theme-toggle]");
     if (btn) {
       const rect = btn.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      document.documentElement.style.setProperty('--tx', `${x}px`);
-      document.documentElement.style.setProperty('--ty', `${y}px`);
+      document.documentElement.style.setProperty("--tx", `${rect.left + rect.width / 2}px`);
+      document.documentElement.style.setProperty("--ty", `${rect.top + rect.height / 2}px`);
     }
     if (document.startViewTransition) {
-      document.documentElement.classList.add('theme-transitioning');
-      document.startViewTransition(() => {
-        setTheme(isDark ? "light" : "dark");
-      });
-      setTimeout(() => {
-        document.documentElement.classList.remove('theme-transitioning');
-      }, 600);
+      document.documentElement.classList.add("theme-transitioning");
+      document.startViewTransition(() => setTheme(isDark ? "light" : "dark"));
+      setTimeout(() => document.documentElement.classList.remove("theme-transitioning"), 600);
     } else {
       setTheme(isDark ? "light" : "dark");
     }
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Top bar: logo (left) + controls (right) */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-white/80 dark:bg-gray-950/80 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-        {/* Logo — top left */}
-        <a href="/" className="flex items-center">
-          <img
-            src={isDark ? LogoHorizontalDark : LogoHorizontal}
-            alt="ZenStats"
-            className="h-9 w-auto"
-          />
-        </a>
+    <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
 
-        {/* Controls — top right */}
+      {/* Nav */}
+      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-6 bg-white/80 dark:bg-gray-950/80 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+        <a href="/" className="flex items-center">
+          <img src={isDark ? LogoHorizontalDark : LogoHorizontal} alt="ZenStats" className="h-8 w-auto" />
+        </a>
         <div className="flex items-center gap-2">
-          {/* Theme toggle */}
+          <Link
+            to="/docs"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            {t(i("文档", "Docs"))}
+          </Link>
+          <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 hidden sm:block" />
           <button
             data-theme-toggle
             onClick={toggleTheme}
-            className="p-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
-            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
           >
-            {isDark ? (
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
-
-          {/* Language toggle */}
           <button
             onClick={toggleLang}
-            className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
+            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
           >
-            {lang === "zh" ? "English" : "中文"}
+            {lang === "zh" ? "EN" : "中文"}
           </button>
+          <Link
+            to="/login"
+            className="px-3 py-1.5 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition"
+          >
+            {t(i("登录", "Login"))}
+          </Link>
         </div>
-      </div>
+      </nav>
 
       {/* Hero */}
-      <header className="relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-6 pt-28 pb-24 text-center">
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 mb-6">
-            <span className="text-indigo-600 dark:text-indigo-400">Zen</span>Stats
+      <section className="relative pt-32 pb-24 px-6 text-center overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(16,185,129,0.08),transparent)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(16,185,129,0.12),transparent)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_60%,white)] dark:bg-[linear-gradient(to_bottom,transparent_60%,rgb(3,7,18))]" />
+        </div>
+
+        <div className="max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-medium mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            {t(i("自托管 · 开源", "Self-hosted · Open Source"))}
+          </div>
+
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+            {lang === "zh" ? (
+              <>隐私优先的<br /><span className="text-emerald-500">网站分析</span>平台</>
+            ) : (
+              <>Privacy-first<br /><span className="text-emerald-500">Web Analytics</span></>
+            )}
           </h1>
-          <p className="text-xl md:text-2xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-10">
-            Self-Hosted · Cookieless · Privacy-First Web Analytics
+
+          <p className="text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto mb-10 leading-relaxed">
+            {t(i(
+              "基于 Go + ClickHouse 构建的轻量级分析平台。数据存储在你自己的服务器上，无第三方介入，完全掌控。",
+              "Lightweight analytics built on Go & ClickHouse. Your data stays on your server — no third parties, full control."
+            ))}
           </p>
-          <p className="text-lg text-gray-400 dark:text-gray-500 max-w-xl mx-auto mb-12">
-            {lang === "zh"
-              ? "轻量级、GDPR 合规的网站分析平台。基于 Go + ClickHouse 构建，从个人项目到企业级应用均可胜任。"
-              : "A lightweight, GDPR-compliant web analytics platform powered by Go & ClickHouse. Scales from personal projects to enterprise."}
-          </p>
-          <div className="flex justify-center gap-4">
+
+          <div className="flex justify-center flex-wrap gap-3">
             <Link
               to="/login"
-              className="rounded-lg bg-indigo-600 px-8 py-3 text-white font-semibold hover:bg-indigo-700 transition"
+              className="px-6 py-3 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition text-sm"
             >
-              {t({ zh: "开始使用", en: "Get Started" })}
+              {t(i("开始使用 →", "Get Started →"))}
             </Link>
             <a
               href={`${repoBase}/zenstats-deploy`}
               target="_blank"
               rel="noreferrer"
-              className="rounded-lg border border-gray-300 dark:border-gray-600 px-8 py-3 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+              className="px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition text-sm"
             >
-              {t({ zh: "部署指南", en: "Deploy Guide" })} →
+              {t(i("部署指南", "Deploy Guide"))}
             </a>
+            <Link
+              to="/docs"
+              className="px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition text-sm"
+            >
+              {t(i("查看文档", "Read Docs"))}
+            </Link>
           </div>
         </div>
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50 via-white to-white dark:from-indigo-950/30 dark:via-gray-950 dark:to-gray-950" />
-      </header>
+
+        {/* Deploy command */}
+        <div className="mt-16 flex justify-center">
+          <div className="inline-flex items-center gap-3 bg-gray-900 dark:bg-gray-800 rounded-xl px-5 py-3 shadow-lg">
+            <span className="text-gray-500 text-sm select-none">$</span>
+            <code className="text-emerald-400 text-sm font-mono">docker compose up -d</code>
+          </div>
+        </div>
+      </section>
 
       {/* Features */}
       <section className="max-w-5xl mx-auto px-6 py-20">
-        <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-16">
-          {t({ zh: "功能特性", en: "Features" })}
-        </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <h2 className="text-2xl font-bold text-center mb-2">{t(i("功能特性", "Features"))}</h2>
+        <p className="text-center text-gray-500 dark:text-gray-400 text-sm mb-12">
+          {t(i("开箱即用，无需额外配置", "Everything you need, out of the box"))}
+        </p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map((f) => (
-            <div key={f.title.zh} className="text-center">
-              <div className="text-4xl mb-3">{f.icon}</div>
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{t(f.title)}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t(f.desc)}</p>
+            <div
+              key={f.title.zh}
+              className="p-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm transition group"
+            >
+              <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/50 transition">
+                {f.icon}
+              </div>
+              <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-1.5">{t(f.title)}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{t(f.desc)}</p>
             </div>
           ))}
         </div>
       </section>
 
+      {/* Privacy note */}
+      {/* <section className="max-w-3xl mx-auto px-6 pb-16">
+        <div className="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-950/20 p-6">
+          <div className="flex gap-3">
+            <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-sm text-amber-900 dark:text-amber-300 mb-1.5">
+                {t(i("关于隐私与数据存储", "About Privacy & Data Storage"))}
+              </h3>
+              <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
+                {t(i(
+                  "ZenStats 会存储访客 IP 地址用于 GeoIP 解析，并在数据库中保留哈希后的指纹标识。如需符合 GDPR 等隐私法规，请在隐私政策中披露相关数据处理行为，并确保你所在司法管辖区具备合法处理依据（如合法利益或用户同意）。ZenStats 本身不进行跨站追踪，数据完全托管在你自己的服务器上。",
+                  "ZenStats stores visitor IP addresses for GeoIP resolution and retains hashed fingerprint identifiers. To comply with GDPR or similar regulations, disclose this data processing in your privacy policy and ensure you have a lawful basis (e.g. legitimate interest or consent) in your jurisdiction. ZenStats does not do cross-site tracking and all data stays on your own server."
+                ))}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section> */}
+
       {/* Tech Stack */}
-      <section className="bg-gray-50 dark:bg-gray-900 py-20">
+      <section className="border-t border-gray-100 dark:border-gray-800 py-16">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-10">
-            {t({ zh: "技术栈", en: "Tech Stack" })}
-          </h2>
-          <div className="flex flex-wrap justify-center gap-3">
-            {techs.map((t) => (
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-6">
+            {t(i("技术栈", "Built with"))}
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {techs.map((tech) => (
               <span
-                key={t}
-                className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm font-medium text-gray-600 dark:text-gray-300 shadow-sm"
+                key={tech}
+                className="px-3 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full text-xs font-medium text-gray-600 dark:text-gray-400"
               >
-                {t}
+                {tech}
               </span>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 text-center">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-          {t({ zh: "准备好开始了吗？", en: "Ready to Get Started?" })}
-        </h2>
-        <p className="text-gray-500 dark:text-gray-400 mb-8">
-          {t({ zh: "一行命令，部署你自己的隐私优先分析平台。", en: "Deploy your own privacy-first analytics platform with one command." })}
-        </p>
-        <code className="inline-block bg-gray-900 dark:bg-gray-800 text-green-400 dark:text-green-300 px-6 py-3 rounded-lg text-sm font-mono">
-          docker compose up -d
-        </code>
-      </section>
-
       {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-gray-800 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
-        <div className="flex justify-center gap-6 mb-4">
-          <a
-            href={`${repoBase}/zenstats`}
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-gray-600 dark:hover:text-gray-300 transition"
-          >
-            {t({ zh: "API 后端", en: "API Backend" })}
-          </a>
-          <a
-            href={`${repoBase}/zenstats-web`}
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-gray-600 dark:hover:text-gray-300 transition"
-          >
-            {t({ zh: "前端", en: "Frontend" })}
-          </a>
-          <a
-            href={`${repoBase}/zenstats-deploy`}
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-gray-600 dark:hover:text-gray-300 transition"
-          >
-            {t({ zh: "部署", en: "Deploy" })}
-          </a>
+      <footer className="border-t border-gray-100 dark:border-gray-800 py-10 px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400 dark:text-gray-600">
+          <img src={isDark ? LogoHorizontalDark : LogoHorizontal} alt="ZenStats" className="h-9 w-auto opacity-70" />
+          <div className="flex items-center gap-5">
+            <a href={`${repoBase}/zenstats`} target="_blank" rel="noreferrer" className="hover:text-gray-700 dark:hover:text-gray-300 transition">
+              {t(i("API 后端", "API Backend"))}
+            </a>
+            <a href={`${repoBase}/zenstats-web`} target="_blank" rel="noreferrer" className="hover:text-gray-700 dark:hover:text-gray-300 transition">
+              {t(i("前端", "Frontend"))}
+            </a>
+            <Link to="/docs" className="hover:text-gray-700 dark:hover:text-gray-300 transition">
+              {t(i("文档", "Docs"))}
+            </Link>
+            <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noreferrer" className="hover:text-gray-700 dark:hover:text-gray-300 transition">
+              AGPL v3
+            </a>
+          </div>
         </div>
-        <a
-          href="https://www.gnu.org/licenses/agpl-3.0.html"
-          target="_blank"
-          rel="noreferrer"
-          className="hover:text-gray-600 dark:hover:text-gray-300 transition"
-        >
-          AGPL v3
-        </a>
       </footer>
     </div>
   );

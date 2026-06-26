@@ -95,7 +95,7 @@ export default function AdminSources() {
               <TableRow>
                 <TableHead>{t('adminSources.domain')}</TableHead>
                 <TableHead>{t('adminSources.name')}</TableHead>
-                <TableHead>{t('adminSources.actions')}</TableHead>
+                <TableHead className="w-[1%] whitespace-nowrap">{t('adminSources.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -103,7 +103,7 @@ export default function AdminSources() {
                 <TableRow key={item.id}>
                   <TableCell>{item.domain}</TableCell>
                   <TableCell>{item.name}</TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <div className="flex gap-2">
                       <Button variant="ghost" size="sm" onClick={() => openEdit(item)}>{t('common.edit')}</Button>
                       <Button variant="ghost" size="sm" className="text-red-600" onClick={() => handleDelete(item.id)}>{t('common.delete')}</Button>

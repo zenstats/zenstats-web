@@ -138,7 +138,7 @@ export default function AdminSites() {
                       <TableCell>{site.remark || '-'}</TableCell>
                       <TableCell>{site.owner_name || t('admin.sitesPage.unknown')}</TableCell>
                       <TableCell>{site.timezone}</TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <div className="flex gap-2">
                           {!site.is_verified && (
                             <Button variant="default" size="sm" onClick={() => openVerifyDialog(site)}>

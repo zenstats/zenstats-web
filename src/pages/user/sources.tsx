@@ -129,7 +129,7 @@ export default function UserSources() {
               <TableRow>
                 <TableHead>{t('customSources.domain')}</TableHead>
                 <TableHead>{t('customSources.name')}</TableHead>
-                {!subAccount && <TableHead>{t('customSources.actions')}</TableHead>}
+                {!subAccount && <TableHead className="w-[1%] whitespace-nowrap">{t('customSources.actions')}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -138,7 +138,7 @@ export default function UserSources() {
                   <TableCell>{engine.domain}</TableCell>
                   <TableCell>{engine.name}</TableCell>
                   {!subAccount && (
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <div className="flex gap-2">
                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(engine)}>
                           {t('common.edit')}

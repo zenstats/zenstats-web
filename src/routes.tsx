@@ -25,6 +25,10 @@ import GoalsSettings from './pages/sites/settings/goals';
 import FunnelsSettings from './pages/sites/settings/funnels';
 import EmailReportsSettings from './pages/sites/settings/email-reports';
 import TrafficAlertSettings from './pages/sites/settings/traffic-alert';
+import SharedLinksSettings from './pages/sites/settings/shared-links';
+import SegmentsSettings from './pages/sites/settings/segments';
+import ShareView from './pages/share/share-view';
+import DocsPage from './pages/docs/DocsPage';
 import ImportPage from './pages/sites/import/import';
 
 // Admin pages
@@ -74,6 +78,14 @@ const routes: RouteObject[] = [
   {
     path: "/reset-password",
     element: <ResetPassword />
+  },
+  {
+    path: "/share/:slug",
+    element: <ShareView />
+  },
+  {
+    path: "/docs",
+    element: <DocsPage />
   },
   {
     path: "/setup",
@@ -194,6 +206,18 @@ const routes: RouteObject[] = [
                 path: "traffic-alert",
                 element: <SettingsLayout>
                   <TrafficAlertSettings />
+                </SettingsLayout>,
+              },
+              {
+                path: "shared-links",
+                element: <SettingsLayout>
+                  <SharedLinksSettings />
+                </SettingsLayout>,
+              },
+              {
+                path: "segments",
+                element: <SettingsLayout>
+                  <SegmentsSettings />
                 </SettingsLayout>,
               },
             ]

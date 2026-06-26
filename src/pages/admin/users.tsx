@@ -123,7 +123,7 @@ export default function AdminUsers() {
                     <TableHead>{t('admin.usersPage.name')}</TableHead>
                     <TableHead>{t('admin.usersPage.group')}</TableHead>
                     <TableHead>{t('admin.usersPage.status')}</TableHead>
-                    <TableHead>{t('admin.usersPage.actions')}</TableHead>
+                    <TableHead className="w-[1%] whitespace-nowrap">{t('admin.usersPage.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -139,7 +139,7 @@ export default function AdminUsers() {
                           {user.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(user)}>
                           {t('common.edit')}
                         </Button>

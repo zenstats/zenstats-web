@@ -94,20 +94,15 @@ function UserDropdown({ user, onLogout, isAdmin, isSubAccount }: { user: { name:
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium text-white bg-indigo-500">
+        <Button variant="ghost" size="sm" className="gap-2 px-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium text-white bg-indigo-500">
             {initial}
           </div>
-          <div className="hidden lg:flex flex-col items-start">
-            <span className="text-sm font-medium text-gray-900 dark:text-gray-100 leading-tight">
-              {user.name}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 leading-tight truncate max-w-[140px]">
-              {user.email}
-            </span>
-          </div>
+          <span className="hidden lg:inline text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[120px] truncate">
+            {user.name}
+          </span>
           <ChevronDown className="h-3.5 w-3.5 text-gray-400 hidden lg:block" />
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
         <div className="px-2 py-2">
@@ -304,7 +299,7 @@ export default function Header() {
           {/* Logo */}
           <div
             className="flex items-center gap-2.5 cursor-pointer"
-            onClick={() => navigate("/sites")}
+            onClick={() => navigate(user?.email ? "/sites" : "/")}
           >
             <img className="block h-8 w-auto" src={logoSrc} alt="ZenStats" />
             <span className="font-semibold text-lg hidden sm:inline-block text-gray-900 dark:text-gray-100">
@@ -323,6 +318,15 @@ export default function Header() {
             >
               <Globe className="h-4 w-4" />
               {t('header.sites')}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/docs")}
+              className="text-gray-600 dark:text-gray-400 text-sm"
+            >
+              {t('header.docs')}
             </Button>
 
             <LanguageSwitcher />

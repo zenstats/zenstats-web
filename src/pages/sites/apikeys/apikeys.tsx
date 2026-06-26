@@ -22,6 +22,7 @@ import {
   Key,
   AlertTriangle,
   Calendar,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
@@ -316,6 +317,12 @@ export default function APIKeysPage() {
                         {t('apiKeys.createdAt')}{" "}
                         {new Date(apiKey.created_at).toLocaleDateString("zh-CN")}
                       </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {apiKey.last_used_at
+                          ? `${t('apiKeys.lastUsedAt')} ${new Date(apiKey.last_used_at).toLocaleDateString()}`
+                          : t('apiKeys.neverUsed')}
+                      </span>
                       {apiKey.expires_at && (
                         <span
                           className={cn(
@@ -327,7 +334,7 @@ export default function APIKeysPage() {
                         >
                           {new Date(apiKey.expires_at) < new Date()
                             ? t('apiKeys.expired')
-                            : `${t('apiKeys.expiresAt')} ${new Date(apiKey.expires_at).toLocaleDateString("zh-CN")}`}
+                            : `${t('apiKeys.expiresAt')} ${new Date(apiKey.expires_at).toLocaleDateString()}`}
                         </span>
                       )}
                     </div>

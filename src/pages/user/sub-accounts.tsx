@@ -123,7 +123,7 @@ export default function UserSubAccounts() {
                 <TableHead>{t('subAccounts.email')}</TableHead>
                 <TableHead>{t('subAccounts.name')}</TableHead>
                 <TableHead>{t('subAccounts.status')}</TableHead>
-                {!subAccount && <TableHead>{t('subAccounts.actions')}</TableHead>}
+                {!subAccount && <TableHead className="w-[1%] whitespace-nowrap">{t('subAccounts.actions')}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -137,7 +137,7 @@ export default function UserSubAccounts() {
                     </Badge>
                   </TableCell>
                   {!subAccount && (
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <Button variant="ghost" size="sm" className="text-red-600" onClick={() => handleDeleteSubAccount(sa.id)}>
                         {t('common.delete')}
                       </Button>

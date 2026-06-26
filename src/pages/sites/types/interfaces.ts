@@ -118,6 +118,47 @@ export interface StatsData {
   screenSizes: BreakdownResponse | null;
 }
 
+// Shared Link types
+export interface SharedLink {
+  id: number;
+  site_id: number;
+  name: string;
+  slug: string;
+  password_hash: string;
+  url: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSharedLinkRequest {
+  name: string;
+  password?: string;
+}
+
+// Segment types
+export interface Segment {
+  id: number;
+  site_id: number;
+  name: string;
+  description?: string;
+  filters: string;
+  created_by?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSegmentRequest {
+  name: string;
+  description?: string;
+  filters: string;
+}
+
+export interface UpdateSegmentRequest {
+  name?: string;
+  description?: string;
+  filters?: string;
+}
+
 // Goal types
 export interface Goal {
   id: number;
