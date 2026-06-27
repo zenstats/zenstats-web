@@ -108,7 +108,23 @@
       "deleteConfirm": "确定要删除站点 {{domain}} 吗？此操作不可撤销。",
       "loadFailed": "加载站点失败",
       "deleteSuccess": "站点删除成功",
-      "deleteFailed": "删除站点失败"
+      "deleteFailed": "删除站点失败",
+      "alertTestTitle": "测试流量告警",
+      "alertTestDesc": "对站点 {{domain}} 执行一次异常检测，可选发送测试邮件。",
+      "alertTestEmail": "测试邮箱（可选）",
+      "alertTestEmailHint": "留空则不发送邮件，站点配置的收件人不会被使用。",
+      "alertTestRun": "执行检测",
+      "alertTesting": "检测中...",
+      "alertTestFailed": "检测失败",
+      "alertResultSpike": "检测到流量突增",
+      "alertResultDrop": "检测到流量下降",
+      "alertResultNormal": "未检测到异常",
+      "alertResultInterval": "检测周期",
+      "alertResultPeriod": "时间段",
+      "alertResultThreshold": "阈值",
+      "alertResultVisitors": "访客数",
+      "alertResultPageviews": "页面浏览量",
+      "alertResultEmailSent": "测试邮件已发送至 {{email}}"
     }
   },
   "adminSources": {
@@ -1096,6 +1112,7 @@
   },
   "common": {
     "cancel": "取消",
+    "close": "关闭",
     "confirm": "确定",
     "save": "保存",
     "edit": "编辑",

@@ -108,7 +108,23 @@
       "deleteConfirm": "Are you sure you want to delete site {{domain}}? This action cannot be undone.",
       "loadFailed": "Failed to load sites",
       "deleteSuccess": "Site deleted successfully",
-      "deleteFailed": "Failed to delete site"
+      "deleteFailed": "Failed to delete site",
+      "alertTestTitle": "Test Traffic Alert",
+      "alertTestDesc": "Run anomaly detection for site {{domain}} and optionally send a test email.",
+      "alertTestEmail": "Test Email (optional)",
+      "alertTestEmailHint": "Leave empty to skip sending email. Site's configured recipients will not be used.",
+      "alertTestRun": "Run Detection",
+      "alertTesting": "Running...",
+      "alertTestFailed": "Detection failed",
+      "alertResultSpike": "Traffic spike detected",
+      "alertResultDrop": "Traffic drop detected",
+      "alertResultNormal": "No anomaly detected",
+      "alertResultInterval": "Interval",
+      "alertResultPeriod": "Period",
+      "alertResultThreshold": "Threshold",
+      "alertResultVisitors": "Visitors",
+      "alertResultPageviews": "Pageviews",
+      "alertResultEmailSent": "Test email sent to {{email}}"
     }
   },
   "adminSources": {
@@ -1110,6 +1126,7 @@
   },
   "common": {
     "cancel": "Cancel",
+    "close": "Close",
     "confirm": "Confirm",
     "save": "Save",
     "edit": "Edit",
