@@ -70,7 +70,7 @@ export default function Devices({
                               {device.percentage}%
                             </span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-muted rounded-full h-2">
                             <div
                               className="bg-blue-600 h-2 rounded-full"
                               style={{ width: `${device.percentage}%` }}

@@ -10,8 +10,8 @@ export default function Forbidden() {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-6xl font-bold text-gray-900 mb-4">{t('error.403')}</h1>
-      <p className="text-2xl text-gray-700 mb-8">{t('error.forbidden')}</p>
+      <h1 className="text-6xl font-bold text-foreground mb-4">{t('error.403')}</h1>
+      <p className="text-2xl text-muted-foreground mb-8">{t('error.forbidden')}</p>
       <Button variant="default" onClick={() => navigate("/")}>
         {t('error.backToHome')}
       </Button>

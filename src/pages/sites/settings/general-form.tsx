@@ -260,7 +260,7 @@ export function SettingsGeneralForm() {
                     <select
                       value={field.value}
                       onChange={field.onChange}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2"
+                      className="w-full rounded-md border border-input bg-background text-foreground px-3 py-2"
                     >
                       <option value="" disabled>
                         {t('settings.general.selectTimezone')}
@@ -333,7 +333,7 @@ export function SettingsGeneralForm() {
                             e.target.value,
                           )
                         }
-                        className="w-[150px] rounded-md border border-gray-300 px-3 py-2"
+                        className="w-[150px] rounded-md border border-input bg-background text-foreground px-3 py-2"
                       >
                         <option value="unlimited">{t('settings.general.unlimited')}</option>
                         <option value="second">{t('settings.general.perSecond')}</option>

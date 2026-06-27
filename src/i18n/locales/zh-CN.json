@@ -164,24 +164,58 @@
     "deleteFailed": "删除来源失败"
   },
   "subAccounts": {
-    "title": "子账户",
-    "description": "创建子账户以获得只读访问权限（{{current}}/{{max}}）",
-    "create": "创建子账户",
-    "createTitle": "创建子账户",
+    "title": "子账号",
+    "description": "已使用 {{current}}/{{max}} 个子账号",
+    "create": "创建子账号",
+    "createTitle": "创建子账号",
+    "editTitle": "编辑子账号",
     "email": "邮箱",
     "name": "名称",
     "password": "密码",
     "status": "状态",
+    "role": "角色",
     "actions": "操作",
-    "emailPlaceholder": "viewer@example.com",
-    "namePlaceholder": "查看者名称",
-    "noPermission": "您的当前套餐不支持子账户功能。",
+    "emailPlaceholder": "user@example.com",
+    "namePlaceholder": "显示名称",
+    "noPermission": "您的当前套餐不支持子账号功能。",
     "upgradeHint": "请升级套餐以使用此功能。",
-    "loadFailed": "加载子账户失败",
-    "createSuccess": "子账户创建成功",
-    "deleteSuccess": "子账户删除成功",
-    "createFailed": "创建子账户失败",
-    "deleteFailed": "删除子账户失败"
+    "loadFailed": "加载子账号失败",
+    "createSuccess": "子账号创建成功",
+    "deleteSuccess": "子账号删除成功",
+    "createFailed": "创建子账号失败",
+    "deleteFailed": "删除子账号失败",
+    "roleGuide": "权限说明",
+    "roles": {
+      "viewer": "只读",
+      "editor": "运营",
+      "admin": "高级运营",
+      "custom": "自定义"
+    },
+    "roleDesc": {
+      "viewer": "只读权限：可查看统计数据、报表和仪表板。",
+      "editor": "可管理目标、漏斗、细分和共享链接。",
+      "admin": "完整运营权限：包含屏蔽规则、邮件报告和流量预警管理。",
+      "custom": "自定义权限组合。"
+    },
+    "permissions": "权限",
+    "permCount": "{{count}} 项权限",
+    "permCount_other": "{{count}} 项权限",
+    "noPerms": "仅查看",
+    "presets": "快捷预设",
+    "permGroups": {
+      "operations": "运营操作",
+      "protection": "站点防护",
+      "notifications": "通知设置"
+    },
+    "perms": {
+      "goals:write": "管理目标",
+      "funnels:write": "管理漏斗",
+      "segments:write": "管理细分",
+      "shared_links:write": "管理共享链接",
+      "shields:write": "管理屏蔽规则",
+      "email_reports:write": "管理邮件报告",
+      "traffic_alerts:write": "管理流量预警"
+    }
   },
   "header": {
     "sites": "站点",
@@ -1206,6 +1240,7 @@
         "statsApiV2": "统计 API v2",
         "reference": "参考",
         "features": "功能",
+        "siteManagement": "站点管理",
         "operations": "运维"
       },
       "introduction": "简介",
@@ -1224,7 +1259,11 @@
       "funnels": "漏斗",
       "segments": "数据段",
       "sharedLinks": "分享链接",
-      "health": "健康检查"
+      "health": "健康检查",
+      "deployment": "部署指南",
+      "shields": "流量屏蔽",
+      "emailReports": "邮件报告",
+      "trafficAlerts": "流量告警"
     },
     "table": {
       "parameter": "参数",
@@ -1360,6 +1399,73 @@
       },
       "health": {
         "description": "在容器编排的健康检查中使用这些接口。/live 在进程运行时返回 200；/ready 在所有后端服务（ClickHouse、PostgreSQL）可达时返回 200。"
+      },
+      "deployment": {
+        "description": "ZenStats 以 Docker 镜像的形式分发，推荐使用 zenstats-deploy 仓库中的官方 docker-compose.yml 来运行。",
+        "quickStart": {
+          "heading": "快速开始",
+          "step1": "克隆部署仓库",
+          "step2": "复制并编辑环境变量文件",
+          "step3": "启动所有服务"
+        },
+        "envVars": {
+          "heading": "关键环境变量",
+          "secretKey": "JWT 签名密钥，生产环境必填。生成命令：openssl rand -base64 32",
+          "domain": "ZenStats 实例的公开域名（如 stats.example.com），用于追踪脚本代码片段。",
+          "dbPassword": "PostgreSQL 密码，部署前请修改默认值。",
+          "maxmindKey": "MaxMind GeoLite2 License Key，用于 GeoIP 解析。留空将使用 Loyalsoldier 备用数据库。",
+          "logLevel": "日志级别，可选：debug、info、warn、error，默认 info。"
+        },
+        "services": {
+          "heading": "服务组成",
+          "frontend": "基于 Caddy 的反向代理，提供 React 前端并代理 API 请求，自动管理 TLS 证书。",
+          "backend": "Go API 服务器，负责事件接入、身份认证和分析查询。",
+          "postgres": "PostgreSQL，存储用户、站点、目标、漏斗和配置信息。",
+          "clickhouse": "ClickHouse，存储原始页面浏览和事件数据，用于分析查询。"
+        },
+        "callout": "数据持久化在 Docker 命名卷（db-data、event-data、zenstats-data）中，请定期备份。"
+      },
+      "shields": {
+        "description": "流量屏蔽功能允许你在数据写入分析库之前过滤掉不需要的流量。在「站点设置 → 屏蔽」中配置。",
+        "ip": {
+          "heading": "IP 黑名单",
+          "description": "屏蔽来自特定 IPv4 或 IPv6 地址的事件，适合排除自己公司的 IP 或已知爬虫。"
+        },
+        "hostname": {
+          "heading": "主机名白名单",
+          "description": "仅接受请求主机名与允许列表匹配的事件，支持前缀通配符（如 *.example.com）。留空则允许所有主机名。"
+        },
+        "country": {
+          "heading": "国家/地区黑名单",
+          "description": "使用 ISO 3166-1 alpha-2 代码（如 CN、RU）屏蔽特定国家的所有流量，需要配置 GeoIP。"
+        },
+        "referrer": {
+          "heading": "垃圾来源黑名单",
+          "description": "屏蔽 Referer 请求头匹配已知垃圾域名的事件，逐条添加域名。"
+        },
+        "callout": "屏蔽规则在每个入站事件写入 ClickHouse 之前生效，被屏蔽的事件将被静默丢弃，不会出现在统计数据中。"
+      },
+      "emailReports": {
+        "description": "ZenStats 可向站点所有者自动发送统计摘要报告，报告包含与上一周期的对比数据、热门页面、流量来源和关键指标。",
+        "weekly": {
+          "heading": "周报",
+          "description": "每周一上午 8:00 发送（服务器时区），覆盖上一完整周的数据。"
+        },
+        "monthly": {
+          "heading": "月报",
+          "description": "每月 1 日上午 9:00 发送（服务器时区），覆盖上一完整月的数据。"
+        },
+        "callout": "邮件报告需要在「管理后台 → 设置」中配置 SMTP。在「站点设置 → 邮件报告」中按站点开启。"
+      },
+      "trafficAlerts": {
+        "description": "当站点流量相比上周同一时段发生显著变化时，流量告警将通过邮件通知你。",
+        "settings": {
+          "heading": "配置项",
+          "threshold": "触发告警所需的变化百分比，例如设为 30 表示流量增减超过 30% 时触发。",
+          "interval": "对比粒度：按小时（上一小时 vs 上周同时段）或按天（今天 vs 上周同日）。",
+          "recipients": "逗号分隔的额外收件人邮箱列表，站点所有者始终会收到告警。"
+        },
+        "callout": "流量告警需要在「管理后台 → 设置」中配置 SMTP。在「站点设置 → 流量告警」中按站点开启。"
       }
     },
     "metrics": {

@@ -191,7 +191,7 @@ export default function SiteInstallPage() {
             </pre>
           </div>
 
-          <div className="rounded-lg border bg-white p-4 text-sm text-muted-foreground">
+          <div className="rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
             <p className="font-medium text-foreground">{t('sites.install.nextSteps')}</p>
             <ol className="mt-2 list-decimal space-y-1 pl-5">
               <li>{t('sites.install.step1')}</li>

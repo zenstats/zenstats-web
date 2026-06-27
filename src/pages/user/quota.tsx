@@ -96,8 +96,8 @@ export default function UserQuota() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">{t('quota.title')}</h1>
-        <div className="border-b border-gray-200 mt-4"></div>
+        <h1 className="text-3xl font-bold text-foreground">{t('quota.title')}</h1>
+        <div className="border-b border-border mt-4"></div>
       </div>
 
       <div className="grid gap-6">

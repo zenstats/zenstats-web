@@ -165,23 +165,57 @@
   },
   "subAccounts": {
     "title": "Sub Accounts",
-    "description": "Create sub accounts for read-only access ({{current}}/{{max}})",
+    "description": "{{current}}/{{max}} sub accounts used",
     "create": "Create Sub Account",
     "createTitle": "Create Sub Account",
+    "editTitle": "Edit Sub Account",
     "email": "Email",
     "name": "Name",
     "password": "Password",
     "status": "Status",
+    "role": "Role",
     "actions": "Actions",
-    "emailPlaceholder": "viewer@example.com",
-    "namePlaceholder": "Viewer name",
+    "emailPlaceholder": "user@example.com",
+    "namePlaceholder": "Display name",
     "noPermission": "Sub accounts are not available in your current plan.",
     "upgradeHint": "Please upgrade your plan to use this feature.",
     "loadFailed": "Failed to load sub accounts",
     "createSuccess": "Sub account created",
     "deleteSuccess": "Sub account deleted",
     "createFailed": "Failed to create sub account",
-    "deleteFailed": "Failed to delete sub account"
+    "deleteFailed": "Failed to delete sub account",
+    "roleGuide": "Permission Reference",
+    "roles": {
+      "viewer": "Viewer",
+      "editor": "Editor",
+      "admin": "Admin",
+      "custom": "Custom"
+    },
+    "roleDesc": {
+      "viewer": "Read-only access to stats, reports, and dashboards.",
+      "editor": "Can manage goals, funnels, segments, and shared links.",
+      "admin": "Full operational access including shield rules, email reports, and traffic alerts.",
+      "custom": "Custom set of permissions."
+    },
+    "permissions": "Permissions",
+    "permCount": "{{count}} permission",
+    "permCount_other": "{{count}} permissions",
+    "noPerms": "Read only",
+    "presets": "Presets",
+    "permGroups": {
+      "operations": "Operations",
+      "protection": "Site Protection",
+      "notifications": "Notifications"
+    },
+    "perms": {
+      "goals:write": "Manage Goals",
+      "funnels:write": "Manage Funnels",
+      "segments:write": "Manage Segments",
+      "shared_links:write": "Manage Shared Links",
+      "shields:write": "Manage Shield Rules",
+      "email_reports:write": "Manage Email Reports",
+      "traffic_alerts:write": "Manage Traffic Alerts"
+    }
   },
   "header": {
     "sites": "Sites",
@@ -1220,6 +1254,7 @@
         "statsApiV2": "Stats API v2",
         "reference": "Reference",
         "features": "Features",
+        "siteManagement": "Site Management",
         "operations": "Operations"
       },
       "introduction": "Introduction",
@@ -1238,7 +1273,11 @@
       "funnels": "Funnels",
       "segments": "Segments",
       "sharedLinks": "Shared Links",
-      "health": "Health Check"
+      "health": "Health Check",
+      "deployment": "Deployment",
+      "shields": "Traffic Shields",
+      "emailReports": "Email Reports",
+      "trafficAlerts": "Traffic Alerts"
     },
     "table": {
       "parameter": "Parameter",
@@ -1374,6 +1413,73 @@
       },
       "health": {
         "description": "Use these endpoints in your container orchestration health checks. /live returns 200 when the process is running; /ready returns 200 when all backing services (ClickHouse, PostgreSQL) are reachable."
+      },
+      "deployment": {
+        "description": "ZenStats ships as a set of Docker images. The recommended way to run it is with the official docker-compose.yml from the zenstats-deploy repository.",
+        "quickStart": {
+          "heading": "Quick Start",
+          "step1": "Clone the deploy repository",
+          "step2": "Copy and edit the environment file",
+          "step3": "Start all services"
+        },
+        "envVars": {
+          "heading": "Key Environment Variables",
+          "secretKey": "JWT signing secret. Required in production. Generate with: openssl rand -base64 32",
+          "domain": "Public hostname of your ZenStats instance (e.g. stats.example.com). Used in the tracking script snippet.",
+          "dbPassword": "PostgreSQL password. Change from the default before deploying.",
+          "maxmindKey": "MaxMind GeoLite2 license key for GeoIP resolution. Leave empty to use the Loyalsoldier fallback database.",
+          "logLevel": "Log verbosity. One of: debug, info, warn, error. Default: info."
+        },
+        "services": {
+          "heading": "Services",
+          "frontend": "Caddy-based reverse proxy serving the React frontend and proxying API calls. Handles TLS automatically.",
+          "backend": "Go API server. Handles event ingestion, authentication, and analytics queries.",
+          "postgres": "PostgreSQL — stores users, sites, goals, funnels, and configuration.",
+          "clickhouse": "ClickHouse — stores raw pageview and event data for analytics queries."
+        },
+        "callout": "Data is persisted in named Docker volumes (db-data, event-data, zenstats-data). Back these up regularly."
+      },
+      "shields": {
+        "description": "Traffic shields let you filter out unwanted traffic before it reaches your analytics. Configure them in Site Settings → Shields.",
+        "ip": {
+          "heading": "IP Blacklist",
+          "description": "Block incoming events from specific IPv4 or IPv6 addresses. Useful for excluding your own office IP or known bots."
+        },
+        "hostname": {
+          "heading": "Hostname Allowlist",
+          "description": "Only accept events where the request hostname matches an allowed entry. Wildcards are supported at the start (e.g. *.example.com). Leave the list empty to allow all hostnames."
+        },
+        "country": {
+          "heading": "Country Blacklist",
+          "description": "Block all traffic from specific countries using ISO 3166-1 alpha-2 codes (e.g. CN, RU). Requires GeoIP to be configured."
+        },
+        "referrer": {
+          "heading": "Spam Referrer Blacklist",
+          "description": "Block events whose Referer header matches a known spam domain. Add domains one at a time."
+        },
+        "callout": "Shield rules are evaluated on every inbound event before it is written to ClickHouse. Blocked events are dropped silently and do not appear in your analytics."
+      },
+      "emailReports": {
+        "description": "ZenStats can send automated summary reports to site owners. Reports compare the current period against the previous one and include top pages, sources, and key metrics.",
+        "weekly": {
+          "heading": "Weekly Report",
+          "description": "Sent every Monday at 8:00 AM (server timezone). Covers the previous full week."
+        },
+        "monthly": {
+          "heading": "Monthly Report",
+          "description": "Sent on the 1st of each month at 9:00 AM (server timezone). Covers the previous full month."
+        },
+        "callout": "Email reports require SMTP to be configured in Admin → Settings. Toggle them on per site in Site Settings → Email Reports."
+      },
+      "trafficAlerts": {
+        "description": "Traffic alerts notify you by email when your site traffic changes significantly compared to the same time last week.",
+        "settings": {
+          "heading": "Configuration",
+          "threshold": "Percentage change required to trigger an alert. For example, a threshold of 30 fires when traffic increases or decreases by more than 30%.",
+          "interval": "Comparison granularity: hourly (last hour vs. same hour last week) or daily (today vs. same day last week).",
+          "recipients": "Comma-separated list of additional email recipients. The site owner is always notified."
+        },
+        "callout": "Traffic alerts require SMTP to be configured in Admin → Settings. Enable them per site in Site Settings → Traffic Alerts."
       }
     },
     "metrics": {

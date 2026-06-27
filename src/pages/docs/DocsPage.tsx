@@ -25,8 +25,12 @@ const NAV_SECTIONS = [
     items: ["goals", "funnels", "segments", "sharedLinks"],
   },
   {
+    groupKey: "siteManagement",
+    items: ["shields", "emailReports", "trafficAlerts"],
+  },
+  {
     groupKey: "operations",
-    items: ["health"],
+    items: ["deployment", "health"],
   },
 ];
 
@@ -583,6 +587,84 @@ zenstats.track('Purchase', {
   }
 }`}</CodeBlock>
             <Callout type="info">{t("docs.sections.sharedLinks.callout")}</Callout>
+          </section>
+
+          {/* Shields */}
+          <section id="shields" className="mb-16 scroll-mt-8">
+            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.shields")}</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.shields.description")}</p>
+            <Callout type="warn">{t("docs.sections.shields.callout")}</Callout>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.shields.ip.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.shields.ip.description")}</p>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.shields.hostname.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.shields.hostname.description")}</p>
+            <CodeBlock label="Example">{`*.example.com   → matches app.example.com, www.example.com
+example.com     → exact match only`}</CodeBlock>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.shields.country.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.shields.country.description")}</p>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.shields.referrer.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">{t("docs.sections.shields.referrer.description")}</p>
+          </section>
+
+          {/* Email Reports */}
+          <section id="emailReports" className="mb-16 scroll-mt-8">
+            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.emailReports")}</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.emailReports.description")}</p>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.emailReports.weekly.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.emailReports.weekly.description")}</p>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.emailReports.monthly.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.emailReports.monthly.description")}</p>
+            <Callout type="info">{t("docs.sections.emailReports.callout")}</Callout>
+          </section>
+
+          {/* Traffic Alerts */}
+          <section id="trafficAlerts" className="mb-16 scroll-mt-8">
+            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.trafficAlerts")}</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.trafficAlerts.description")}</p>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trafficAlerts.settings.heading")}</h3>
+            <ParamTable rows={[
+              { name: "threshold", desc: t("docs.sections.trafficAlerts.settings.threshold") },
+              { name: "interval", desc: t("docs.sections.trafficAlerts.settings.interval") },
+              { name: "recipients", desc: t("docs.sections.trafficAlerts.settings.recipients") },
+            ]} />
+            <Callout type="info">{t("docs.sections.trafficAlerts.callout")}</Callout>
+          </section>
+
+          {/* Deployment */}
+          <section id="deployment" className="mb-16 scroll-mt-8">
+            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.deployment")}</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.deployment.description")}</p>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.deployment.quickStart.heading")}</h3>
+            <CodeBlock label="1. Clone">{`git clone https://github.com/zenstats/zenstats-deploy
+cd zenstats-deploy`}</CodeBlock>
+            <CodeBlock label="2. Configure">{`cp .env.example .env
+# Edit .env — set ZENSTATS_SECRET_KEY and ZENSTATS_DOMAIN at minimum`}</CodeBlock>
+            <CodeBlock label="3. Deploy">{`docker compose up -d`}</CodeBlock>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.deployment.envVars.heading")}</h3>
+            <ParamTable rows={[
+              { name: "ZENSTATS_SECRET_KEY", req: true, desc: t("docs.sections.deployment.envVars.secretKey") },
+              { name: "ZENSTATS_DOMAIN", req: true, desc: t("docs.sections.deployment.envVars.domain") },
+              { name: "DB_PASSWORD", desc: t("docs.sections.deployment.envVars.dbPassword") },
+              { name: "ZENSTATS_MAXMIND_LICENSE_KEY", desc: t("docs.sections.deployment.envVars.maxmindKey") },
+              { name: "ZENSTATS_LOG_LEVEL", desc: t("docs.sections.deployment.envVars.logLevel") },
+            ]} />
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.deployment.services.heading")}</h3>
+            <ParamTable rows={[
+              { name: "frontend", desc: t("docs.sections.deployment.services.frontend") },
+              { name: "zenstats", desc: t("docs.sections.deployment.services.backend") },
+              { name: "zenstats_db", desc: t("docs.sections.deployment.services.postgres") },
+              { name: "zenstats_events_db", desc: t("docs.sections.deployment.services.clickhouse") },
+            ]} />
+            <Callout type="warn">{t("docs.sections.deployment.callout")}</Callout>
           </section>
 
           {/* Health */}

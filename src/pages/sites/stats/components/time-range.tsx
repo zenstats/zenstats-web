@@ -83,7 +83,7 @@ export default function TimeRange({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex justify-between items-center space-x-2 bg-white p-2 rounded-lg shadow-sm w-[90px] text-left transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-blue-500/20"
+              className="flex justify-between items-center space-x-2 bg-card p-2 rounded-lg shadow-sm w-[90px] text-left transition-colors hover:bg-accent focus:ring-2 focus:ring-blue-500/20"
             >
               <span className="text-sm font-medium">{t('stats.timeRange.hour')}</span>
               <ChevronDown className="h-4 w-4" />

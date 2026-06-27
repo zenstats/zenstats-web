@@ -38,7 +38,7 @@ export function TimeZoneSelector({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search timezones"
-          className="sticky top-0 z-10 bg-white mb-2"
+          className="sticky top-0 z-10 bg-background mb-2"
         />
         {filteredTimeZones.map((timeZone) => (
           <SelectItem key={timeZone.value} value={timeZone.value}>

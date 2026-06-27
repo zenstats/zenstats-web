@@ -206,8 +206,47 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How it Works */}
+      <section className="max-w-4xl mx-auto px-6 pb-20">
+        <h2 className="text-2xl font-bold text-center mb-2">{t(i("如何开始", "How it Works"))}</h2>
+        <p className="text-center text-gray-500 dark:text-gray-400 text-sm mb-12">
+          {t(i("三步完成自托管部署", "Self-host in three steps"))}
+        </p>
+        <div className="grid sm:grid-cols-3 gap-6">
+          {[
+            {
+              step: "01",
+              title: i("克隆部署仓库", "Clone the deploy repo"),
+              desc: i("从 GitHub 获取官方 Docker Compose 配置", "Get the official Docker Compose setup from GitHub"),
+              code: "git clone github.com/zenstats/zenstats-deploy",
+            },
+            {
+              step: "02",
+              title: i("配置环境变量", "Configure your environment"),
+              desc: i("复制 .env.example 并设置域名和密钥", "Copy .env.example, set your domain and secret key"),
+              code: "cp .env.example .env && vi .env",
+            },
+            {
+              step: "03",
+              title: i("一键启动", "Launch all services"),
+              desc: i("Caddy 自动申请 SSL，数据库自动初始化", "Caddy handles TLS, databases auto-initialize"),
+              code: "docker compose up -d",
+            },
+          ].map((s) => (
+            <div key={s.step} className="relative p-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+              <span className="text-3xl font-black text-gray-100 dark:text-gray-800 absolute top-4 right-5 select-none">{s.step}</span>
+              <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-2">{t(s.title)}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">{t(s.desc)}</p>
+              <div className="bg-gray-900 dark:bg-gray-800 rounded-lg px-3 py-2">
+                <code className="text-emerald-400 text-xs font-mono break-all">{s.code}</code>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Privacy note */}
-      {/* <section className="max-w-3xl mx-auto px-6 pb-16">
+      <section className="max-w-3xl mx-auto px-6 pb-16">
         <div className="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-950/20 p-6">
           <div className="flex gap-3">
             <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
@@ -224,7 +263,7 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section> */}
+      </section>
 
       {/* Tech Stack */}
       <section className="border-t border-gray-100 dark:border-gray-800 py-16">

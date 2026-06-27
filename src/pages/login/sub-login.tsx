@@ -17,6 +17,7 @@ interface SubLoginResponse {
     email: string
     name: string
     role: string
+    permissions: string[]
     parent_user_id: number
   }
 }
@@ -47,7 +48,11 @@ export default function SubLogin() {
         localStorage.setItem("user_type", "sub_account")
         localStorage.setItem("sub_account_id", String(user.id))
         localStorage.setItem("role", user.role)
+        localStorage.setItem("permissions", JSON.stringify(user.permissions ?? []))
         localStorage.setItem("parent_user_id", String(user.parent_user_id))
+        // 清除普通用户残留字段，防止子账号误获管理员权限或跳过邮箱验证逻辑
+        localStorage.removeItem("is_admin")
+        localStorage.removeItem("email_verified")
 
         toast.success(t('subLogin.loginSuccess'))
         navigate("/sites")
