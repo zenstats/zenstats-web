@@ -18,6 +18,7 @@ interface AdminUser {
   status: string
   group_id: number
   group_name: string
+  last_seen?: string
   created_at: string
   updated_at: string
 }
@@ -123,6 +124,8 @@ export default function AdminUsers() {
                     <TableHead>{t('admin.usersPage.name')}</TableHead>
                     <TableHead>{t('admin.usersPage.group')}</TableHead>
                     <TableHead>{t('admin.usersPage.status')}</TableHead>
+                    <TableHead>{t('admin.usersPage.registeredAt')}</TableHead>
+                    <TableHead>{t('admin.usersPage.lastSeen')}</TableHead>
                     <TableHead className="w-[1%] whitespace-nowrap">{t('admin.usersPage.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -138,6 +141,12 @@ export default function AdminUsers() {
                         <Badge variant={user.status === "active" ? "default" : "destructive"}>
                           {user.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                        {user.last_seen ? new Date(user.last_seen).toLocaleString() : t('admin.usersPage.never')}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(user)}>
