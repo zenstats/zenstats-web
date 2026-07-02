@@ -86,7 +86,8 @@
       sendRequest(endpoint, {
         n: 'engagement', sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
         d: dataDomain, u: currentEngagementURL, p: currentEngagementProps, e: et,
-        v: '{{TRACKER_SCRIPT_VERSION}}'
+        v: '{{TRACKER_SCRIPT_VERSION}}',
+        t: new Date().toISOString()
       })
       runningEngagementStart = null
       currentEngagementTime = 0
@@ -290,7 +291,7 @@
     var customURL = options && (options.u || options.url)
     {{/if}}
     var payload = {
-      n: eventName, v: '{{TRACKER_SCRIPT_VERSION}}',
+      n: eventName, v: '{{TRACKER_SCRIPT_VERSION}}', t: new Date().toISOString(),
       u: {{#if COMPILE_MANUAL}}(customURL || location.href){{else}}location.href{{/if}}, d: dataDomain, r: document.referrer || null
     }
     if (options && options.meta) payload.m = JSON.stringify(options.meta)

@@ -2,6 +2,7 @@ import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig, type Ax
 import useErrorStore from "@store/errorStore";
 import qs from 'qs'
 import { getMockResponse } from './mock'
+import { clearAuthStorage } from './auth'
 import i18n from '@/i18n'
 
 export interface BaseResponse<T = unknown> {
@@ -226,10 +227,9 @@ const handleAuthorized = () => {
     if (window.location.href.includes('login')) {
         return
     }
-    localStorage.removeItem('token')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('email')
-    localStorage.removeItem('name')
+    // 清理全部鉴权字段，包括子账号专属键（user_type/permissions/role/sub_account_id 等），
+    // 避免停用/降权的子账号登出后残留状态影响下次登录的权限判断。
+    clearAuthStorage()
     window.location.href = '/login'
     return Promise.reject(i18n.t('common.authFailed'))
 }

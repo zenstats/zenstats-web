@@ -427,6 +427,7 @@ window.__zenstats = true  // bypass bot filtering during tests
 {
   n: "pageview",              // event name
   v: "1",                     // script version
+  t: "2025-01-01T00:00:00.000Z", // client timestamp (ISO 8601, UTC)
   u: "https://example.com/",  // full URL
   d: "example.com",           // domain
   r: "https://google.com/",   // referrer (null if direct)
@@ -438,6 +439,28 @@ window.__zenstats = true  // bypass bot filtering during tests
   h: 1                        // hash‑routing marker (Hash Routing feature)
 }
 ```
+
+**About `t` (client timestamp):** the tracker stamps each event with the client-side time (`new Date().toISOString()`) when the event occurs. Because events may be buffered client-side and flushed a moment later (see Batching below) or sent on page unload, this preserves the true event time. The server accepts `t` only when it is within the last hour and not in the future; otherwise it falls back to the server receive time. Omitting `t` (older tracker builds) also falls back to server time, so this is backward compatible.
+
+### Batch Payload
+
+To reduce requests, the tracker queues events for up to ~2 seconds and sends them together. When more than one event is queued, they are flushed as a single `batch` request:
+
+```javascript
+{
+  n: "batch",                 // marks a batch envelope
+  v: "1",                     // script version
+  e: [                        // array of sub-events (each is a normal payload)
+    { n: "pageview", t: "2025-01-01T00:00:00.000Z", u: "...", d: "example.com", ... },
+    { n: "Signup",   t: "2025-01-01T00:00:01.200Z", u: "...", d: "example.com", ... }
+  ]
+}
+```
+
+Notes:
+- In a batch envelope, `e` is the **array of sub-events** — not the engagement time. Each sub-event carries its own `t`, so per-event ordering and timing survive batching.
+- Sub-events inherit the batch-level `d` (domain) when they don't specify their own.
+- A single queued event is sent as a normal (non-batch) payload, not wrapped in `batch`.
 
 ### Built‑in Event Names
 

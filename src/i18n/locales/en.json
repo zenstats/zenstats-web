@@ -539,6 +539,17 @@
       "title": "Custom Query",
       "reset": "Reset",
       "execute": "Execute Query",
+      "conversionRateNeedsGoal": "conversion_rate requires an \"event:goal\" filter. Add a goal filter above to query it.",
+      "issues": {
+        "needsGoal": "{{metric}} requires an \"event:goal\" breakdown or a goal filter.",
+        "needsPage": "{{metric}} requires an \"event:page\" breakdown or an \"event:page\" filter.",
+        "pageBreakdownOnly": "{{metric}} is only supported with an \"event:page\" breakdown.",
+        "noBreakdown": "{{metric}} cannot be used in a breakdown query (aggregate only).",
+        "viewsPerVisitPageFilter": "views_per_visit cannot be combined with an \"event:page\" filter.",
+        "timeOnPageGoalFilter": "time_on_page cannot be combined with an \"event:goal\" filter.",
+        "timeOnPageNameFilter": "time_on_page cannot be combined with an \"event:name\" filter.",
+        "sessionMetricEventDim": "Session metric {{metric}} cannot be broken down by \"{{dim}}\"."
+      },
       "queryType": "Query Type",
       "breakdownQuery": "Breakdown",
       "aggregateQuery": "Aggregate",
@@ -548,9 +559,15 @@
       "metrics": {
         "visitors": "Unique Visitors",
         "pageviews": "Total Pageviews",
+        "visits": "Visits",
         "bounceRate": "Bounce Rate",
         "visitDuration": "Avg Visit Duration",
         "viewsPerVisit": "Views per Visit",
+        "scrollDepth": "Scroll Depth",
+        "timeOnPage": "Time on Page",
+        "exitRate": "Exit Rate",
+        "conversions": "Conversions",
+        "conversionRate": "Conversion Rate",
         "events": "Events"
       },
       "filters": "Filters",
@@ -574,8 +591,11 @@
       "dimensions": {
         "source": "Source",
         "pagePath": "Page Path",
+        "hostname": "Hostname",
         "entryPage": "Entry Page",
+        "entryPageHostname": "Entry Page Hostname",
         "exitPage": "Exit Page",
+        "exitPageHostname": "Exit Page Hostname",
         "country": "Country/Region",
         "region": "Region",
         "city": "City",
@@ -583,14 +603,20 @@
         "os": "Operating System",
         "device": "Device Type",
         "screenSize": "Screen Size",
-        "eventName": "Event Name"
+        "eventName": "Event Name",
+        "goal": "Goal"
       },
       "collapseForm": "Collapse Form",
       "expandForm": "Expand Form",
+      "showForm": "Show Form",
+      "hideForm": "Hide Form",
+      "orderBy": "Sort By",
       "totalRows": "{{total}} total results",
+      "rows": "{{count}} results",
       "prev": "Previous",
       "next": "Next",
-      "vsPrevious": "vs previous"
+      "vsPrevious": "vs previous",
+      "desc": "Custom query description"
     },
     "dimensions": {
       "source": "Source",
@@ -1319,7 +1345,9 @@
       "dimensionsV2": "Array of dimension keys to group results by.",
       "filtersV2": "Array of filter tuples [operator, dimension, values].",
       "orderBy": "Array of [metric, direction] pairs, e.g. [[\"visitors\",\"desc\"]].",
-      "offset": "Number of results to skip (for pagination)."
+      "offset": "Number of results to skip (for pagination).",
+      "periodV2": "Time period shorthand: day, p7, p14, p30, month, 6mo, 12mo, custom. Use with date for single-day, or from/to for custom ranges.",
+      "sampleThreshold": "Sample threshold for high-traffic sites."
     },
     "sections": {
       "introduction": {
@@ -1512,7 +1540,9 @@
       "scrollDepth": "Average percentage of the page scrolled.",
       "exitRate": "Percentage of sessions that ended on this page.",
       "viewsPerVisit": "Average pages viewed per session.",
-      "events": "Total custom events fired."
+      "events": "Total custom events fired.",
+      "conversions": "Unique visitors who completed a goal (requires goal filter).",
+      "conversionRate": "Percentage of visitors who completed a goal (requires goal filter. Aggregate only)."
     },
     "dimensions": {
       "source": "Traffic source (referrer domain).",
@@ -1526,18 +1556,26 @@
       "os": "Operating system name.",
       "device": "Device type (desktop / mobile / tablet).",
       "screenSize": "Screen resolution bucket.",
-      "eventName": "Custom event name."
+      "eventName": "Custom event name.",
+      "entryPageHostname": "Hostname of the entry page.",
+      "exitPageHostname": "Hostname of the exit page.",
+      "hostname": "Page hostname (event-level).",
+      "goal": "Goal name (conversion tracking)."
     },
     "filters": {
       "is": "Exact match. Accepts multiple values (OR logic within one filter).",
       "isNot": "Exclude exact matches.",
       "contains": "Substring match.",
       "notContains": "Exclude substring matches.",
-      "matches": "Regex match."
+      "matches": "Regex match.",
+      "containsNot": "Exclude substring matches (alias for not_contains).",
+      "matchesNot": "Exclude regex matches."
     },
     "periods": {
       "day": "Today.",
+      "realtime": "Last 30 minutes.",
       "p7": "Last 7 days.",
+      "p14": "Last 14 days.",
       "p30": "Last 30 days.",
       "month": "Current calendar month.",
       "sixMonth": "Last 6 months.",

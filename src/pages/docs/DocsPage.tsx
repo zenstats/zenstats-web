@@ -354,12 +354,13 @@ zenstats.track('Purchase', {
             <CodeBlock label="Response">{`{
   "code": 200,
   "data": {
-    "results": [
-      { "source": "Google",   "visitors": 5820, "bounce_rate": 38.2 },
-      { "source": "Direct",   "visitors": 3140, "bounce_rate": 45.1 },
-      { "source": "Twitter",  "visitors": 1280, "bounce_rate": 52.7 }
+    "columns": ["visitors", "bounce_rate"],
+    "data": [
+      { "name": "Google",   "visitors": 5820, "bounce_rate": 38.2 },
+      { "name": "Direct",   "visitors": 3140, "bounce_rate": 45.1 },
+      { "name": "Twitter",  "visitors": 1280, "bounce_rate": 52.7 }
     ],
-    "total": 3
+    "total_rows": 25
   }
 }`}</CodeBlock>
           </section>
@@ -411,37 +412,57 @@ zenstats.track('Purchase', {
             </div>
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.table.requestBody")}</h3>
             <ParamTable rows={[
-              { name: "date_range", req: true, desc: t("docs.params.dateRange") },
+              { name: "period", desc: t("docs.params.periodV2") },
+              { name: "date", desc: t("docs.params.date") },
+              { name: "from", desc: t("docs.params.from") },
+              { name: "to", desc: t("docs.params.to") },
               { name: "metrics", req: true, desc: t("docs.params.metricsV2") },
               { name: "dimensions", desc: t("docs.params.dimensionsV2") },
               { name: "filters", desc: t("docs.params.filtersV2") },
               { name: "order_by", desc: t("docs.params.orderBy") },
               { name: "limit", desc: t("docs.params.limit") },
               { name: "offset", desc: t("docs.params.offset") },
+              { name: "sample_threshold", desc: t("docs.params.sampleThreshold") },
             ]} />
-            <CodeBlock label="Request">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+            <CodeBlock label="Request (breakdown)">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "date_range": ["2024-01-01", "2024-01-31"],
+    "period": "p30",
     "metrics": ["visitors", "pageviews", "bounce_rate"],
     "dimensions": ["visit:source"],
+    "filters": [["is","visit:country",["US"]]],
     "order_by": [["visitors", "desc"]],
-    "limit": 20
+    "limit": 20,
+    "offset": 0
   }'`}</CodeBlock>
-            <CodeBlock label="Response">{`{
+            <CodeBlock label="Request (aggregate)">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+  -H "Authorization: Bearer <token>" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "period": "day",
+    "metrics": ["visitors", "pageviews", "bounce_rate", "visit_duration"]
+  }'`}</CodeBlock>
+            <CodeBlock label="Response (aggregate)">{`{
   "code": 200,
   "data": {
-    "results": [
-      {
-        "dimensions": ["Google"],
-        "metrics":    [5820, 18400, 38.2]
-      }
-    ],
-    "meta": {
-      "metrics":    ["visitors", "pageviews", "bounce_rate"],
-      "dimensions": ["visit:source"]
+    "results": {
+      "visitors":       { "value": 12840, "change": 5.2, "comparison_value": 12208 },
+      "pageviews":      { "value": 48320,  "change": 3.1, "comparison_value": 46850  },
+      "bounce_rate":    { "value": 38.2,  "change": -1.5, "comparison_value": 39.8   },
+      "visit_duration":  { "value": 68.5,  "change": 2.0,  "comparison_value": 67.1   }
     }
+  }
+}`}</CodeBlock>
+            <CodeBlock label="Response (breakdown)">{`{
+  "code": 200,
+  "data": {
+    "columns": ["visitors", "pageviews", "bounce_rate"],
+    "data": [
+      { "name": "Google",  "visitors": 5820, "pageviews": 18400, "bounce_rate": 32.1 },
+      { "name": "Direct",  "visitors": 3140, "pageviews": 10200, "bounce_rate": 45.1 }
+    ],
+    "total_rows": 12
   }
 }`}</CodeBlock>
           </section>
@@ -461,6 +482,8 @@ zenstats.track('Purchase', {
               { code: "exit_rate", desc: t("docs.metrics.exitRate") },
               { code: "views_per_visit", desc: t("docs.metrics.viewsPerVisit") },
               { code: "events", desc: t("docs.metrics.events") },
+              { code: "conversions", desc: t("docs.metrics.conversions") },
+              { code: "conversion_rate", desc: t("docs.metrics.conversionRate") },
             ]} />
           </section>
 
@@ -481,6 +504,10 @@ zenstats.track('Purchase', {
               { code: "visit:device", desc: t("docs.dimensions.device") },
               { code: "visit:screen_size", desc: t("docs.dimensions.screenSize") },
               { code: "event:name", desc: t("docs.dimensions.eventName") },
+              { code: "visit:entry_page_hostname", desc: t("docs.dimensions.entryPageHostname") },
+              { code: "visit:exit_page_hostname", desc: t("docs.dimensions.exitPageHostname") },
+              { code: "event:hostname", desc: t("docs.dimensions.hostname") },
+              { code: "event:goal", desc: t("docs.dimensions.goal") },
             ]} />
           </section>
 
@@ -502,6 +529,8 @@ zenstats.track('Purchase', {
               { name: "contains", desc: t("docs.filters.contains") },
               { name: "not_contains", desc: t("docs.filters.notContains") },
               { name: "matches", desc: t("docs.filters.matches") },
+              { name: "contains_not", desc: t("docs.filters.containsNot") },
+              { name: "matches_not", desc: t("docs.filters.matchesNot") },
             ]} />
           </section>
 
@@ -511,7 +540,9 @@ zenstats.track('Purchase', {
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.periods.description")}</p>
             <ParamTable rows={[
               { name: "day", desc: t("docs.periods.day") },
+              { name: "realtime", desc: t("docs.periods.realtime") },
               { name: "p7", desc: t("docs.periods.p7") },
+              { name: "p14", desc: t("docs.periods.p14") },
               { name: "p30", desc: t("docs.periods.p30") },
               { name: "month", desc: t("docs.periods.month") },
               { name: "6mo", desc: t("docs.periods.sixMonth") },

@@ -1,18 +1,18 @@
 # ZenStats Web
 
-ZenStats 前端面板 + Tracker JS SDK。React 19 + TypeScript + Vite，Docker 构建 Caddy 网关镜像。
+Frontend dashboard + Tracker JS SDK for ZenStats. Built with React 19 + TypeScript + Vite, shipped as a Caddy gateway Docker image.
 
-## 技术栈
+## Tech Stack
 
-- **框架**: React 19, TypeScript
-- **构建**: Vite 7
+- **Framework**: React 19, TypeScript
+- **Builder**: Vite 7
 - **UI**: Tailwind CSS 4, shadcn/ui
-- **图表**: ECharts + Recharts
-- **路由**: React Router 6
-- **状态**: Zustand
-- **国际化**: react-i18next
+- **Charts**: ECharts + Recharts
+- **Router**: React Router 6
+- **State**: Zustand
+- **i18n**: react-i18next
 
-## 快速开始
+## Quick Start
 
 ```bash
 git clone https://github.com/zenstats/zenstats-web.git
@@ -22,89 +22,89 @@ pnpm install
 pnpm dev          # http://localhost:5173
 ```
 
-## 本地开发
+## Local Development
 
-### Mock 模式（无需后端，推荐前端开发首选）
+### Mock Mode (no backend required)
 
-所有 API 调用返回内置模拟数据，无需启动数据库或后端：
+Built-in mock data for all API calls — no database or backend needed:
 
 ```bash
 VITE_USE_MOCK=true pnpm dev
 ```
 
-访问 `http://localhost:5173`，自动以 Demo 用户登录，所有页面（统计面板、漏斗分析、站点管理等）均可正常浏览。Mock 数据定义在 `src/utils/mock.ts`。
+Navigate to `http://localhost:5173`, auto-login as Demo user. All pages (stats dashboard, funnel analysis, site settings, etc.) are browsable. Mock data is defined in `src/utils/mock.ts`.
 
-### 连接本地后端
+### Connect to Local Backend
 
-确保后端已在 `localhost:8080` 运行（参考 [zenstats/README.md](../zenstats/README.md) 的 Quick Start）：
+Ensure the backend is running on `localhost:8080` (see [zenstats/README.md](../zenstats/README.md) Quick Start):
 
 ```bash
-pnpm dev     # Vite 开发服务器，/api/* 请求代理到 localhost:8080
+pnpm dev     # Vite dev server, /api/* proxies to localhost:8080
 ```
 
-Vite 代理配置在 `vite.config.ts` 中，默认将 `/api`、`/swagger` 等路径转发到后端。
+Vite proxy config is in `vite.config.ts`, forwarding `/api`, `/swagger` and other paths to the backend.
 
-### 全栈开发（推荐）
+### Full-Stack Development (recommended)
 
-使用 `zenstats-deploy` 一键启动完整后端栈，前端单独开发：
+Use `zenstats-deploy` to start the complete backend stack with one command, develop the frontend separately:
 
 ```bash
-# 终端 1：启动后端栈（PG + CH + API + Caddy）
+# Terminal 1: Start backend stack (PG + CH + API + Caddy)
 cd ../zenstats-deploy
 cp .env.local .env
 make local
 
-# 终端 2：启动前端开发服务器
+# Terminal 2: Start frontend dev server
 cd zenstats-web
 pnpm dev          # → http://localhost:5173
 
-# 或者仅启动数据库，在宿主机运行 API（方便 IDE 调试）:
+# Or just start the databases and run the API on the host (for IDE debugging):
 # make db-up
 # cd ../zenstats && go run main.go server
 ```
 
-## 项目结构
+## Project Structure
 
 ```
 zenstats-web/
-├── src/                # React 应用源码
-│   ├── pages/          # 页面组件 (login, sites, stats, settings)
-│   ├── components/     # 通用 UI 组件
-│   ├── store/          # Zustand 状态管理
-│   └── utils/          # Axios 封装、工具函数
+├── src/                # React app source
+│   ├── pages/          # Page components (login, sites, stats, settings)
+│   ├── components/     # Shared UI components
+│   ├── store/          # Zustand state management
+│   └── utils/          # Axios wrapper, utility functions
 ├── tracker/            # Tracker JS SDK
-│   ├── src/            # 追踪脚本源码
-│   ├── compile.js      # 64 变体编译脚本
-│   └── dist/           # 编译产物 (gitignore)
-├── public/             # 静态资源（Tracker JS 编译后注入到 public/js/）
-├── Dockerfile          # 三阶段构建 (tracker → frontend → caddy)
-├── Caddyfile           # Caddy 网关配置 (SPA + /js/ + /api/ 代理)
-└── .gitea/             # CI 工作流（多架构 buildx → ghcr.io）
+│   ├── src/            # Tracking script source
+│   ├── compile.js      # 64-variant build script
+│   └── dist/           # Build output (gitignored)
+├── public/             # Static assets (compiled Tracker injected into public/js/)
+├── Dockerfile          # Three-stage build (tracker → frontend → caddy)
+├── Caddyfile           # Caddy gateway config (SPA + /js/ + /api/ proxy)
+└── .gitea/             # CI workflows (multi-arch buildx → ghcr.io)
 ```
 
-## Docker 镜像
+## Docker Image
 
 ```bash
 docker build -t zenstats-web .
 ```
 
-CI 自动构建多架构镜像推送到 `ghcr.io/zenstats/zenstats-web`。
+CI automatically builds multi-architecture images and pushes to `ghcr.io/zenstats/zenstats-web`.
 
-镜像包含：
-- **Caddy 2** 网关（自动 SSL、反向代理）
-- **Tracker JS** 64 变体（`/js/script.js` 等）
-- **SPA 静态文件**（React 管理面板）
+The image includes:
+- **Caddy 2** gateway (auto SSL, reverse proxy)
+- **Tracker JS** 64 variants (`/js/script.js`, etc.)
+- **SPA static files** (React admin panel)
 
 ## Tracker SDK
 
-追踪脚本文档：[docs/tracker.md](docs/tracker.md) (EN) / [docs/tracker_zh.md](docs/tracker_zh.md) (中文)
+Tracker documentation: [docs/tracker.md](docs/tracker.md) (EN) / [docs/tracker_zh.md](docs/tracker_zh.md) (ZH)
 
-## 部署
+## Deployment
 
-本仓库只负责前端镜像构建。完整部署请使用 [zenstats-deploy](https://github.com/zenstats/zenstats-deploy)：
+This repository only handles frontend image builds. For full deployment, use [zenstats-deploy](https://github.com/zenstats/zenstats-deploy):
 
 ```bash
-docker compose up -d   # 自动拉取前端 + API 镜像
+docker compose up -d   # auto-pulls frontend + API images
 ```
 
 ## License

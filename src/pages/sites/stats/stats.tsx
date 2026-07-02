@@ -48,6 +48,8 @@ import type {
   MainGraphPoint,
   CurrentVisitors as CurrentVisitorsType,
   BreakdownResponse,
+  QueryV2Request,
+  QueryV2Response,
   Segment,
 } from "../types/interfaces";
 import AggregateStats from "./components/aggregate-stats";
@@ -332,6 +334,14 @@ export default function StatsPage() {
         const response = await axios.get<BaseResponse<{ value: string; label: string }[]>>(
           "/stats/" + domain + "/suggestions",
           { params },
+        );
+        return response.data;
+      },
+      // V2 unified query API (POST)
+      queryV2: async (req: QueryV2Request) => {
+        const response = await axios.post<BaseResponse<QueryV2Response>>(
+          "/v2/query/" + domain,
+          req,
         );
         return response.data;
       },
@@ -1164,9 +1174,7 @@ export default function StatsPage() {
               <CustomQuery
                 query={query}
                 domain={domain!}
-                breakdownApi={api.getBreakdown}
-                aggregateApi={api.getAggregate}
-                exportApi={api.exportBreakdown}
+                queryV2Api={api.queryV2}
               />
             )}
         </div>

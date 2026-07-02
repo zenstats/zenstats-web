@@ -539,6 +539,17 @@
       "title": "自定义查询",
       "reset": "重置",
       "execute": "执行查询",
+      "conversionRateNeedsGoal": "conversion_rate 需要一个 \"event:goal\" 过滤条件，请在上方添加目标过滤后再查询。",
+      "issues": {
+        "needsGoal": "{{metric}} 需要按 \"event:goal\" 拆分或添加 goal 过滤。",
+        "needsPage": "{{metric}} 需要按 \"event:page\" 拆分或添加 \"event:page\" 过滤。",
+        "pageBreakdownOnly": "{{metric}} 仅支持按 \"event:page\" 拆分。",
+        "noBreakdown": "{{metric}} 不支持拆分查询（仅聚合）。",
+        "viewsPerVisitPageFilter": "views_per_visit 不能与 \"event:page\" 过滤同时使用。",
+        "timeOnPageGoalFilter": "time_on_page 不能与 \"event:goal\" 过滤同时使用。",
+        "timeOnPageNameFilter": "time_on_page 不能与 \"event:name\" 过滤同时使用。",
+        "sessionMetricEventDim": "会话指标 {{metric}} 不能按 \"{{dim}}\" 拆分。"
+      },
       "queryType": "查询类型",
       "breakdownQuery": "分解查询 (Breakdown)",
       "aggregateQuery": "聚合查询 (Aggregate)",
@@ -546,11 +557,17 @@
       "limit": "限制条数",
       "metricsLabel": "指标",
       "metrics": {
-        "visitors": "唯一身份浏览者",
-        "pageviews": "总浏览量",
+        "visitors": "访客数",
+        "pageviews": "页面浏览",
+        "visits": "访问数",
         "bounceRate": "跳出率",
         "visitDuration": "平均访问时长",
         "viewsPerVisit": "每次访问页面数",
+        "scrollDepth": "滚动深度",
+        "timeOnPage": "页面停留时间",
+        "exitRate": "退出率",
+        "conversions": "转化人数",
+        "conversionRate": "转化率",
         "events": "事件数"
       },
       "filters": "筛选条件 (Filters)",
@@ -564,9 +581,12 @@
       "pageOf": "第 {{page}} 页",
       "dimensions": {
         "source": "来源",
-        "page": "页面路径",
+        "pagePath": "页面路径",
+        "hostname": "主机名",
         "entryPage": "入口页面",
+        "entryPageHostname": "入口页主机名",
         "exitPage": "退出页面",
+        "exitPageHostname": "退出页主机名",
         "country": "国家/地区",
         "region": "地区",
         "city": "城市",
@@ -574,7 +594,8 @@
         "os": "操作系统",
         "device": "设备类型",
         "screenSize": "屏幕尺寸",
-        "eventName": "事件名称"
+        "eventName": "事件名称",
+        "goal": "目标"
       },
       "operators": {
         "is": "是 (=)",
@@ -587,10 +608,15 @@
       "metricUnavailable": "当前查询类型或分组维度不支持该指标",
       "collapseForm": "收起表单",
       "expandForm": "展开表单",
+      "showForm": "显示表单",
+      "hideForm": "隐藏表单",
+      "orderBy": "排序",
       "totalRows": "共 {{total}} 条结果",
+      "rows": "{{count}} 条结果",
       "prev": "上一页",
       "next": "下一页",
-      "vsPrevious": "较上期"
+      "vsPrevious": "较上期",
+      "desc": "自定义查询说明"
     },
     "siteSettings": "站点设置",
     "installTrackingCode": "安装统计代码",
@@ -1305,7 +1331,9 @@
       "dimensionsV2": "用于结果分组的维度键数组。",
       "filtersV2": "过滤器三元组数组 [操作符, 维度, 值数组]。",
       "orderBy": "排序字段数组，如 [[\"visitors\",\"desc\"]]。",
-      "offset": "跳过的结果数量（用于分页）。"
+      "offset": "跳过的结果数量（用于分页）。",
+      "periodV2": "时间周期缩写：day, p7, p14, p30, month, 6mo, 12mo, custom。配合 date（单日）或 from/to（自定义范围）使用。",
+      "sampleThreshold": "高流量站点的采样阈值。"
     },
     "sections": {
       "introduction": {
@@ -1498,7 +1526,9 @@
       "scrollDepth": "页面平均滚动百分比。",
       "exitRate": "以该页面结束会话的比例（%）。",
       "viewsPerVisit": "每次会话的平均浏览页数。",
-      "events": "触发的自定义事件总数。"
+      "events": "触发的自定义事件总数。",
+      "conversions": "完成目标的独立访客数（需要 goal 过滤）。",
+      "conversionRate": "完成目标的访客占比（需要 goal 过滤，仅聚合查询支持）。"
     },
     "dimensions": {
       "source": "流量来源（引荐域名）。",
@@ -1512,18 +1542,26 @@
       "os": "操作系统名称。",
       "device": "设备类型（桌面/移动/平板）。",
       "screenSize": "屏幕分辨率区间。",
-      "eventName": "自定义事件名称。"
+      "eventName": "自定义事件名称。",
+      "entryPageHostname": "入口页面的主机名。",
+      "exitPageHostname": "退出页面的主机名。",
+      "hostname": "页面主机名（事件级）。",
+      "goal": "目标名称（转化跟踪）。"
     },
     "filters": {
       "is": "精确匹配，支持多个值（同一过滤器内为 OR 逻辑）。",
       "isNot": "排除精确匹配的值。",
       "contains": "子串匹配。",
       "notContains": "排除包含子串的值。",
-      "matches": "正则表达式匹配。"
+      "matches": "正则表达式匹配。",
+      "containsNot": "排除包含子串的值（not_contains 的别名）。",
+      "matchesNot": "排除正则匹配的值。"
     },
     "periods": {
       "day": "今天。",
+      "realtime": "最近 30 分钟。",
       "p7": "最近 7 天。",
+      "p14": "最近 14 天。",
       "p30": "最近 30 天。",
       "month": "本月。",
       "sixMonth": "最近 6 个月。",

@@ -94,6 +94,27 @@ export interface BreakdownResponse {
   total_rows?: number;
 }
 
+// V2 Query API types
+export interface QueryV2Request {
+  period?: string;
+  from?: string;
+  to?: string;
+  date?: string;
+  metrics: string[];
+  dimensions?: string[];
+  filters?: unknown;
+  order_by?: [string, string][];
+  limit?: number;
+  offset?: number;
+}
+
+export interface QueryV2Response {
+  columns: string[];
+  data: Record<string, string | number>[];
+  total_rows?: number;
+  results?: Record<string, AggregateMetric>;
+}
+
 // Current Visitors API types
 export interface CurrentVisitors {
   total: number;
