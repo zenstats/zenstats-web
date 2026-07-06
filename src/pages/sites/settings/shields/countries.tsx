@@ -16,6 +16,7 @@ import axios, { type BaseResponse } from "@utils/axios";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from "@/components/confirm-provider";
 
 // Define interface for Country shield rule
 interface ShieldCountryRule {
@@ -91,12 +92,14 @@ export default function SettingShieldsCountries() {
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const { domain: domainParam } = useParams<Params>();
   const domain = domainParam!;
 
   // Handle country deletion
   const handleDeleteCountry = async (id: number) => {
-    if (!domain || !window.confirm(t('settings.shields.countries.confirmUnblock'))) return;
+    if (!domain) return;
+    if (!(await confirm({ description: t('settings.shields.countries.confirmUnblock'), destructive: true }))) return;
     setLoading(true);
     setDeletingId(id);
     try {

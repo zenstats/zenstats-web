@@ -9,6 +9,31 @@
     "sources": "Sources",
     "settings": "Settings",
     "backToSites": "Back to Sites",
+    "emailLogs": {
+      "nav": "Email Logs",
+      "title": "Email Logs",
+      "empty": "No email records yet.",
+      "recipient": "Recipient",
+      "subject": "Subject",
+      "type": "Type",
+      "status": "Status",
+      "statusCol": "Status",
+      "time": "Time",
+      "allStatuses": "All statuses",
+      "allTypes": "All types",
+      "statuses": {
+        "sent": "Sent",
+        "failed": "Failed",
+        "skipped": "Skipped"
+      },
+      "types": {
+        "verification": "Verification",
+        "password_reset": "Password Reset",
+        "email_report": "Email Report",
+        "traffic_alert": "Traffic Alert",
+        "other": "Other"
+      }
+    },
     "dashboardPage": {
       "totalUsers": "Total Users",
       "users": "users",
@@ -224,7 +249,8 @@
     "permGroups": {
       "operations": "Operations",
       "protection": "Site Protection",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "deletion": "Deletion (delete permissions)"
     },
     "perms": {
       "goals:write": "Manage Goals",
@@ -233,7 +259,12 @@
       "shared_links:write": "Manage Shared Links",
       "shields:write": "Manage Shield Rules",
       "email_reports:write": "Manage Email Reports",
-      "traffic_alerts:write": "Manage Traffic Alerts"
+      "traffic_alerts:write": "Manage Traffic Alerts",
+      "goals:delete": "Delete Goals",
+      "funnels:delete": "Delete Funnels",
+      "segments:delete": "Delete Segments / Saved Queries",
+      "shared_links:delete": "Delete Shared Links",
+      "shields:delete": "Delete Shield Rules"
     }
   },
   "header": {
@@ -718,7 +749,36 @@
     },
     "segment": {
       "label": "Segment",
-      "clear": "Clear segment"
+      "clear": "Clear segment",
+      "save": "Save current filters…",
+      "saveTitle": "Save as segment",
+      "name": "Name",
+      "namePlaceholder": "e.g. Chrome users in China",
+      "description": "Description",
+      "descPlaceholder": "Optional description",
+      "saveSuccess": "Segment saved",
+      "noFilters": "Add at least one filter first"
+    },
+    "panels": {
+      "saved": "Saved panels",
+      "saveAsPanel": "Save as panel",
+      "saveTitle": "Save query as panel",
+      "name": "Name",
+      "namePlaceholder": "e.g. Top pages last 30 days",
+      "description": "Description",
+      "descPlaceholder": "Optional description",
+      "pinToHome": "Pin to dashboard home",
+      "pin": "Pin to home",
+      "unpin": "Unpin from home",
+      "loaded": "Loaded panel: {{name}}",
+      "invalidConfig": "This panel's config is invalid",
+      "saveSuccess": "Panel saved",
+      "homeTitle": "Pinned panels",
+      "openInQuery": "Open in custom query",
+      "noResults": "No data",
+      "editLayout": "Edit layout",
+      "doneEdit": "Done",
+      "editHint": "Drag panel headers to move, drag the bottom-right corner to resize. Changes are saved automatically."
     }
   },
   "settings": {
@@ -727,6 +787,13 @@
       "settings": "Settings",
       "manageSite": "Manage your site settings for {{domain}}.",
       "manageSiteSettings": "Site Settings",
+      "group": {
+        "setup": "Setup & Data",
+        "analysis": "Analysis",
+        "protection": "Protection",
+        "notifications": "Notifications",
+        "sharing": "Sharing"
+      },
       "nav": {
         "general": "General",
         "installCode": "Install Code",
@@ -742,7 +809,8 @@
         "emailReports": "Email Reports",
         "trafficAlert": "Traffic Alerts",
         "sharedLinks": "Shared Links",
-        "segments": "Segments"
+        "segments": "Segments",
+        "panels": "Saved Queries"
       }
     },
     "general": {
@@ -967,7 +1035,8 @@
         "createdAt": "Created",
         "addSuccess": "Referrer added to blacklist",
         "addFailed": "Failed to add referrer",
-        "removeSuccess": "Referrer removed from blacklist"
+        "removeSuccess": "Referrer removed from blacklist",
+        "confirmRemove": "Are you sure you want to remove this referrer from the blacklist?"
       }
     },
     "emailReports": {
@@ -1033,6 +1102,19 @@
       "edit": "Edit",
       "description_field": "Description",
       "descriptionPlaceholder": "Brief explanation of what this segment filters"
+    },
+    "panels": {
+      "title": "Saved Queries",
+      "description": "Manage saved custom queries. Pinned ones appear as panels on the dashboard.",
+      "empty": "No saved queries yet. Save one from the Custom Query tab.",
+      "name": "Name",
+      "query": "Query",
+      "pinned": "Pinned",
+      "pin": "Pin to dashboard",
+      "unpin": "Unpin from dashboard",
+      "edit": "Edit panel",
+      "descriptionField": "Description",
+      "deleteConfirm": "Are you sure you want to delete this panel?"
     }
   },
   "apiKeys": {
@@ -1254,6 +1336,7 @@
   "import": {
     "title": "Data Import",
     "description": "Import historical data from Google Analytics 4 into ZenStats.",
+    "loadFailed": "Failed to load imported data. Please try again.",
     "uploadCard": {
       "title": "Upload CSV File",
       "description": "Upload a CSV file exported from Google Analytics 4. The system will parse it and store the data in the database.",

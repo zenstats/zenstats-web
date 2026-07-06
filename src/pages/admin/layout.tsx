@@ -1,7 +1,7 @@
 import { Separator } from "@/components/ui/separator"
 import { SidebarNav, type SidebarNavItem } from "@/components/sidebar-nav"
 import { useNavigate } from "react-router-dom";
-import { BarChart3, Users, Package, Globe, Settings, ArrowLeft, Search } from "lucide-react";
+import { BarChart3, Users, Package, Globe, Settings, ArrowLeft, Search, Mail } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 interface AdminLayoutProps {
@@ -42,6 +42,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       title: t('admin.sources', 'Sources'),
       icon: <Search className="mr-2 h-4 w-4" />,
       href: "/admin/sources",
+    },
+    {
+      id: "email-logs",
+      title: t('admin.emailLogs.nav', 'Email Logs'),
+      icon: <Mail className="mr-2 h-4 w-4" />,
+      href: "/admin/email-logs",
     },
     {
       id: "settings",

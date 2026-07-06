@@ -9,6 +9,31 @@
     "sources": "内置来源",
     "settings": "设置",
     "backToSites": "返回站点",
+    "emailLogs": {
+      "nav": "邮件记录",
+      "title": "邮件发送记录",
+      "empty": "暂无邮件记录。",
+      "recipient": "收件人",
+      "subject": "主题",
+      "type": "类型",
+      "status": "状态",
+      "statusCol": "状态",
+      "time": "时间",
+      "allStatuses": "全部状态",
+      "allTypes": "全部类型",
+      "statuses": {
+        "sent": "已发送",
+        "failed": "失败",
+        "skipped": "已跳过"
+      },
+      "types": {
+        "verification": "邮箱验证",
+        "password_reset": "重置密码",
+        "email_report": "邮件报告",
+        "traffic_alert": "流量告警",
+        "other": "其他"
+      }
+    },
     "dashboardPage": {
       "totalUsers": "总用户数",
       "users": "用户",
@@ -224,7 +249,8 @@
     "permGroups": {
       "operations": "运营操作",
       "protection": "站点防护",
-      "notifications": "通知设置"
+      "notifications": "通知设置",
+      "deletion": "删除权限"
     },
     "perms": {
       "goals:write": "管理目标",
@@ -233,7 +259,12 @@
       "shared_links:write": "管理共享链接",
       "shields:write": "管理屏蔽规则",
       "email_reports:write": "管理邮件报告",
-      "traffic_alerts:write": "管理流量预警"
+      "traffic_alerts:write": "管理流量预警",
+      "goals:delete": "删除目标",
+      "funnels:delete": "删除漏斗",
+      "segments:delete": "删除细分 / 保存的查询",
+      "shared_links:delete": "删除共享链接",
+      "shields:delete": "删除屏蔽规则"
     }
   },
   "header": {
@@ -704,7 +735,36 @@
     },
     "segment": {
       "label": "数据段",
-      "clear": "清除数据段"
+      "clear": "清除数据段",
+      "save": "保存当前筛选…",
+      "saveTitle": "保存为数据段",
+      "name": "名称",
+      "namePlaceholder": "例如：中国的 Chrome 用户",
+      "description": "描述",
+      "descPlaceholder": "可选描述",
+      "saveSuccess": "数据段已保存",
+      "noFilters": "请先添加至少一个筛选条件"
+    },
+    "panels": {
+      "saved": "已保存面板",
+      "saveAsPanel": "保存为面板",
+      "saveTitle": "保存查询为面板",
+      "name": "名称",
+      "namePlaceholder": "例如：近30天热门页面",
+      "description": "描述",
+      "descPlaceholder": "可选描述",
+      "pinToHome": "固定到看板首页",
+      "pin": "固定到首页",
+      "unpin": "取消固定",
+      "loaded": "已载入面板：{{name}}",
+      "invalidConfig": "该面板配置无效",
+      "saveSuccess": "面板已保存",
+      "homeTitle": "固定面板",
+      "openInQuery": "在自定义查询中打开",
+      "noResults": "暂无数据",
+      "editLayout": "编辑布局",
+      "doneEdit": "完成",
+      "editHint": "拖动面板标题栏可移动，拖动右下角可缩放，改动会自动保存。"
     }
   },
   "settings": {
@@ -713,6 +773,13 @@
       "settings": "设置",
       "manageSite": "管理站点 {{domain}} 的设置。",
       "manageSiteSettings": "站点设置",
+      "group": {
+        "setup": "接入与数据",
+        "analysis": "分析资产",
+        "protection": "访问防护",
+        "notifications": "通知",
+        "sharing": "共享"
+      },
       "nav": {
         "general": "通用",
         "installCode": "安装代码",
@@ -728,7 +795,8 @@
         "emailReports": "邮件报告",
         "trafficAlert": "流量告警",
         "sharedLinks": "分享链接",
-        "segments": "数据段"
+        "segments": "数据段",
+        "panels": "保存的查询"
       }
     },
     "general": {
@@ -953,7 +1021,8 @@
         "createdAt": "创建时间",
         "addSuccess": "来源已添加至黑名单",
         "addFailed": "添加来源失败",
-        "removeSuccess": "来源已从黑名单移除"
+        "removeSuccess": "来源已从黑名单移除",
+        "confirmRemove": "确定要将该来源从黑名单中移除吗？"
       }
     },
     "emailReports": {
@@ -1019,6 +1088,19 @@
       "edit": "编辑",
       "description_field": "描述",
       "descriptionPlaceholder": "简要说明此数据段的过滤条件"
+    },
+    "panels": {
+      "title": "保存的查询",
+      "description": "管理已保存的自定义查询。固定的查询会作为面板显示在看板上。",
+      "empty": "还没有保存的查询。可在「自定义查询」中保存。",
+      "name": "名称",
+      "query": "查询",
+      "pinned": "固定",
+      "pin": "固定到看板",
+      "unpin": "取消固定",
+      "edit": "编辑面板",
+      "descriptionField": "描述",
+      "deleteConfirm": "确定删除此面板？"
     }
   },
   "apiKeys": {
@@ -1240,6 +1322,7 @@
   "import": {
     "title": "数据导入",
     "description": "将 Google Analytics 4 的历史数据导入到 ZenStats。",
+    "loadFailed": "加载导入数据失败，请重试。",
     "uploadCard": {
       "title": "上传 CSV 文件",
       "description": "上传从 Google Analytics 4 导出的 CSV 文件，系统将自动解析并存入数据库。",

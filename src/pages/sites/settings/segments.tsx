@@ -24,16 +24,17 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Layers, Pencil, Plus, Trash2 } from "lucide-react";
 import axios, { type BaseResponse } from "@utils/axios";
+import { useConfirm } from "@/components/confirm-provider";
 import type { Segment } from "../types/interfaces";
 
 export default function SegmentsSettings() {
   const { domain } = useParams<{ domain: string }>();
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [segments, setSegments] = useState<Segment[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Segment | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Segment | null>(null);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -108,10 +109,10 @@ export default function SegmentsSettings() {
 
   const handleDelete = async (seg: Segment) => {
     if (!domain) return;
+    if (!(await confirm({ description: t("settings.segments.deleteConfirm"), destructive: true }))) return;
     try {
       await axios.delete(`/sites/${domain}/segments/${seg.id}`);
       toast.success(t("common.deleted"));
-      setDeleteTarget(null);
       setSegments((prev) => prev.filter((s) => s.id !== seg.id));
     } catch {
       toast.error(t("common.deleteFailed"));
@@ -175,7 +176,7 @@ export default function SegmentsSettings() {
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => setDeleteTarget(seg)}
+                        onClick={() => handleDelete(seg)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -235,28 +236,6 @@ export default function SegmentsSettings() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirm dialog */}
-      <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("common.confirmDelete")}</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            {t("settings.segments.deleteConfirm")}
-          </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              {t("common.cancel")}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => deleteTarget && handleDelete(deleteTarget)}
-            >
-              {t("common.delete")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }

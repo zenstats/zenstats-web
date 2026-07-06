@@ -27,6 +27,7 @@ import EmailReportsSettings from './pages/sites/settings/email-reports';
 import TrafficAlertSettings from './pages/sites/settings/traffic-alert';
 import SharedLinksSettings from './pages/sites/settings/shared-links';
 import SegmentsSettings from './pages/sites/settings/segments';
+import PanelsSettings from './pages/sites/settings/panels';
 import ShareView from './pages/share/share-view';
 import DocsPage from './pages/docs/DocsPage';
 import ImportPage from './pages/sites/import/import';
@@ -39,6 +40,7 @@ import AdminUsers from './pages/admin/users';
 import AdminGroups from './pages/admin/groups';
 import AdminSites from './pages/admin/sites';
 import AdminSources from './pages/admin/sources';
+import AdminEmailLogs from './pages/admin/email-logs';
 import AdminSettings from './pages/admin/settings';
 
 // User pages
@@ -150,6 +152,18 @@ const routes: RouteObject[] = [
                 element: <Navigate to="general" replace />
               },
               {
+                path: "install",
+                element: <SettingsLayout>
+                  <SiteInstallPage embedded />
+                </SettingsLayout>,
+              },
+              {
+                path: "import",
+                element: <SettingsLayout>
+                  <ImportPage embedded />
+                </SettingsLayout>,
+              },
+              {
                 path: "general",
                 element: <SettingsLayout>
                   <SettingsGeneralForm />
@@ -220,6 +234,12 @@ const routes: RouteObject[] = [
                   <SegmentsSettings />
                 </SettingsLayout>,
               },
+              {
+                path: "panels",
+                element: <SettingsLayout>
+                  <PanelsSettings />
+                </SettingsLayout>,
+              },
             ]
           }
         ]
@@ -271,6 +291,10 @@ const routes: RouteObject[] = [
           {
             path: "sources",
             element: <AdminLayout><AdminSources /></AdminLayout>
+          },
+          {
+            path: "email-logs",
+            element: <AdminLayout><AdminEmailLogs /></AdminLayout>
           },
           {
             path: "settings",

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { BaseResponse } from "@utils/axios";
-import type { StatsRequest, AggregateMetric, QueryV2Request, QueryV2Response } from "@/pages/sites/types/interfaces";
+import type { StatsRequest, AggregateMetric, QueryV2Request, QueryV2Response, SavedPanel, CustomQueryConfig } from "@/pages/sites/types/interfaces";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,11 +15,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
   Play, Plus, X, RotateCcw, Download, ChevronLeft, ChevronRight,
-  Code2,
+  Code2, Bookmark, Save, Trash2, Pin, ChevronDown,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import axios from "@utils/axios";
 
@@ -155,6 +169,115 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
   const [hasMore, setHasMore] = useState(false);
   const [totalRows, setTotalRows] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Saved panels（已保存的自定义查询面板）
+  const [savedPanels, setSavedPanels] = useState<SavedPanel[]>([]);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [panelName, setPanelName] = useState("");
+  const [panelDescription, setPanelDescription] = useState("");
+  const [panelPinned, setPanelPinned] = useState(false);
+  const [savingPanel, setSavingPanel] = useState(false);
+
+  const fetchPanels = useCallback(async () => {
+    if (!domain) return;
+    try {
+      const res = await axios.get<BaseResponse<SavedPanel[]>>(`/sites/${domain}/panels`);
+      setSavedPanels(res.data.data || []);
+    } catch {
+      /* ignore */
+    }
+  }, [domain]);
+
+  useEffect(() => {
+    fetchPanels();
+  }, [fetchPanels]);
+
+  // 收集当前表单为可保存的配置对象
+  const buildConfig = useCallback((): CustomQueryConfig => ({
+    resultType,
+    property,
+    metrics: selectedMetrics,
+    filters: filters.map((f) => ({ property: f.property, operator: f.operator, value: f.value })),
+    limit,
+    orderByMetric,
+    orderByDir,
+  }), [resultType, property, selectedMetrics, filters, limit, orderByMetric, orderByDir]);
+
+  // 把已保存面板的配置回填到表单
+  const applyConfig = (cfg: CustomQueryConfig) => {
+    if (cfg.resultType) setResultType(cfg.resultType);
+    if (cfg.property) setProperty(cfg.property);
+    if (Array.isArray(cfg.metrics)) setSelectedMetrics(cfg.metrics);
+    if (Array.isArray(cfg.filters)) {
+      setFilters(cfg.filters.map((f) => ({ id: generateId(), property: f.property, operator: f.operator, value: f.value })));
+    } else {
+      setFilters([]);
+    }
+    if (typeof cfg.limit === "number") setLimit(cfg.limit);
+    setOrderByMetric(cfg.orderByMetric || "");
+    setOrderByDir(cfg.orderByDir || "desc");
+    setFormExpanded(true);
+  };
+
+  const handleLoadPanel = (panel: SavedPanel) => {
+    try {
+      const cfg = JSON.parse(panel.config) as CustomQueryConfig;
+      applyConfig(cfg);
+      toast.success(t("stats.panels.loaded", { name: panel.name }));
+    } catch {
+      toast.error(t("stats.panels.invalidConfig"));
+    }
+  };
+
+  const openSavePanel = () => {
+    setPanelName("");
+    setPanelDescription("");
+    setPanelPinned(false);
+    setSaveDialogOpen(true);
+  };
+
+  const handleSavePanel = async () => {
+    if (!domain || !panelName.trim()) return;
+    setSavingPanel(true);
+    try {
+      const res = await axios.post<BaseResponse<SavedPanel>>(`/sites/${domain}/panels`, {
+        name: panelName.trim(),
+        description: panelDescription.trim() || undefined,
+        config: JSON.stringify(buildConfig()),
+        pinned: panelPinned,
+      });
+      const created = res.data.data;
+      toast.success(t("stats.panels.saveSuccess"));
+      setSaveDialogOpen(false);
+      if (created) setSavedPanels((prev) => [created, ...prev]);
+      else fetchPanels();
+    } catch {
+      toast.error(t("common.saveFailed"));
+    } finally {
+      setSavingPanel(false);
+    }
+  };
+
+  const handleDeletePanel = async (panel: SavedPanel) => {
+    if (!domain) return;
+    try {
+      await axios.delete(`/sites/${domain}/panels/${panel.id}`);
+      setSavedPanels((prev) => prev.filter((p) => p.id !== panel.id));
+      toast.success(t("common.deleted"));
+    } catch {
+      toast.error(t("common.deleteFailed"));
+    }
+  };
+
+  const handleTogglePin = async (panel: SavedPanel) => {
+    if (!domain) return;
+    try {
+      await axios.patch(`/sites/${domain}/panels/${panel.id}`, { pinned: !panel.pinned });
+      setSavedPanels((prev) => prev.map((p) => (p.id === panel.id ? { ...p, pinned: !p.pinned } : p)));
+    } catch {
+      toast.error(t("common.saveFailed"));
+    }
+  };
 
   const addFilter = () => {
     setFilters((prev) => [
@@ -434,6 +557,55 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
 
   return (
     <Card>
+      {/* Save as panel dialog */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('stats.panels.saveTitle')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>{t('stats.panels.name')}</Label>
+              <Input
+                placeholder={t('stats.panels.namePlaceholder')}
+                value={panelName}
+                onChange={(e) => setPanelName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>
+                {t('stats.panels.description')}{" "}
+                <span className="text-muted-foreground text-xs">({t('common.optional')})</span>
+              </Label>
+              <Input
+                placeholder={t('stats.panels.descPlaceholder')}
+                value={panelDescription}
+                onChange={(e) => setPanelDescription(e.target.value)}
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={panelPinned}
+                onChange={(e) => setPanelPinned(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Pin className="h-3.5 w-3.5 text-violet-500" />
+              {t('stats.panels.pinToHome')}
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleSavePanel} disabled={savingPanel || !panelName.trim()}>
+              {savingPanel ? t('common.saving') : t('common.save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
@@ -446,6 +618,56 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            {savedPanels.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+                    <Bookmark className="h-3.5 w-3.5 mr-1" />
+                    {t('stats.panels.saved')}
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  {savedPanels.map((panel) => (
+                    <DropdownMenuItem
+                      key={panel.id}
+                      onClick={() => handleLoadPanel(panel)}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <div className="flex flex-col items-start min-w-0">
+                        <span className="text-sm font-medium truncate max-w-[150px]">{panel.name}</span>
+                        {panel.description && (
+                          <span className="text-xs text-muted-foreground truncate max-w-[150px]">{panel.description}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleTogglePin(panel); }}
+                          title={panel.pinned ? t('stats.panels.unpin') : t('stats.panels.pin')}
+                          className={cn(
+                            "p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors",
+                            panel.pinned ? "text-violet-600 dark:text-violet-400" : "text-gray-400"
+                          )}
+                        >
+                          <Pin className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeletePanel(panel); }}
+                          title={t('common.delete')}
+                          className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Button variant="outline" size="sm" onClick={openSavePanel} className="h-8 px-3 text-xs">
+              <Save className="h-3.5 w-3.5 mr-1" />
+              {t('stats.panels.saveAsPanel')}
+            </Button>
             {hasExecuted && (
               <Button variant="outline" size="sm" onClick={handleReset} className="h-8 px-3 text-xs">
                 <RotateCcw className="h-3.5 w-3.5 mr-1" />

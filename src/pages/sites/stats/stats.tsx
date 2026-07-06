@@ -10,6 +10,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -17,6 +18,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import type { DateRange } from "react-day-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
   RefreshCw,
   ChevronDown,
@@ -59,6 +63,7 @@ import CurrentVisitorsComponent from "./components/current-visitors";
 import FilterBar from "./components/filter-bar";
 import FilterMenu from "./components/filter-menu";
 import CustomQuery from "./components/custom-query";
+import PinnedPanels from "./components/pinned-panels";
 import DimensionSettings, {
   type DimensionConfig,
   getDefaultDimensions,
@@ -657,6 +662,51 @@ export default function StatsPage() {
     setQuery((prev) => ({ ...prev, filters: undefined, refresh: new Date() }));
   };
 
+  // Save current filters as a new segment
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [saveDescription, setSaveDescription] = useState("");
+  const [savingSegment, setSavingSegment] = useState(false);
+
+  const openSaveSegment = () => {
+    if (activeFilters.length === 0) {
+      toast.error(t("stats.segment.noFilters"));
+      return;
+    }
+    setSaveName("");
+    setSaveDescription("");
+    setSaveDialogOpen(true);
+  };
+
+  const handleSaveSegment = async () => {
+    if (!domain || !saveName.trim() || !query.filters) return;
+    setSavingSegment(true);
+    try {
+      const res = await axios.post<BaseResponse<Segment>>(`/sites/${domain}/segments`, {
+        name: saveName.trim(),
+        description: saveDescription.trim() || undefined,
+        filters: query.filters,
+      });
+      const created = res.data.data;
+      toast.success(t("stats.segment.saveSuccess"));
+      setSaveDialogOpen(false);
+      if (created) {
+        setSegments((prev) => [created, ...prev]);
+        setActiveSegment(created);
+      } else {
+        // Fallback: refetch list
+        axios
+          .get<BaseResponse<Segment[]>>(`/sites/${domain}/segments`)
+          .then((r) => setSegments(r.data.data || []))
+          .catch(() => {});
+      }
+    } catch {
+      toast.error(t("common.saveFailed"));
+    } finally {
+      setSavingSegment(false);
+    }
+  };
+
   // Ensure activeCategoryTab is valid
   useEffect(() => {
     if (activeCategories.length > 0 && !activeCategories.some((t) => t.key === activeCategoryTab)) {
@@ -948,7 +998,7 @@ export default function StatsPage() {
             </DropdownMenu>
 
             {/* Segment selector */}
-            {segments.length > 0 && (
+            {(segments.length > 0 || activeFilters.length > 0) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -968,6 +1018,15 @@ export default function StatsPage() {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
+                  {activeFilters.length > 0 && (
+                    <>
+                      <DropdownMenuItem onClick={openSaveSegment} className="text-violet-600 dark:text-violet-400">
+                        <Layers className="h-3.5 w-3.5 mr-1.5" />
+                        {t("stats.segment.save")}
+                      </DropdownMenuItem>
+                      {segments.length > 0 && <DropdownMenuSeparator />}
+                    </>
+                  )}
                   {segments.map((seg) => (
                     <DropdownMenuItem
                       key={seg.id}
@@ -1029,6 +1088,45 @@ export default function StatsPage() {
             </div>
           </div>
         )}
+
+        {/* Save current filters as segment dialog */}
+        <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("stats.segment.saveTitle")}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-1.5">
+                <Label>{t("stats.segment.name")}</Label>
+                <Input
+                  placeholder={t("stats.segment.namePlaceholder")}
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>
+                  {t("stats.segment.description")}{" "}
+                  <span className="text-muted-foreground text-xs">({t("common.optional")})</span>
+                </Label>
+                <Input
+                  placeholder={t("stats.segment.descPlaceholder")}
+                  value={saveDescription}
+                  onChange={(e) => setSaveDescription(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button onClick={handleSaveSegment} disabled={savingSegment || !saveName.trim()}>
+                {savingSegment ? t("common.saving") : t("common.save")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Filter bar */}
         <FilterBar
@@ -1178,6 +1276,9 @@ export default function StatsPage() {
               />
             )}
         </div>
+
+        {/* 自定义看板：固定面板墙（可拖拽/缩放），置于页面底部 */}
+        <PinnedPanels domain={domain!} query={query} queryV2Api={api.queryV2} />
 
         {/* Footer */}
         <div className="text-center py-6">

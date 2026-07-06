@@ -11,6 +11,7 @@ import axios, { type BaseResponse } from "@utils/axios";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from "@/components/confirm-provider";
 
 // Define interface for IP shield rule
 interface ShieldIPRule {
@@ -84,11 +85,13 @@ export default function SettingShieldsIpAddress() {
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const { domain: domainParam } = useParams<Params>();
   const domain = domainParam!;
   // Handle IP deletion
   const handleDeleteIP = async (id: number) => {
-    if (!domain || !window.confirm(t('settings.shields.ip.confirmUnblock'))) return;
+    if (!domain) return;
+    if (!(await confirm({ description: t('settings.shields.ip.confirmUnblock'), destructive: true }))) return;
     setLoading(true);
     setDeletingId(id);
     try {

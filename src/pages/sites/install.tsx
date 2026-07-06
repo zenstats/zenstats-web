@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import { Check, Clipboard, ExternalLink } from "lucide-react";
+import { Check, Clipboard, Code2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -75,7 +75,7 @@ function getScriptLabel(enabled: FeatureId[], t: (key: string) => string): strin
     .join(' + ')
 }
 
-export default function SiteInstallPage() {
+export default function SiteInstallPage({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { domain = "" } = useParams<{ domain: string }>();
@@ -119,14 +119,19 @@ export default function SiteInstallPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-            <Check className="h-6 w-6" />
-          </div>
-          <CardTitle className="text-2xl">{t('sites.install.title')}</CardTitle>
-          <CardDescription className="text-base">
+    <div className={embedded ? "" : "mx-auto max-w-3xl px-4 py-10"}>
+      <Card className={embedded ? "" : "border-0 shadow-sm"}>
+        <CardHeader className={embedded ? "space-y-1.5" : "space-y-3 text-center"}>
+          {!embedded && (
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <Check className="h-6 w-6" />
+            </div>
+          )}
+          <CardTitle className={embedded ? "text-xl flex items-center gap-2" : "text-2xl"}>
+            {embedded && <Code2 className="h-5 w-5" />}
+            {t('sites.install.title')}
+          </CardTitle>
+          <CardDescription className={embedded ? "" : "text-base"}>
             {t('sites.install.instruction')}
             <span className="font-medium text-foreground"> {domain} </span>
             {t('sites.install.instructionSuffix')}
@@ -200,13 +205,15 @@ export default function SiteInstallPage() {
             </ol>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => navigate("/sites")}>{t('sites.install.backToSites')}</Button>
-            <Button onClick={() => navigate(`/sites/${domain}/stats`)}>
-              {t('sites.install.viewStats')}
-              <ExternalLink className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
+          {!embedded && (
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={() => navigate("/sites")}>{t('sites.install.backToSites')}</Button>
+              <Button onClick={() => navigate(`/sites/${domain}/stats`)}>
+                {t('sites.install.viewStats')}
+                <ExternalLink className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -9,6 +9,7 @@ import axios, { type BaseResponse } from "@utils/axios";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from "@/components/confirm-provider";
 
 interface ShieldReferrerRule {
   id: number;
@@ -39,6 +40,7 @@ const removeReferrer = async (domain: string, ruleId: number): Promise<void> => 
 
 export default function SettingShieldsReferrer() {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const { domain } = useParams<{ domain?: string }>();
   const [rules, setRules] = useState<ShieldReferrerRule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,6 +83,7 @@ export default function SettingShieldsReferrer() {
 
   const handleRemove = async (ruleId: number) => {
     if (!domain) return;
+    if (!(await confirm({ description: t('settings.shields.referrer.confirmRemove'), destructive: true }))) return;
     try {
       await removeReferrer(domain, ruleId);
       toast.success(t('settings.shields.referrer.removeSuccess'));

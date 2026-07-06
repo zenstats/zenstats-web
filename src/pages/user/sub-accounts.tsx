@@ -48,6 +48,11 @@ const PERM_GROUPS = [
     key: "notifications",
     perms: ["email_reports:write", "traffic_alerts:write"],
   },
+  {
+    // 删除权限独立于写权限，避免误删；仅在明确勾选后子账号才能执行删除操作
+    key: "deletion",
+    perms: ["goals:delete", "funnels:delete", "segments:delete", "shared_links:delete", "shields:delete"],
+  },
 ]
 
 const ALL_PERMS = PERM_GROUPS.flatMap((g) => g.perms)

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import axios, { type BaseResponse } from "@utils/axios";
+import { useConfirm } from "@/components/confirm-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +48,7 @@ interface CreateAPIKeyResponse {
 
 export default function APIKeysPage() {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [keys, setKeys] = useState<APIKeyInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -56,7 +58,6 @@ export default function APIKeysPage() {
   const subAccount = isSubAccount();
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
   const fetchKeys = useCallback(async () => {
     try {
@@ -117,10 +118,10 @@ export default function APIKeysPage() {
   };
 
   const handleDelete = async (id: number) => {
+    if (!(await confirm({ description: t('apiKeys.confirmDelete'), destructive: true }))) return;
     try {
       await axios.delete(`/apikeys/${id}`);
       toast.success(t('apiKeys.deleteSuccess'));
-      setDeleteConfirm(null);
       fetchKeys();
     } catch (error) {
       console.error("Failed to delete API key:", error);
@@ -341,36 +342,14 @@ export default function APIKeysPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     {!subAccount && (
-                      deleteConfirm === apiKey.id ? (
-                        <div className="flex items-center gap-2 ml-2">
-                          <span className="text-xs text-red-500">{t('apiKeys.confirmDelete')}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDelete(apiKey.id)}
-                          >
-                            {t('apiKeys.delete')}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => setDeleteConfirm(null)}
-                          >
-                            {t('apiKeys.deleteCancel')}
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-gray-400 hover:text-red-500"
-                          onClick={() => setDeleteConfirm(apiKey.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-gray-400 hover:text-red-500"
+                        onClick={() => handleDelete(apiKey.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     )}
                   </div>
                 </div>

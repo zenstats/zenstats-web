@@ -100,7 +100,7 @@ function StatCard({
   );
 }
 
-export default function ImportPage() {
+export default function ImportPage({ embedded = false }: { embedded?: boolean }) {
   const { domain = "" } = useParams<{ domain?: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -126,12 +126,16 @@ export default function ImportPage() {
   const [breakdownData, setBreakdownData] = useState<ImportBreakdownRow[]>([]);
   const [tsLoading, setTsLoading] = useState(false);
   const [tsData, setTsData] = useState<{ date: string; visitors: number; pageviews: number }[]>([]);
+  const [aggError, setAggError] = useState(false);
+  const [breakdownError, setBreakdownError] = useState(false);
+  const [tsError, setTsError] = useState(false);
 
   const client = api;
 
   const fetchAggregate = useCallback(async () => {
     if (!domain) return;
     setAggLoading(true);
+    setAggError(false);
     try {
       const res = await client.get<
         BaseResponse<ImportAggregateResponse>
@@ -139,16 +143,18 @@ export default function ImportPage() {
         params: { from: dateFrom, to: dateTo },
       });
       if (res.data.data) setAggData(res.data.data);
-    } catch {
-      // ignore
+    } catch (err: any) {
+      setAggError(true);
+      toast.error(err?.response?.data?.error || t("import.loadFailed"));
     } finally {
       setAggLoading(false);
     }
-  }, [client, domain, dateFrom, dateTo]);
+  }, [client, domain, dateFrom, dateTo, t]);
 
   const fetchBreakdown = useCallback(async () => {
     if (!domain) return;
     setBreakdownLoading(true);
+    setBreakdownError(false);
     try {
       const res = await client.get<BaseResponse<ImportBreakdownResponse>>(
         `/sites/${domain}/import/breakdown`,
@@ -158,6 +164,7 @@ export default function ImportPage() {
       else setBreakdownData([]);
     } catch {
       setBreakdownData([]);
+      setBreakdownError(true);
     } finally {
       setBreakdownLoading(false);
     }
@@ -166,6 +173,7 @@ export default function ImportPage() {
   const fetchTimeSeries = useCallback(async () => {
     if (!domain) return;
     setTsLoading(true);
+    setTsError(false);
     try {
       const res = await client.get<
         BaseResponse<{ date: string; visitors: number; pageviews: number }[]>
@@ -175,6 +183,7 @@ export default function ImportPage() {
       if (Array.isArray(res.data.data)) setTsData(res.data.data);
     } catch {
       setTsData([]);
+      setTsError(true);
     } finally {
       setTsLoading(false);
     }
@@ -251,24 +260,37 @@ export default function ImportPage() {
       : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-6xl mx-auto p-4 md:p-10 space-y-6">
-        <div className="space-y-2">
-          <div
-            className="text-sm text-blue-500 hover:underline cursor-pointer w-fit"
-            onClick={() =>
-              navigate(domain ? `/sites/${domain}/stats` : "/sites")
-            }
-          >
-            ← {t("settings.layout.backToDashboard")}
+    <div className={embedded ? "" : "min-h-screen bg-gray-50 dark:bg-gray-950"}>
+      <div className={embedded ? "space-y-6" : "max-w-6xl mx-auto p-4 md:p-10 space-y-6"}>
+        {embedded ? (
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              {t("import.title")}
+            </h2>
+            <p className="text-sm text-muted-foreground">{t("import.description")}</p>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            {t("import.title")}
-          </h2>
-          <p className="text-muted-foreground">{t("import.description")}</p>
-        </div>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <button
+                type="button"
+                className="text-sm font-medium text-primary hover:underline cursor-pointer w-fit"
+                onClick={() =>
+                  navigate(domain ? `/sites/${domain}/stats` : "/sites")
+                }
+              >
+                ← {t("settings.layout.backToDashboard")}
+              </button>
+              <h2 className="text-2xl font-bold tracking-tight">
+                {t("import.title")}
+              </h2>
+              <p className="text-muted-foreground">{t("import.description")}</p>
+            </div>
 
-        <Separator />
+            <Separator />
+          </>
+        )}
 
         <Card>
           <CardHeader>
@@ -415,8 +437,8 @@ export default function ImportPage() {
                 />
               </div>
             ) : (
-              <div className="py-8 text-center text-sm text-gray-400">
-                {t("import.stats.noData")}
+              <div className={cn("py-8 text-center text-sm", aggError ? "text-red-500" : "text-gray-400")}>
+                {aggError ? t("import.loadFailed") : t("import.stats.noData")}
               </div>
             )}
           </CardContent>
@@ -455,8 +477,8 @@ export default function ImportPage() {
                   ))}
                 </div>
               ) : breakdownData.length === 0 ? (
-                <div className="py-8 text-center text-sm text-gray-400">
-                  {t("import.breakdown.noData")}
+                <div className={cn("py-8 text-center text-sm", breakdownError ? "text-red-500" : "text-gray-400")}>
+                  {breakdownError ? t("import.loadFailed") : t("import.breakdown.noData")}
                 </div>
               ) : (
                 <div>
@@ -512,8 +534,8 @@ export default function ImportPage() {
                   ))}
                 </div>
               ) : tsData.length === 0 ? (
-                <div className="py-8 text-center text-sm text-gray-400">
-                  {t("import.timeseries.noData")}
+                <div className={cn("py-8 text-center text-sm", tsError ? "text-red-500" : "text-gray-400")}>
+                  {tsError ? t("import.loadFailed") : t("import.timeseries.noData")}
                 </div>
               ) : (
                 <div className="max-h-80 overflow-y-auto">

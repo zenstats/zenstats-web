@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import axios, { type BaseResponse } from "@utils/axios"
+import { useConfirm } from "@/components/confirm-provider"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Trash2, BellRing, Loader2, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -50,12 +51,11 @@ interface TrafficAlertTestResult {
 
 export default function AdminSites() {
   const { t } = useTranslation()
+  const confirm = useConfirm()
   const [sites, setSites] = useState<AdminSite[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false)
   const [alertDialogOpen, setAlertDialogOpen] = useState(false)
   const [selectedSite, setSelectedSite] = useState<AdminSite | null>(null)
   const [alertEmail, setAlertEmail] = useState("")
@@ -82,26 +82,30 @@ export default function AdminSites() {
     fetchSites()
   }, [page, t])
 
-  const handleDeleteSite = async () => {
-    if (!selectedSite) return
+  const handleDeleteSite = async (site: AdminSite) => {
+    if (!(await confirm({
+      title: t('admin.sitesPage.deleteConfirmTitle'),
+      description: t('admin.sitesPage.deleteConfirm', { domain: site.domain }),
+      destructive: true,
+    }))) return
     try {
-      await axios.delete(`/admin/sites/${selectedSite.id}`)
+      await axios.delete(`/admin/sites/${site.id}`)
       toast.success(t('admin.sitesPage.deleteSuccess'))
-      setDeleteDialogOpen(false)
-      setSelectedSite(null)
       fetchSites()
     } catch {
       toast.error(t('admin.sitesPage.deleteFailed'))
     }
   }
 
-  const handleVerifySite = async () => {
-    if (!selectedSite) return
+  const handleVerifySite = async (site: AdminSite) => {
+    if (!(await confirm({
+      title: t('admin.sitesPage.verifyConfirmTitle'),
+      description: t('admin.sitesPage.verifyConfirm', { domain: site.domain }),
+      confirmText: t('admin.sitesPage.verify'),
+    }))) return
     try {
-      await axios.put(`/admin/sites/${selectedSite.id}/verify`)
+      await axios.put(`/admin/sites/${site.id}/verify`)
       toast.success(t('admin.sitesPage.verifySuccess'))
-      setVerifyDialogOpen(false)
-      setSelectedSite(null)
       fetchSites()
     } catch {
       toast.error(t('admin.sitesPage.verifyFailed'))
@@ -136,8 +140,6 @@ export default function AdminSites() {
     setAlertDialogOpen(true)
   }
 
-  const openDeleteDialog = (site: AdminSite) => { setSelectedSite(site); setDeleteDialogOpen(true) }
-  const openVerifyDialog = (site: AdminSite) => { setSelectedSite(site); setVerifyDialogOpen(true) }
 
   const totalPages = Math.ceil(totalCount / 20)
 
@@ -183,14 +185,14 @@ export default function AdminSites() {
                       <TableCell className="whitespace-nowrap">
                         <div className="flex gap-2">
                           {!site.is_verified && (
-                            <Button variant="default" size="sm" onClick={() => openVerifyDialog(site)}>
+                            <Button variant="default" size="sm" onClick={() => handleVerifySite(site)}>
                               {t('admin.sitesPage.verify')}
                             </Button>
                           )}
                           <Button variant="outline" size="sm" onClick={() => openAlertDialog(site)}>
                             <BellRing className="h-4 w-4" />
                           </Button>
-                          <Button variant="destructive" size="sm" onClick={() => openDeleteDialog(site)}>
+                          <Button variant="destructive" size="sm" onClick={() => handleDeleteSite(site)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -253,31 +255,6 @@ export default function AdminSites() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('admin.sitesPage.deleteConfirmTitle')}</DialogTitle>
-          </DialogHeader>
-          <p>{t('admin.sitesPage.deleteConfirm', { domain: selectedSite?.domain })}</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>{t('common.cancel')}</Button>
-            <Button variant="destructive" onClick={handleDeleteSite}>{t('common.delete')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('admin.sitesPage.verifyConfirmTitle')}</DialogTitle>
-          </DialogHeader>
-          <p>{t('admin.sitesPage.verifyConfirm', { domain: selectedSite?.domain })}</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setVerifyDialogOpen(false)}>{t('common.cancel')}</Button>
-            <Button onClick={handleVerifySite}>{t('admin.sitesPage.verify')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

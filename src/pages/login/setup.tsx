@@ -20,6 +20,8 @@ interface SetupResponse {
   user: {
     name: string;
     email: string;
+    is_admin: boolean;
+    email_verified: boolean;
   }
 }
 
@@ -107,6 +109,8 @@ export default function Setup() {
         localStorage.setItem("refreshToken", response.data.data.refresh_token)
         localStorage.setItem("name", response.data.data.user.name)
         localStorage.setItem("email", response.data.data.user.email)
+        localStorage.setItem("is_admin", (response.data.data.user.is_admin ?? false).toString())
+        localStorage.setItem("email_verified", (response.data.data.user.email_verified ?? false).toString())
 
         navigate('/sites', {
           state: { success: t('setup.successMessage') }

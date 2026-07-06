@@ -26,6 +26,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Target, Globe, MousePointerClick, Tags, Sparkles } from "lucide-react";
 import axios, { type BaseResponse } from "@utils/axios";
 import ComboBoxCreate from "@/components/ui/combobox-create";
+import { useConfirm } from "@/components/confirm-provider";
 import type { Goal, CreateGoalRequest } from "../types/interfaces";
 
 export default function GoalsSettings() {
@@ -33,10 +34,9 @@ export default function GoalsSettings() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
   const [creating, setCreating] = useState(false);
   const { t } = useTranslation();
+  const confirm = useConfirm();
 
   // Form state
   const [goalType, setGoalType] = useState<"event" | "page">("event");
@@ -169,14 +169,13 @@ export default function GoalsSettings() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!domain || !goalToDelete) return;
+  const handleDelete = async (goal: Goal) => {
+    if (!domain) return;
+    if (!(await confirm({ description: t('settings.goals.deleteConfirm', { name: goal.display_name }), destructive: true }))) return;
 
     try {
-      await axios.delete(`/sites/${domain}/goals/${goalToDelete.id}`);
+      await axios.delete(`/sites/${domain}/goals/${goal.id}`);
       toast.success(t('settings.goals.deleteSuccess'));
-      setDeleteDialogOpen(false);
-      setGoalToDelete(null);
       fetchGoals();
     } catch (error: any) {
       const message = error?.response?.data?.message || t('settings.goals.deleteFailed');
@@ -198,11 +197,6 @@ export default function GoalsSettings() {
   const openCreateDialog = () => {
     resetForm();
     setDialogOpen(true);
-  };
-
-  const openDeleteDialog = (goal: Goal) => {
-    setGoalToDelete(goal);
-    setDeleteDialogOpen(true);
   };
 
   const toggleCustomPropKey = (key: string) => {
@@ -303,7 +297,7 @@ export default function GoalsSettings() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => openDeleteDialog(goal)}
+                      onClick={() => handleDelete(goal)}
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -524,25 +518,6 @@ export default function GoalsSettings() {
           </DialogContent>
         </Dialog>
 
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t('settings.goals.deleteTitle')}</DialogTitle>
-              <DialogDescription>
-                {t('settings.goals.deleteConfirm', { name: goalToDelete?.display_name })}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                {t('settings.goals.cancel')}
-              </Button>
-              <Button variant="destructive" onClick={handleDelete}>
-                {t('settings.goals.delete')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </CardContent>
     </Card>
   );

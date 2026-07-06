@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Filter, ChevronRight, GripVertical, BarChart3 } from "lucide-react";
 import axios, { type BaseResponse } from "@utils/axios";
+import { useConfirm } from "@/components/confirm-provider";
 import type { Goal, Funnel, CreateFunnelRequest } from "../types/interfaces";
 
 export default function FunnelsSettings() {
@@ -40,10 +41,9 @@ export default function FunnelsSettings() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [funnelToDelete, setFunnelToDelete] = useState<Funnel | null>(null);
   const [creating, setCreating] = useState(false);
   const { t } = useTranslation();
+  const confirm = useConfirm();
 
   // Form state
   const [funnelName, setFunnelName] = useState("");
@@ -104,14 +104,13 @@ export default function FunnelsSettings() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!domain || !funnelToDelete) return;
+  const handleDelete = async (funnel: Funnel) => {
+    if (!domain) return;
+    if (!(await confirm({ description: t('settings.funnels.deleteConfirm', { name: funnel.name }), destructive: true }))) return;
 
     try {
-      await axios.delete(`/sites/${domain}/funnels/${funnelToDelete.id}`);
+      await axios.delete(`/sites/${domain}/funnels/${funnel.id}`);
       toast.success(t('settings.funnels.deleteSuccess'));
-      setDeleteDialogOpen(false);
-      setFunnelToDelete(null);
       fetchData();
     } catch (error: any) {
       const message = error?.response?.data?.message || t('settings.funnels.deleteFailed');
@@ -129,10 +128,6 @@ export default function FunnelsSettings() {
     setDialogOpen(true);
   };
 
-  const openDeleteDialog = (funnel: Funnel) => {
-    setFunnelToDelete(funnel);
-    setDeleteDialogOpen(true);
-  };
 
   const addStep = () => {
     if (selectedGoals.length >= 8) {
@@ -238,7 +233,7 @@ export default function FunnelsSettings() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => openDeleteDialog(funnel)}
+                        onClick={() => handleDelete(funnel)}
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -336,25 +331,6 @@ export default function FunnelsSettings() {
           </DialogContent>
         </Dialog>
 
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t('settings.funnels.deleteTitle')}</DialogTitle>
-              <DialogDescription>
-                {t('settings.funnels.deleteConfirm', { name: funnelToDelete?.name })}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                {t('settings.funnels.cancel')}
-              </Button>
-              <Button variant="destructive" onClick={handleDelete}>
-                {t('settings.funnels.delete')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </CardContent>
     </Card>
   );

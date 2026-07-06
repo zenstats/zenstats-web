@@ -180,6 +180,56 @@ export interface UpdateSegmentRequest {
   filters?: string;
 }
 
+// SavedPanel types（已保存的自定义查询面板）
+export interface SavedPanel {
+  id: number;
+  site_id: number;
+  name: string;
+  description?: string;
+  // config 为自定义查询完整配置的 JSON 字符串（见 CustomQueryConfig）
+  config: string;
+  pinned: boolean;
+  // layout 为该面板在自定义看板网格中的位置与大小 JSON（PanelLayout）
+  layout?: string;
+  created_by?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// PanelLayout 是序列化进 SavedPanel.layout 的网格布局。
+export interface PanelLayout {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+// CustomQueryConfig 是序列化进 SavedPanel.config 的自定义查询表单配置。
+export interface CustomQueryConfig {
+  resultType: "breakdown" | "aggregate";
+  property: string;
+  metrics: string[];
+  filters: { property: string; operator: string; value: string }[];
+  limit: number;
+  orderByMetric: string;
+  orderByDir: "desc" | "asc";
+}
+
+export interface CreatePanelRequest {
+  name: string;
+  description?: string;
+  config: string;
+  pinned?: boolean;
+}
+
+export interface UpdatePanelRequest {
+  name?: string;
+  description?: string;
+  config?: string;
+  layout?: string;
+  pinned?: boolean;
+}
+
 // Goal types
 export interface Goal {
   id: number;

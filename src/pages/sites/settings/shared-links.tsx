@@ -23,16 +23,17 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Copy, Plus, Trash2, Link } from "lucide-react";
 import axios, { type BaseResponse } from "@utils/axios";
+import { useConfirm } from "@/components/confirm-provider";
 import type { SharedLink } from "../types/interfaces";
 
 export default function SharedLinksSettings() {
   const { domain } = useParams<{ domain: string }>();
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [links, setLinks] = useState<SharedLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<SharedLink | null>(null);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [copiedId, setCopiedId] = useState<number | null>(null);
@@ -73,10 +74,10 @@ export default function SharedLinksSettings() {
 
   const handleDelete = async (link: SharedLink) => {
     if (!domain) return;
+    if (!(await confirm({ description: t("settings.sharedLinks.deleteConfirm"), destructive: true }))) return;
     try {
       await axios.delete(`/sites/${domain}/shared-links/${link.id}`);
       toast.success(t("common.deleted"));
-      setDeleteTarget(null);
       setLinks((prev) => prev.filter((l) => l.id !== link.id));
     } catch {
       toast.error(t("common.deleteFailed"));
@@ -145,7 +146,7 @@ export default function SharedLinksSettings() {
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => setDeleteTarget(link)}
+                        onClick={() => handleDelete(link)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -194,28 +195,6 @@ export default function SharedLinksSettings() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirm dialog */}
-      <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("common.confirmDelete")}</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            {t("settings.sharedLinks.deleteConfirm")}
-          </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              {t("common.cancel")}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => deleteTarget && handleDelete(deleteTarget)}
-            >
-              {t("common.delete")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }
