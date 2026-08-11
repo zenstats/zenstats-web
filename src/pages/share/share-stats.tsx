@@ -25,6 +25,8 @@ interface ShareStatsPageProps {
   domain: string;
   slug: string;
   linkName: string;
+  /** 密码保护链接的访问密码，随每个请求以 link_password 传给后端 */
+  password?: string;
 }
 
 const PERIOD_OPTIONS = [
@@ -36,7 +38,7 @@ const PERIOD_OPTIONS = [
   { key: "12mo",  label: "Last 12 months" },
 ];
 
-export default function ShareStatsPage({ domain, slug, linkName }: ShareStatsPageProps) {
+export default function ShareStatsPage({ domain, slug, linkName, password }: ShareStatsPageProps) {
   const { t } = useTranslation();
   const [period, setPeriod] = useState("p30");
   const [periodLabel, setPeriodLabel] = useState("Last 30 days");
@@ -58,11 +60,13 @@ export default function ShareStatsPage({ domain, slug, linkName }: ShareStatsPag
     setSourcesQuery(prev => ({ ...prev, period, refresh }));
   }, [period, refresh]);
 
-  // All API calls include ?slug=xxx — backend validates slug, no auth required
+  // All API calls include ?slug=xxx — backend validates slug, no auth required.
+  // 密码保护链接额外带 link_password，后端逐请求校验（缺失/错误则拒绝）。
   const withSlug = useCallback((params: StatsRequest) => ({
     ...params,
     slug,
-  }), [slug]);
+    ...(password ? { link_password: password } : {}),
+  }), [slug, password]);
 
   const api = useMemo(() => ({
     getAggregate: async (q: StatsRequest) => {

@@ -31,13 +31,13 @@ const features: { icon: React.ReactNode; title: T; desc: T }[] = [
   },
   {
     icon: <Globe className="w-5 h-5" />,
-    title: i("GeoIP + 设备", "GeoIP + Device"),
-    desc: i("访客地理位置、浏览器、操作系统、设备类型", "Visitor location, browser, OS, and device type."),
+    title: i("来源归因", "Attribution"),
+    desc: i("地理位置、设备、UTM 参数与获客渠道（自然/付费/社交/引荐）", "Location, device, UTM parameters, and acquisition channel."),
   },
   {
     icon: <Target className="w-5 h-5" />,
-    title: i("目标与漏斗", "Goals & Funnels"),
-    desc: i("自定义事件目标、多步骤转化漏斗", "Custom event goals and multi-step conversion funnels."),
+    title: i("目标、漏斗与收入", "Goals, Funnels & Revenue"),
+    desc: i("自定义事件目标、多步骤转化漏斗、电商收入追踪", "Event goals, conversion funnels, and ecommerce revenue."),
   },
   {
     icon: <Users className="w-5 h-5" />,

@@ -50,7 +50,13 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
   // Determine active metric (default visitors) — from local state, not query
   const currentMetric = activeMetric || "visitors";
   // Determine active interval (default based on period)
-  const activeInterval = query.interval || (query.period === "realtime" ? "minute" : query.period === "day" ? "hourly" : "daily");
+  const defaultIntervalForPeriod = (p?: string): Interval => {
+    if (p === "realtime") return "minute";
+    if (p === "day" || p === "yesterday") return "hourly";
+    if (p === "6mo" || p === "12mo" || p === "year") return "monthly";
+    return "daily";
+  };
+  const activeInterval = query.interval || defaultIntervalForPeriod(query.period);
   const [localInterval, setLocalInterval] = useState<Interval>(activeInterval);
 
   // Sync local interval from query

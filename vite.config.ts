@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, type PluginOption } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -14,6 +14,9 @@ export default defineConfig(({ mode }) => {
       host: "0.0.0.0",
     },
 
+    // 强制转为顶层 vite 的 PluginOption[]：pnpm 会给 @tailwindcss/vite 装一份嵌套的 vite，
+    // 其 Plugin 类型与顶层 vite@7.0.3 名义不同（同版本、不同安装路径），导致 tsc -b 报 TS2769。
+    // 运行时无差异，仅是类型 nominal 冲突，故此处做一次显式转换。
     plugins: [
       react(),
       tsconfigPaths(),
@@ -29,10 +32,24 @@ export default defineConfig(({ mode }) => {
           return html;
         },
       },
-    ],
+    ] as PluginOption[],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
+      },
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          // 供应商分包：只对"各页面都用到"的库(react 核心、radix)单独成块以利缓存。
+          // recharts / react-grid-layout 仅被懒加载的统计/漏斗页使用，不在此手动分块——
+          // 让 Vite 把它们并入对应的按需 chunk，避免在首屏被 modulepreload 提前下载。
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return;
+            if (id.includes("@radix-ui")) return "radix";
+            if (/[\\/]react[\\/]|[\\/]react-dom[\\/]|[\\/]react-router/.test(id)) return "react-vendor";
+          },
+        },
       },
     },
   };

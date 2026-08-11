@@ -73,6 +73,12 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
     ]},
     { group: t('stats.categories.visit'), items: [
       { value: "visit:source", label: t('stats.customQuery.dimensions.source') },
+      { value: "visit:channel", label: t('stats.customQuery.dimensions.channel') },
+      { value: "visit:utm_source", label: "utm_source" },
+      { value: "visit:utm_medium", label: "utm_medium" },
+      { value: "visit:utm_campaign", label: "utm_campaign" },
+      { value: "visit:utm_content", label: "utm_content" },
+      { value: "visit:utm_term", label: "utm_term" },
       { value: "visit:country", label: t('stats.customQuery.dimensions.country') },
       { value: "visit:region", label: t('stats.customQuery.dimensions.region') },
       { value: "visit:city", label: t('stats.customQuery.dimensions.city') },
@@ -99,6 +105,9 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
     { value: "time_on_page", label: t('stats.customQuery.metrics.timeOnPage') },
     { value: "exit_rate", label: t('stats.customQuery.metrics.exitRate') },
     { value: "conversion_rate", label: t('stats.customQuery.metrics.conversionRate') },
+    { value: "percentage", label: t('stats.customQuery.metrics.percentage') },
+    { value: "total_revenue", label: t('stats.customQuery.metrics.totalRevenue') },
+    { value: "average_revenue", label: t('stats.customQuery.metrics.averageRevenue') },
   ], [t]);
 
   const OPERATORS = useMemo(() => [
@@ -152,6 +161,7 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
   // Query form state
   const [resultType, setResultType] = useState<"breakdown" | "aggregate">("breakdown");
   const [property, setProperty] = useState("event:name");
+  const [property2, setProperty2] = useState(""); // 可选的第二个拆分维度（多维 breakdown），"" = 无
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(DEFAULT_METRICS);
   const [filters, setFilters] = useState<FilterRow[]>([]);
   const [limit, setLimit] = useState(100);
@@ -196,17 +206,19 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
   const buildConfig = useCallback((): CustomQueryConfig => ({
     resultType,
     property,
+    property2: property2 || undefined,
     metrics: selectedMetrics,
     filters: filters.map((f) => ({ property: f.property, operator: f.operator, value: f.value })),
     limit,
     orderByMetric,
     orderByDir,
-  }), [resultType, property, selectedMetrics, filters, limit, orderByMetric, orderByDir]);
+  }), [resultType, property, property2, selectedMetrics, filters, limit, orderByMetric, orderByDir]);
 
   // 把已保存面板的配置回填到表单
   const applyConfig = (cfg: CustomQueryConfig) => {
     if (cfg.resultType) setResultType(cfg.resultType);
     if (cfg.property) setProperty(cfg.property);
+    setProperty2(cfg.property2 || "");
     if (Array.isArray(cfg.metrics)) setSelectedMetrics(cfg.metrics);
     if (Array.isArray(cfg.filters)) {
       setFilters(cfg.filters.map((f) => ({ id: generateId(), property: f.property, operator: f.operator, value: f.value })));
@@ -238,6 +250,11 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
 
   const handleSavePanel = async () => {
     if (!domain || !panelName.trim()) return;
+    // 不允许保存非法的指标/维度组合，否则固定面板运行时会 400 且静默无结果
+    if (hasMetricIssues) {
+      toast.error(Object.values(metricIssues)[0]);
+      return;
+    }
     setSavingPanel(true);
     try {
       const res = await axios.post<BaseResponse<SavedPanel>>(`/sites/${domain}/panels`, {
@@ -315,11 +332,20 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
     const has = (d: string) => fset.has(d);
     const isEventOnlyProp = (p: string) =>
       p === "event:name" || p === "event:goal" || p.startsWith("event:props:");
+    // 分解拆分维度为事件专属属性时，这些指标（会话/pageviews/visits）不可用
     const sessionScoped = new Set(["pageviews", "bounce_rate", "visit_duration", "views_per_visit", "visits"]);
+    // 只能落 sessions 表的指标：与任何事件专属过滤器组合时后端无法过滤 → 400
+    const strictlySession = new Set(["bounce_rate", "visit_duration", "views_per_visit"]);
+    const eventOnlyFilterDim = [...fset].find((d) => isEventOnlyProp(d)) || "";
 
     const issues: Record<string, string> = {};
     for (const m of selectedMetrics) {
       let err = "";
+      // 通用：只能落 sessions 表的指标不能与事件专属过滤器组合
+      if (strictlySession.has(m) && eventOnlyFilterDim) {
+        issues[m] = t('stats.customQuery.issues.sessionMetricEventFilter', { metric: m, dim: eventOnlyFilterDim });
+        continue;
+      }
       switch (m) {
         case "time_on_page":
           if (has("event:goal")) err = t('stats.customQuery.issues.timeOnPageGoalFilter');
@@ -331,8 +357,8 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
           if (!has("event:goal")) err = t('stats.customQuery.issues.needsGoal', { metric: m });
           break;
         case "exit_rate":
-          if (dim && dim !== "event:page") err = t('stats.customQuery.issues.pageBreakdownOnly', { metric: m });
-          else if (!dim && !has("event:page")) err = t('stats.customQuery.issues.needsPage', { metric: m });
+          // 仅支持按 event:page 拆分；页面过滤或其他维度均不可用
+          if (dim !== "event:page") err = t('stats.customQuery.issues.pageBreakdownOnly', { metric: m });
           break;
         case "scroll_depth":
           if (dim && dim !== "event:page") err = t('stats.customQuery.issues.pageBreakdownOnly', { metric: m });
@@ -369,6 +395,7 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
 
   const lastQueryRef = useRef<{
     property: string;
+    property2: string;
     selectedMetrics: string[];
     filtersArray: unknown | undefined;
     resultType: "breakdown" | "aggregate";
@@ -382,8 +409,9 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
     const last = lastQueryRef.current;
     const filtersArray = last?.filtersArray ?? buildFiltersArray();
     const metrics = last?.selectedMetrics ?? selectedMetrics;
+    // 多维 breakdown：主维度 + 可选第二维度
     const dimensions = last?.resultType === "breakdown" && last?.property
-      ? [last.property]
+      ? [last.property, last.property2].filter(Boolean)
       : [];
     const orderBy: [string, string][] = [];
     if (last?.orderByMetric && last.orderByMetric !== "none") {
@@ -418,6 +446,7 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
     const filtersArray = buildFiltersArray();
     lastQueryRef.current = {
       property,
+      property2,
       selectedMetrics,
       filtersArray,
       resultType,
@@ -480,6 +509,7 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
 
   const handleReset = () => {
     setProperty("event:name");
+    setProperty2("");
     setSelectedMetrics(DEFAULT_METRICS);
     setFilters([]);
     setLimit(100);
@@ -704,26 +734,49 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
               </div>
 
               {resultType === "breakdown" && (
-                <div>
-                  <Label className="text-xs text-gray-500 mb-1 block">{t('stats.customQuery.groupBy')}</Label>
-                  <Select value={property} onValueChange={setProperty}>
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {effectiveDimensionOptions.map((group) => (
-                        <SelectGroup key={group.group}>
-                          <SelectLabel>{group.group}</SelectLabel>
-                          {group.items.map((item) => (
-                            <SelectItem key={item.value} value={item.value}>
-                              {item.value} ({item.label})
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <>
+                  <div>
+                    <Label className="text-xs text-gray-500 mb-1 block">{t('stats.customQuery.groupBy')}</Label>
+                    <Select value={property} onValueChange={setProperty}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {effectiveDimensionOptions.map((group) => (
+                          <SelectGroup key={group.group}>
+                            <SelectLabel>{group.group}</SelectLabel>
+                            {group.items.map((item) => (
+                              <SelectItem key={item.value} value={item.value}>
+                                {item.value} ({item.label})
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500 mb-1 block">{t('stats.customQuery.groupBy2')}</Label>
+                    <Select value={property2 || "none"} onValueChange={(v) => setProperty2(v === "none" ? "" : v)}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t('stats.customQuery.groupByNone')}</SelectItem>
+                        {effectiveDimensionOptions.map((group) => (
+                          <SelectGroup key={group.group}>
+                            <SelectLabel>{group.group}</SelectLabel>
+                            {group.items.filter((item) => item.value !== property).map((item) => (
+                              <SelectItem key={item.value} value={item.value}>
+                                {item.value} ({item.label})
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
               )}
 
               <div>

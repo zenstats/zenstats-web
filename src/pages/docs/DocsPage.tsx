@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import LogoHorizontal from "@/assets/logo-h.svg";
+import LogoHorizontalDark from "@/assets/logo-h-dark.svg";
 
 const NAV_SECTIONS = [
   {
@@ -26,7 +28,7 @@ const NAV_SECTIONS = [
   },
   {
     groupKey: "siteManagement",
-    items: ["shields", "emailReports", "trafficAlerts"],
+    items: ["shields", "emailReports", "trafficAlerts", "subAccounts"],
   },
   {
     groupKey: "operations",
@@ -175,12 +177,8 @@ export default function DocsPage() {
         {/* Logo */}
         <div className="px-5 py-5 border-b border-slate-200 dark:border-[#21262d]">
           <Link to="/" className="flex items-center gap-2 no-underline">
-            <div className="w-7 h-7 bg-emerald-500 rounded flex items-center justify-center flex-shrink-0">
-              <svg viewBox="0 0 16 16" className="w-4 h-4 fill-white">
-                <path d="M2 12l3-4 3 2 3-6 3 4H2z" />
-              </svg>
-            </div>
-            <span className="font-mono text-sm font-semibold text-slate-800 dark:text-[#e6edf3] tracking-tight">ZenStats</span>
+            <img src={LogoHorizontal} alt="ZenStats" className="h-6 w-auto dark:hidden" />
+            <img src={LogoHorizontalDark} alt="ZenStats" className="h-6 w-auto hidden dark:block" />
             <span className="font-mono text-[9px] bg-emerald-100 text-emerald-700 dark:bg-amber-100 dark:text-amber-800 px-1 py-0.5 rounded font-semibold">
               Docs
             </span>
@@ -298,6 +296,16 @@ zenstats.track('Purchase', {
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.outbound.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.outbound.description")}</p>
             <CodeBlock label="HTML">{`<a href="https://github.com" data-zenstats-outbound>GitHub</a>`}</CodeBlock>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.revenue.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.revenue.description")}</p>
+            <CodeBlock label="POST /api/event">{`{
+  "n": "Purchase",
+  "d": "example.com",
+  "u": "https://example.com/checkout",
+  "revenue": { "amount": "49.99", "currency": "USD" }
+}`}</CodeBlock>
+            <Callout type="info">{t("docs.sections.trackingScript.revenue.callout")}</Callout>
           </section>
 
           {/* Aggregate */}
@@ -422,6 +430,8 @@ zenstats.track('Purchase', {
               { name: "order_by", desc: t("docs.params.orderBy") },
               { name: "limit", desc: t("docs.params.limit") },
               { name: "offset", desc: t("docs.params.offset") },
+              { name: "compare", desc: t("docs.params.compare") },
+              { name: "compare_from / compare_to", desc: t("docs.params.compareCustom") },
               { name: "sample_threshold", desc: t("docs.params.sampleThreshold") },
             ]} />
             <CodeBlock label="Request (breakdown)">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
@@ -436,13 +446,26 @@ zenstats.track('Purchase', {
     "limit": 20,
     "offset": 0
   }'`}</CodeBlock>
-            <CodeBlock label="Request (aggregate)">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+            <CodeBlock label="Request (aggregate + comparison)">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "period": "day",
-    "metrics": ["visitors", "pageviews", "bounce_rate", "visit_duration"]
+    "period": "p7",
+    "metrics": ["visitors", "pageviews", "bounce_rate", "visit_duration"],
+    "compare": "previous_period"
   }'`}</CodeBlock>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.v2Query.multiDim.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.v2Query.multiDim.description")}</p>
+            <CodeBlock label="Request (multi-dimension breakdown)">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+  -H "Authorization: Bearer <token>" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "period": "p30",
+    "metrics": ["visitors", "total_revenue"],
+    "dimensions": ["event:page", "visit:country"]
+  }'
+// Each result row carries every dimension column, e.g.
+// { "page": "/pricing", "country": "US", "visitors": 421, "total_revenue": 1290.50 }`}</CodeBlock>
             <CodeBlock label="Response (aggregate)">{`{
   "code": 200,
   "data": {
@@ -484,6 +507,9 @@ zenstats.track('Purchase', {
               { code: "events", desc: t("docs.metrics.events") },
               { code: "conversions", desc: t("docs.metrics.conversions") },
               { code: "conversion_rate", desc: t("docs.metrics.conversionRate") },
+              { code: "percentage", desc: t("docs.metrics.percentage") },
+              { code: "total_revenue", desc: t("docs.metrics.totalRevenue") },
+              { code: "average_revenue", desc: t("docs.metrics.averageRevenue") },
             ]} />
           </section>
 
@@ -493,6 +519,12 @@ zenstats.track('Purchase', {
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.dimensions.description")}</p>
             <RefGrid items={[
               { code: "visit:source", desc: t("docs.dimensions.source") },
+              { code: "visit:channel", desc: t("docs.dimensions.channel") },
+              { code: "visit:utm_source", desc: t("docs.dimensions.utmSource") },
+              { code: "visit:utm_medium", desc: t("docs.dimensions.utmMedium") },
+              { code: "visit:utm_campaign", desc: t("docs.dimensions.utmCampaign") },
+              { code: "visit:utm_content", desc: t("docs.dimensions.utmContent") },
+              { code: "visit:utm_term", desc: t("docs.dimensions.utmTerm") },
               { code: "event:page", desc: t("docs.dimensions.page") },
               { code: "visit:entry_page", desc: t("docs.dimensions.entryPage") },
               { code: "visit:exit_page", desc: t("docs.dimensions.exitPage") },
@@ -531,7 +563,21 @@ zenstats.track('Purchase', {
               { name: "matches", desc: t("docs.filters.matches") },
               { name: "contains_not", desc: t("docs.filters.containsNot") },
               { name: "matches_not", desc: t("docs.filters.matchesNot") },
+              { name: "matches_wildcard", desc: t("docs.filters.matchesWildcard") },
+              { name: "matches_wildcard_not", desc: t("docs.filters.matchesWildcardNot") },
             ]} />
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.filters.logical.heading")}</h3>
+            <ParamTable rows={[
+              { name: "and / or / not", desc: t("docs.filters.andOrNot") },
+              { name: "has_done", desc: t("docs.filters.hasDone") },
+              { name: "has_not_done", desc: t("docs.filters.hasNotDone") },
+            ]} />
+            <CodeBlock label="Behavioral & case-insensitive filters">{`// has_done: visitors who did an event anywhere in the session
+["has_done", ["is", "event:name", ["Signup"]]]
+
+// Case-insensitive match (default is case-sensitive) via a 4th modifier element
+["is", "visit:browser", ["chrome"], {"case_sensitive": false}]`}</CodeBlock>
+            <Callout type="info">{t("docs.sections.filters.caseCallout")}</Callout>
           </section>
 
           {/* Periods */}
@@ -547,6 +593,9 @@ zenstats.track('Purchase', {
               { name: "month", desc: t("docs.periods.month") },
               { name: "6mo", desc: t("docs.periods.sixMonth") },
               { name: "12mo", desc: t("docs.periods.twelveMonth") },
+              { name: "year", desc: t("docs.periods.year") },
+              { name: "all", desc: t("docs.periods.all") },
+              { name: "Nd / Nmo", desc: t("docs.periods.shorthand") },
               { name: "custom", desc: t("docs.periods.custom") },
             ]} />
           </section>
@@ -563,6 +612,17 @@ zenstats.track('Purchase', {
               { name: t("docs.sections.goals.types.pageview"), desc: t("docs.sections.goals.types.pageviewDesc") },
               { name: t("docs.sections.goals.types.event"), desc: t("docs.sections.goals.types.eventDesc") },
             ]} />
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.goals.breakdown.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.goals.breakdown.description")}</p>
+            <CodeBlock label="Goal breakdown">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+  -H "Authorization: Bearer <token>" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "period": "p30",
+    "metrics": ["visitors", "events", "conversion_rate"],
+    "dimensions": ["event:goal"]
+  }'`}</CodeBlock>
+            <Callout type="info">{t("docs.sections.goals.breakdown.callout")}</Callout>
           </section>
 
           {/* Funnels */}
@@ -665,6 +725,33 @@ example.com     → exact match only`}</CodeBlock>
               { name: "recipients", desc: t("docs.sections.trafficAlerts.settings.recipients") },
             ]} />
             <Callout type="info">{t("docs.sections.trafficAlerts.callout")}</Callout>
+          </section>
+
+          {/* Sub-accounts & Permissions */}
+          <section id="subAccounts" className="mb-16 scroll-mt-8">
+            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.subAccounts")}</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.subAccounts.description")}</p>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.subAccounts.roles.heading")}</h3>
+            <ParamTable rows={[
+              { name: "viewer", desc: t("docs.sections.subAccounts.roles.viewer") },
+              { name: "editor", desc: t("docs.sections.subAccounts.roles.editor") },
+              { name: "admin", desc: t("docs.sections.subAccounts.roles.admin") },
+              { name: "custom", desc: t("docs.sections.subAccounts.roles.custom") },
+            ]} />
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.subAccounts.permissions.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.subAccounts.permissions.description")}</p>
+            <RefGrid items={[
+              { code: "goals:write", desc: t("docs.sections.subAccounts.permissions.goals") },
+              { code: "funnels:write", desc: t("docs.sections.subAccounts.permissions.funnels") },
+              { code: "segments:write", desc: t("docs.sections.subAccounts.permissions.segments") },
+              { code: "shared_links:write", desc: t("docs.sections.subAccounts.permissions.sharedLinks") },
+              { code: "shields:write", desc: t("docs.sections.subAccounts.permissions.shields") },
+              { code: "email_reports:write", desc: t("docs.sections.subAccounts.permissions.emailReports") },
+              { code: "traffic_alerts:write", desc: t("docs.sections.subAccounts.permissions.trafficAlerts") },
+            ]} />
+            <Callout type="info">{t("docs.sections.subAccounts.callout")}</Callout>
           </section>
 
           {/* Deployment */}

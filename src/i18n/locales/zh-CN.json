@@ -448,7 +448,11 @@
       "last7Days": "最近7天",
       "last14Days": "最近14天",
       "last30Days": "最近30天",
-      "customRange": "自定义范围"
+      "customRange": "自定义范围",
+      "thisMonth": "本月",
+      "last6Months": "最近 6 个月",
+      "last12Months": "最近 12 个月",
+      "thisYear": "今年"
     },
     "categories": {
       "traffic": "流量来源",
@@ -579,7 +583,8 @@
         "viewsPerVisitPageFilter": "views_per_visit 不能与 \"event:page\" 过滤同时使用。",
         "timeOnPageGoalFilter": "time_on_page 不能与 \"event:goal\" 过滤同时使用。",
         "timeOnPageNameFilter": "time_on_page 不能与 \"event:name\" 过滤同时使用。",
-        "sessionMetricEventDim": "会话指标 {{metric}} 不能按 \"{{dim}}\" 拆分。"
+        "sessionMetricEventDim": "会话指标 {{metric}} 不能按 \"{{dim}}\" 拆分。",
+        "sessionMetricEventFilter": "会话指标 {{metric}} 不能与 \"{{dim}}\" 过滤条件同时使用。"
       },
       "queryType": "查询类型",
       "breakdownQuery": "分解查询 (Breakdown)",
@@ -599,7 +604,10 @@
         "exitRate": "退出率",
         "conversions": "转化人数",
         "conversionRate": "转化率",
-        "events": "事件数"
+        "events": "事件数",
+        "percentage": "占比",
+        "totalRevenue": "总收入",
+        "averageRevenue": "平均收入"
       },
       "filters": "筛选条件 (Filters)",
       "addFilter": "添加条件",
@@ -626,7 +634,8 @@
         "device": "设备类型",
         "screenSize": "屏幕尺寸",
         "eventName": "事件名称",
-        "goal": "目标"
+        "goal": "目标",
+        "channel": "渠道"
       },
       "operators": {
         "is": "是 (=)",
@@ -647,7 +656,24 @@
       "prev": "上一页",
       "next": "下一页",
       "vsPrevious": "较上期",
-      "desc": "自定义查询说明"
+      "desc": "自定义查询说明",
+      "groupBy2": "第二拆分维度（可选）",
+      "groupByNone": "无"
+    },
+    "dimensions": {
+      "source": "来源",
+      "page": "页面路径",
+      "entryPage": "入口页",
+      "exitPage": "退出页",
+      "country": "国家/地区",
+      "region": "地区",
+      "city": "城市",
+      "browser": "浏览器",
+      "os": "操作系统",
+      "device": "设备类型",
+      "screenSize": "屏幕尺寸",
+      "eventName": "事件名称",
+      "channel": "渠道"
     },
     "siteSettings": "站点设置",
     "installTrackingCode": "安装统计代码",
@@ -1348,7 +1374,11 @@
   "share": {
     "notFound": "Shared link not found",
     "loading": "Loading...",
-    "sharedBy": "Shared analytics for {domain}"
+    "sharedBy": "Shared analytics for {domain}",
+    "passwordPrompt": "该看板已设置访问密码，请输入密码后继续。",
+    "passwordPlaceholder": "密码",
+    "passwordSubmit": "查看看板",
+    "passwordWrong": "密码不正确。"
   },
   "docs": {
     "hero": {
@@ -1392,7 +1422,8 @@
       "deployment": "部署指南",
       "shields": "流量屏蔽",
       "emailReports": "邮件报告",
-      "trafficAlerts": "流量告警"
+      "trafficAlerts": "流量告警",
+      "subAccounts": "子账号与权限"
     },
     "table": {
       "parameter": "参数",
@@ -1404,7 +1435,7 @@
       "period": "时间范围，参见",
       "metrics": "逗号分隔的指标列表，默认为 visitors,pageviews,bounce_rate,visit_duration。参见",
       "filters": "URL 编码的 JSON 过滤器数组，参见",
-      "compare": "设置为 previous_period 可返回对比数据。",
+      "compare": "聚合查询的对比模式：previous_period（上一同期）或 year_over_year（去年同期）。会为每个指标附加 comparison_value/change。",
       "date": "day 模式下的指定日期（YYYY-MM-DD）。",
       "property": "分组维度，参见",
       "limit": "返回结果数量上限（默认 100）。",
@@ -1416,7 +1447,8 @@
       "orderBy": "排序字段数组，如 [[\"visitors\",\"desc\"]]。",
       "offset": "跳过的结果数量（用于分页）。",
       "periodV2": "时间周期缩写：day, p7, p14, p30, month, 6mo, 12mo, custom。配合 date（单日）或 from/to（自定义范围）使用。",
-      "sampleThreshold": "高流量站点的采样阈值。"
+      "sampleThreshold": "高流量站点的采样阈值。",
+      "compareCustom": "compare = custom 时显式指定对比区间（ISO 日期）。"
     },
     "sections": {
       "introduction": {
@@ -1455,6 +1487,11 @@
         "outbound": {
           "heading": "外链追踪",
           "description": "在任意链接上添加 data-zenstats-outbound 属性，即可自动将点击记录为名为「Outbound Link: Click」的自定义事件。"
+        },
+        "revenue": {
+          "heading": "收入（电商）",
+          "description": "在事件里附带 revenue 对象即可记录收入；amount 接受字符串或数字，currency 为 ISO 货币码。用 total_revenue / average_revenue 指标查询。",
+          "callout": "追踪脚本暂不自动发送收入——请从你的服务端或结算流程向 /api/event 提交带 revenue 字段的事件。"
         }
       },
       "aggregate": {
@@ -1470,7 +1507,11 @@
         "description": "返回过去 5 分钟内活跃在站点的访客数量，适合实时在线指示器。"
       },
       "v2Query": {
-        "description": "更灵活的查询 API，接受 JSON 请求体，支持多维度分组、排序和基于偏移量的分页。"
+        "description": "更灵活的查询 API，接受 JSON 请求体，支持多维度分组、排序和基于偏移量的分页。",
+        "multiDim": {
+          "heading": "多维度细分",
+          "description": "传入多个维度即可交叉分析。结果每行都包含每个维度的列，外加各指标。"
+        }
       },
       "metrics": {
         "description": "大多数 API 调用中指标可以自由组合，部分指标（time_on_page、scroll_depth）需要开启参与度追踪。"
@@ -1482,7 +1523,11 @@
         "description": "过滤器将结果限制在特定的流量子集。GET 请求中以 URL 编码的 JSON 数组传递，POST 请求中作为 JSON 字段传递。",
         "operators": {
           "heading": "操作符"
-        }
+        },
+        "logical": {
+          "heading": "逻辑与行为操作符"
+        },
+        "caseCallout": "过滤器默认区分大小写。在元组第 4 个元素加 {\"case_sensitive\": false} 可不区分大小写。"
       },
       "periods": {
         "description": "将时间范围键作为 period 查询参数传递。自定义范围请使用 v2 API 的 date_range 字段。"
@@ -1500,6 +1545,11 @@
           "pageviewDesc": "访客访问匹配某 URL 模式的页面时触发，支持通配符，如 /blog/*。",
           "event": "自定义事件",
           "eventDesc": "调用 zenstats.track(\"EventName\") 时触发，事件名称须完全匹配。"
+        },
+        "breakdown": {
+          "heading": "查询目标",
+          "description": "按 event:goal 维度拆分，可得到每个目标一行的转化人数与转化率。conversion_rate 仅在按目标拆分或带目标过滤时可用。",
+          "callout": "conversion_rate = 完成该目标的独立访客数 ÷ 时段内总独立访客数 × 100。"
         }
       },
       "funnels": {
@@ -1597,6 +1647,28 @@
           "recipients": "逗号分隔的额外收件人邮箱列表，站点所有者始终会收到告警。"
         },
         "callout": "流量告警需要在「管理后台 → 设置」中配置 SMTP。在「站点设置 → 流量告警」中按站点开启。"
+      },
+      "subAccounts": {
+        "description": "子账号是父账号下额外的登录用户。每个子账号有一个角色和一组细粒度写权限；它始终可以查看所属站点的分析数据，但只能修改其权限允许的内容。",
+        "roles": {
+          "heading": "角色",
+          "viewer": "只读，无任何写权限。",
+          "editor": "可管理目标、漏斗、分群和分享链接。",
+          "admin": "拥有下列全部写权限。",
+          "custom": "下列写权限的任意自定义组合。"
+        },
+        "permissions": {
+          "heading": "写权限",
+          "description": "子账号可持有其中任意子集。缺少某项权限时，对应的写接口返回 403；读取不受影响。站点的创建/删除、API Key、子账号管理仍为父账号专属。",
+          "goals": "创建、更新、删除目标。",
+          "funnels": "创建、更新、删除漏斗。",
+          "segments": "创建、更新、删除分群。",
+          "sharedLinks": "创建、删除分享面板链接。",
+          "shields": "管理 IP / 主机名 / 国家 / 来源屏蔽规则。",
+          "emailReports": "配置周报/月报邮件。",
+          "trafficAlerts": "配置流量告警阈值与收件人。"
+        },
+        "callout": "权限与状态变更在子账号下次刷新令牌时生效；被停用的子账号会自动登出。"
       }
     },
     "metrics": {
@@ -1607,11 +1679,14 @@
       "visitDuration": "平均会话时长（秒）。",
       "timeOnPage": "访客离开前在页面上的平均停留时间。",
       "scrollDepth": "页面平均滚动百分比。",
-      "exitRate": "以该页面结束会话的比例（%）。",
+      "exitRate": "以该页面结束会话的比例（%）。仅支持按 event:page 拆分查询。",
       "viewsPerVisit": "每次会话的平均浏览页数。",
       "events": "触发的自定义事件总数。",
       "conversions": "完成目标的独立访客数（需要 goal 过滤）。",
-      "conversionRate": "完成目标的访客占比（需要 goal 过滤，仅聚合查询支持）。"
+      "conversionRate": "完成目标的访客占比（需要 goal 过滤，仅聚合查询支持）。",
+      "percentage": "各分组占总访客的百分比。仅用于细分查询。",
+      "totalRevenue": "事件收入总额（电商）。需事件携带收入金额。",
+      "averageRevenue": "每笔收入事件的平均收入（电商）。"
     },
     "dimensions": {
       "source": "流量来源（引荐域名）。",
@@ -1629,7 +1704,13 @@
       "entryPageHostname": "入口页面的主机名。",
       "exitPageHostname": "退出页面的主机名。",
       "hostname": "页面主机名（事件级）。",
-      "goal": "目标名称（转化跟踪）。"
+      "goal": "目标名称（转化跟踪）。",
+      "channel": "获客渠道（自然搜索、付费搜索、社交、引荐、直接访问等）。",
+      "utmSource": "UTM 来源（utm_source）。",
+      "utmMedium": "UTM 媒介（utm_medium）。",
+      "utmCampaign": "UTM 活动（utm_campaign）。",
+      "utmContent": "UTM 内容（utm_content）。",
+      "utmTerm": "UTM 关键词（utm_term）。"
     },
     "filters": {
       "is": "精确匹配，支持多个值（同一过滤器内为 OR 逻辑）。",
@@ -1638,7 +1719,12 @@
       "notContains": "排除包含子串的值。",
       "matches": "正则表达式匹配。",
       "containsNot": "排除包含子串的值（not_contains 的别名）。",
-      "matchesNot": "排除正则匹配的值。"
+      "matchesNot": "排除正则匹配的值。",
+      "matchesWildcard": "通配符匹配（* 匹配任意序列），如 /blog/**。",
+      "matchesWildcardNot": "通配符匹配取反。",
+      "andOrNot": "组合过滤器：[\"and\", [..]]、[\"or\", [..]]、[\"not\", filter]。",
+      "hasDone": "会话中至少发生过一次该事件过滤条件。",
+      "hasNotDone": "会话中从未发生过该事件过滤条件。"
     },
     "periods": {
       "day": "今天。",
@@ -1649,7 +1735,10 @@
       "month": "本月。",
       "sixMonth": "最近 6 个月。",
       "twelveMonth": "最近 12 个月。",
-      "custom": "自定义日期范围，请使用 v2 API 的 date_range 字段。"
+      "custom": "自定义日期范围，请使用 v2 API 的 date_range 字段。",
+      "year": "date 所在的自然年。",
+      "all": "全部可用数据（近似为最近 5 年）。",
+      "shorthand": "相对简写：Nd = 最近 N 天，Nmo = 最近 N 个月（如 7d、28d、3mo）。"
     },
     "footer": {
       "copyright": "© ZenStats — 自托管分析平台。"

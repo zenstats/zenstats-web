@@ -1,3 +1,4 @@
+import { lazy } from "react";
 import type { RouteObject } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import Login from "@/pages/login/login";
@@ -8,8 +9,9 @@ import Sites from "@/pages/sites/sites";
 import NewSite from "@/pages/sites/new";
 import SiteInstallPage from "@/pages/sites/install";
 import SiteVerifyPage from "@/pages/sites/verify";
-import StatsPage from "@/pages/sites/stats/stats";
-import FunnelAnalysisPage from "@/pages/sites/funnel-analysis/funnel-analysis";
+// 重体积路由懒加载（recharts / react-grid-layout 等只在进入对应页面时加载，减小首屏包）
+const StatsPage = lazy(() => import("@/pages/sites/stats/stats"));
+const FunnelAnalysisPage = lazy(() => import("@/pages/sites/funnel-analysis/funnel-analysis"));
 import APIKeysPage from "@/pages/sites/apikeys/apikeys";
 import AccountSettingsPage from "@/pages/settings/account";
 import Setup from '@/pages/login/setup';
@@ -28,20 +30,20 @@ import TrafficAlertSettings from './pages/sites/settings/traffic-alert';
 import SharedLinksSettings from './pages/sites/settings/shared-links';
 import SegmentsSettings from './pages/sites/settings/segments';
 import PanelsSettings from './pages/sites/settings/panels';
-import ShareView from './pages/share/share-view';
-import DocsPage from './pages/docs/DocsPage';
+const ShareView = lazy(() => import('./pages/share/share-view'));
+const DocsPage = lazy(() => import('./pages/docs/DocsPage'));
 import ImportPage from './pages/sites/import/import';
 
-// Admin pages
+// Admin pages（后台仅管理员访问，整体懒加载）
 import AdminGuard from '@/components/admin-guard';
 import AdminLayout from './pages/admin/layout';
-import AdminDashboard from './pages/admin/dashboard';
-import AdminUsers from './pages/admin/users';
-import AdminGroups from './pages/admin/groups';
-import AdminSites from './pages/admin/sites';
-import AdminSources from './pages/admin/sources';
-import AdminEmailLogs from './pages/admin/email-logs';
-import AdminSettings from './pages/admin/settings';
+const AdminDashboard = lazy(() => import('./pages/admin/dashboard'));
+const AdminUsers = lazy(() => import('./pages/admin/users'));
+const AdminGroups = lazy(() => import('./pages/admin/groups'));
+const AdminSites = lazy(() => import('./pages/admin/sites'));
+const AdminSources = lazy(() => import('./pages/admin/sources'));
+const AdminEmailLogs = lazy(() => import('./pages/admin/email-logs'));
+const AdminSettings = lazy(() => import('./pages/admin/settings'));
 
 // User pages
 import Register from './pages/register/register';

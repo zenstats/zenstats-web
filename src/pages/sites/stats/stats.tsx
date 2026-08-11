@@ -180,6 +180,10 @@ export default function StatsPage() {
     { key: "p7", label: t('stats.period.last7Days'), separator: true },
     { key: "p14", label: t('stats.period.last14Days') },
     { key: "p30", label: t('stats.period.last30Days') },
+    { key: "month", label: t('stats.period.thisMonth'), separator: true },
+    { key: "6mo", label: t('stats.period.last6Months') },
+    { key: "12mo", label: t('stats.period.last12Months') },
+    { key: "year", label: t('stats.period.thisYear') },
   ], [t]);
 
   const CATEGORY_TABS = useMemo(() => [
@@ -271,6 +275,25 @@ export default function StatsPage() {
   // Parse current filters
   const activeFilters = useMemo(() => parseFilters(query.filters), [query.filters]);
 
+  // 存在事件专属过滤器（event:name/goal/props）时，会话指标（bounce_rate/visit_duration/views_per_visit）
+  // 无法按事件维度计算、会被后端剔除。若当前高亮的正是这类指标，回退到 visitors，
+  // 使图表与卡片一致，避免主图因指标被剔除而空白。
+  useEffect(() => {
+    const hasEventOnlyFilter = activeFilters.some(
+      (f) =>
+        f.dimension === "event:name" ||
+        f.dimension === "event:goal" ||
+        f.dimension.startsWith("event:props:"),
+    );
+    const isSessionMetric =
+      activeMetric === "bounce_rate" ||
+      activeMetric === "visit_duration" ||
+      activeMetric === "views_per_visit";
+    if (hasEventOnlyFilter && isSessionMetric) {
+      setActiveMetric("visitors");
+    }
+  }, [activeFilters, activeMetric]);
+
   // Get enabled dimensions grouped by category
   const enabledDimensions = useMemo(() => {
     return dimensions.filter((d: DimensionConfig) => d.enabled);
@@ -361,7 +384,8 @@ export default function StatsPage() {
   const fetchAllData = useCallback(() => {
     const q = qs.parse(window.location.search, { ignoreQueryPrefix: true });
     const period = [
-      "realtime", "day", "custom", "p7", "p14", "p30",
+      "realtime", "day", "yesterday", "custom", "p7", "p14", "p30",
+      "month", "6mo", "12mo", "year",
     ].includes(q.period as string)
       ? (q.period as string)
       : "day";
@@ -452,6 +476,10 @@ export default function StatsPage() {
     if (period === "p7") return 7;
     if (period === "p14") return 14;
     if (period === "p30") return 30;
+    if (period === "month") return dayjs().daysInMonth();
+    if (period === "6mo") return 180;
+    if (period === "12mo") return 365;
+    if (period === "year") return 365;
     if (period === "custom" && query.from && query.to) {
       return dayjs(query.to).diff(dayjs(query.from), "day") + 1;
     }

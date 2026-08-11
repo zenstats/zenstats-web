@@ -47,7 +47,9 @@ function buildRequest(cfg: CustomQueryConfig, base: StatsRequest): QueryV2Reques
     filters = ["and", valid.map((f) => [f.operator, f.property, [f.value.trim()]])];
   }
 
-  const dimensions = cfg.resultType === "breakdown" && cfg.property ? [cfg.property] : [];
+  const dimensions = cfg.resultType === "breakdown" && cfg.property
+    ? [cfg.property, cfg.property2].filter((d): d is string => !!d)
+    : [];
   const orderBy: [string, string][] = [];
   if (cfg.orderByMetric && cfg.orderByMetric !== "none") {
     orderBy.push([cfg.orderByMetric, cfg.orderByDir || "desc"]);

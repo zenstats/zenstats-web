@@ -46,6 +46,7 @@ const DIMENSION_TRANSLATION_KEYS: Record<string, string> = {
 
 const DIMENSION_DATA: Omit<DimensionConfig, "enabled" | "order" | "label">[] = [
   { key: "source", property: "visit:source", category: "traffic" },
+  { key: "channel", property: "visit:channel", category: "traffic" },
   { key: "medium", property: "visit:medium", category: "traffic" },
   { key: "utm_source", property: "event:utm_source", category: "traffic" },
   { key: "utm_medium", property: "event:utm_medium", category: "traffic" },

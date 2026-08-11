@@ -1,6 +1,6 @@
 # ZenStats Tracking Script
 
-The ZenStats tracking script is a lightweight (4–6KB depending on features selected) JavaScript snippet that tracks pageviews, engagement time, scroll depth, custom events, outbound links, file downloads, and form submissions. It supports any framework including React, Vue, Angular, and plain HTML.
+The ZenStats tracking script is a lightweight (~4–6 KB minified, ~2.5 KB gzipped depending on features selected) JavaScript snippet that tracks pageviews, engagement time, scroll depth, custom events, outbound links, file downloads, and form submissions. It supports any framework including React, Vue, Angular, and plain HTML.
 
 ## Table of Contents
 
@@ -61,9 +61,9 @@ script.{ex}.{fd}.{ha}.{ma}.{ol}.{te}.js   ← any combination, sorted alphabetic
 
 **Abbreviation key:** `ex` = exclusions, `fd` = file downloads, `ha` = hash routing, `ma` = manual URL, `ol` = outbound links, `te` = tagged events.
 
-### File sizes (brotli / minified)
+### File sizes (minified; ~2.5 KB gzipped)
 
-| Variant | Typical |
+| Variant | Minified |
 |---------|---------|
 | Bare (pageviews only) | ~4.1 KB |
 | Single feature | ~4.5–5.2 KB |
@@ -436,9 +436,12 @@ window.__zenstats = true  // bypass bot filtering during tests
   e: 15000,                   // engagement time in ms (engagement only)
   sd: 85,                     // scroll depth in % (engagement only)
   i: false,                   // interactive flag
-  h: 1                        // hash‑routing marker (Hash Routing feature)
+  h: 1,                       // hash‑routing marker (Hash Routing feature)
+  revenue: { amount: "49.99", currency: "USD" } // ecommerce revenue (optional)
 }
 ```
+
+**About `revenue` (ecommerce):** attach a `revenue` object to any event to record its monetary value. `amount` accepts a string or number, `currency` is an ISO 4217 code. Query it with the `total_revenue` / `average_revenue` metrics. The tracking script does not populate `revenue` automatically yet — post the event with the `revenue` field to `/api/event` from your server or checkout flow.
 
 **About `t` (client timestamp):** the tracker stamps each event with the client-side time (`new Date().toISOString()`) when the event occurs. Because events may be buffered client-side and flushed a moment later (see Batching below) or sent on page unload, this preserves the true event time. The server accepts `t` only when it is within the last hour and not in the future; otherwise it falls back to the server receive time. Omitting `t` (older tracker builds) also falls back to server time, so this is backward compatible.
 

@@ -1,6 +1,6 @@
 # ZenStats 追踪脚本
 
-ZenStats 追踪脚本是一个轻量级（根据所选功能 4–6KB）JavaScript 代码片段，可追踪页面浏览、停留时间、滚动深度、自定义事件、站外链接、文件下载和表单提交。支持 React、Vue、Angular 和纯 HTML 等所有框架。
+ZenStats 追踪脚本是一个轻量级（根据所选功能约 4–6 KB 压缩前、约 2.5 KB gzip 后）JavaScript 代码片段，可追踪页面浏览、停留时间、滚动深度、自定义事件、站外链接、文件下载和表单提交。支持 React、Vue、Angular 和纯 HTML 等所有框架。
 
 ## 目录
 

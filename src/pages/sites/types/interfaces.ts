@@ -208,6 +208,7 @@ export interface PanelLayout {
 export interface CustomQueryConfig {
   resultType: "breakdown" | "aggregate";
   property: string;
+  property2?: string; // 可选第二拆分维度（多维 breakdown）
   metrics: string[];
   filters: { property: string; operator: string; value: string }[];
   limit: number;
