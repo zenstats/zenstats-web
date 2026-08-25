@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import App from './App';
-import './i18n';
+import { i18nReady } from './i18n';
 
 // Mock mode: auto-login with fake user for preview (dev only, never enabled in production)
 if (import.meta.env.VITE_USE_MOCK === 'true') {
@@ -14,12 +14,14 @@ if (import.meta.env.VITE_USE_MOCK === 'true') {
     }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <BrowserRouter>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <App />
-      </ThemeProvider>
-    </BrowserRouter>
-  </StrictMode>,
-)
+i18nReady.then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <BrowserRouter>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <App />
+        </ThemeProvider>
+      </BrowserRouter>
+    </StrictMode>,
+  )
+})

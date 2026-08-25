@@ -1,5 +1,5 @@
 import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosRequestHeaders, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
-import useErrorStore from "@store/errorStore";
+import { toast } from "sonner";
 import qs from 'qs'
 import { getMockResponse } from './mock'
 import { clearAuthStorage } from './auth'
@@ -18,6 +18,18 @@ const ignoreMsgs = [
 ]
 
 let requestList: Array<() => void> = []
+
+// 同一错误文案在短时间内只提示一次：站点列表等页面会并发几十个请求，
+// 后端不可用时不应弹出几十个相同的 toast。
+const recentToasts = new Map<string, number>()
+const TOAST_DEDUPE_MS = 3000
+export function notifyError(message: string) {
+    const now = Date.now()
+    const last = recentToasts.get(message)
+    if (last && now - last < TOAST_DEDUPE_MS) return
+    recentToasts.set(message, now)
+    toast.error(message)
+}
 let isRefreshToken = false
 // 请求白名单，无须token的接口
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'; // Set VITE_USE_MOCK=true to enable mock mode
@@ -115,7 +127,7 @@ api.interceptors.request.use(
         return config
     },
     (error: AxiosError) => {
-        Promise.reject(error)
+        return Promise.reject(error)
     }
 )
 
@@ -206,20 +218,22 @@ api.interceptors.response.use(
         return response;
     },
     (error: AxiosError) => {
-        // HTTP 错误处理
-        const { setError } = useErrorStore.getState() as { setError: (msg: string) => void };
-        const errorMessage =
-            error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data
-                ? (error.response.data as { message: string }).message
-                : i18n.t('common.networkError');
-        setError(errorMessage);
-
+        // HTTP 层错误（网络断开 / 网关 5xx / 超时）：以前只写入一个无人消费的 store，
+        // 用户看到的是永远转圈的骨架屏；现在直接 toast 提示。主动取消的请求不提示。
+        if (error.code !== AxiosError.ERR_CANCELED) {
+            const errorMessage =
+                error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data
+                    ? (error.response.data as { message: string }).message
+                    : i18n.t('common.networkError');
+            notifyError(errorMessage);
+        }
         return Promise.reject(error);
     }
 );
 
+// 刷新令牌通过 POST body 发送，避免长效令牌进入网关/后端访问日志与浏览器历史
 const refreshToken = async () => {
-    return await api.get('/auth/refresh?refreshToken=' + localStorage.getItem('refreshToken'))
+    return await api.post('/auth/refresh', { refresh_token: localStorage.getItem('refreshToken') })
 }
 
 const handleAuthorized = () => {
@@ -235,14 +249,12 @@ const handleAuthorized = () => {
 }
 
 const handleForbidden = () => {
-    const { setError } = useErrorStore.getState() as { setError: (msg: string) => void };
-    setError(i18n.t('common.unauthorized'));
+    notifyError(i18n.t('common.unauthorized'));
     return Promise.reject(new Error(i18n.t('common.unauthorized')));
 }
 
 const handleError = () => {
-    const { setError } = useErrorStore.getState() as { setError: (msg: string) => void };
-    setError(i18n.t('common.serverError'));
+    notifyError(i18n.t('common.serverError'));
     return Promise.reject(new Error(i18n.t('common.serverError')));
 }
 

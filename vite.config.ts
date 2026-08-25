@@ -37,6 +37,10 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
       },
+      // 强制所有依赖（react-router-dom / recharts / radix 等）使用项目根下的同一份 React。
+      // 曾出现 pnpm 目录中 react-router-dom 携带独立 react 副本的情况，导致 dev 下
+      // "Invalid hook call / useRef of null" 白屏；dedupe 让这类安装异常不再影响运行。
+      dedupe: ["react", "react-dom"],
     },
     build: {
       rollupOptions: {

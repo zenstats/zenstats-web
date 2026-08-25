@@ -309,7 +309,7 @@ export default function APIKeysPage() {
                         {apiKey.name}
                       </h3>
                     </div>
-                    <div className="mt-1 flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
                       <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
                         {apiKey.key_preview}
                       </code>

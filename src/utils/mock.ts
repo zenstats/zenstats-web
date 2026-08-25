@@ -89,9 +89,9 @@ const mockSiteList = {
   code: 200,
   message: "success",
   data: [
-    { id: 1, domain: "example.com", remark: "Example Site", role: "admin", timezone: "Asia/Shanghai" },
-    { id: 2, domain: "blog.example.com", remark: "Blog", role: "viewer", timezone: "Asia/Shanghai" },
-    { id: 3, domain: "docs.example.com", remark: "Docs", role: "owner", timezone: "Asia/Shanghai" },
+    { id: 1, domain: "example.com", remark: "Example Site", role: "admin", timezone: "Asia/Shanghai", is_verified: true },
+    { id: 2, domain: "blog.example.com", remark: "Blog", role: "viewer", timezone: "Asia/Shanghai", is_verified: false },
+    { id: 3, domain: "docs.example.com", remark: "Docs", role: "owner", timezone: "Asia/Shanghai", is_verified: true },
   ],
 };
 

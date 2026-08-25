@@ -22,6 +22,7 @@ import { useEffect, useState, useCallback } from "react";
 import axios, { type BaseResponse } from "@utils/axios";
 import { isSubAccount } from "@utils/auth";
 import SiteSparkline from "@/components/SiteSparkline";
+import { preloadStats } from "@/lib/route-preload";
 import TodaySiteStats from "./components/today-stats";
 import type { Site } from "./types/interfaces";
 
@@ -64,6 +65,17 @@ export default function Sites() {
     fetchSites();
   }, [fetchSites]);
 
+  // 站点列表之后几乎必然进入统计页：在浏览器空闲时预取 stats chunk（含 recharts），
+  // 点击卡片时无需再等待脚本下载。
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(() => { void preloadStats(); });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(() => { void preloadStats(); }, 1500);
+    return () => window.clearTimeout(id);
+  }, []);
+
   const goToSite = (site: Site) =>
     navigate(site.is_verified ? `/sites/${site.domain}/stats` : `/sites/${site.domain}/verify`);
 
@@ -78,12 +90,12 @@ export default function Sites() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <Input
             placeholder={t("sites.searchPlaceholder")}
             value={searchQuery}
-            className="bg-white dark:bg-gray-900 w-64"
+            className="bg-white dark:bg-gray-900 w-full sm:w-64"
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">

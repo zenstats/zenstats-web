@@ -52,7 +52,8 @@ export default function CurrentVisitors({ query, api }: CurrentVisitorsProps) {
         >
           {data.total}
         </span>
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        {/* 文案在窄屏隐藏（只保留绿点 + 数字），否则会被挤成竖排逐字换行 */}
+        <span className="hidden sm:inline whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
           {t('stats.currentVisitors')}
         </span>
       </div>

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom"
+import { clearAuthStorage } from "@/utils/auth"
 import { useTranslation } from 'react-i18next'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,11 +10,7 @@ export default function VerifyEmailSuccess() {
   const navigate = useNavigate()
 
   const handleGoToLogin = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("refreshToken")
-    localStorage.removeItem("name")
-    localStorage.removeItem("email")
-    localStorage.removeItem("is_admin")
+    clearAuthStorage()
     localStorage.removeItem("email_verified")
     navigate("/login")
   }

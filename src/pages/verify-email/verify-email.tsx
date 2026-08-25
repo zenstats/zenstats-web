@@ -24,7 +24,7 @@ export default function VerifyEmail() {
     // This page is shown after the user clicks the link in their email
     // The backend will redirect to /verify-email-success after verification
     // But since we're an SPA, we need to call the API directly
-    axios.get(`/auth/verify-email?token=${token}`)
+    axios.get(`/auth/verify-email?token=${encodeURIComponent(token)}`)
       .then(() => {
         setStatus("success")
         setTimeout(() => {

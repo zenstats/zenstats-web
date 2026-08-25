@@ -79,16 +79,12 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
     }
   }, [api, query, localInterval, currentMetric]);
 
-  useEffect(() => {
-    if (query.refresh !== undefined) {
-      fetchData();
-    }
-  }, [fetchData, query.refresh]);
-
-  // Also refetch when local interval or metric changes
+  // fetchData 的依赖已包含 query（含 refresh）、localInterval、currentMetric，
+  // 用单个 effect 即可覆盖"父组件刷新 / 切换区间 / 切换指标"三种触发；
+  // 之前两个 effect 会在挂载与每次切换时各发一次相同请求。
   useEffect(() => {
     fetchData();
-  }, [localInterval, currentMetric]);
+  }, [fetchData]);
 
   // Transform data for recharts: [{timestamp, metrics: {visitors, pageviews}}] → [{time, value, compareValue}]
   const compKey = `${currentMetric}_comparison`;

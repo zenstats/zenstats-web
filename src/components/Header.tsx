@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { clearAuthStorage } from "@/utils/auth";
+import { changeLanguage } from "@/i18n";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -48,10 +50,7 @@ const useUser = () => {
 
   const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem("email");
-    localStorage.removeItem("name");
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
+    clearAuthStorage();
     navigate("/login");
   }, [navigate]);
 
@@ -513,8 +512,7 @@ export default function Header() {
               <button
                 className="w-full flex items-center gap-2.5 py-2 px-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
                 onClick={() => {
-                  i18n.changeLanguage(i18n.language === 'zh-CN' ? 'en' : 'zh-CN');
-                  localStorage.setItem('zenstats-language', i18n.language === 'zh-CN' ? 'en' : 'zh-CN');
+                  void changeLanguage(i18n.language === 'zh-CN' ? 'en' : 'zh-CN');
                 }}
               >
                 <Globe className="h-4 w-4 text-gray-500" />

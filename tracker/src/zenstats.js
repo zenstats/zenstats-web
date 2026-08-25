@@ -1,6 +1,10 @@
 (function(){
   'use strict';
 
+  // Double-load guard: must run before ANY listener is registered below, otherwise a second
+  // <script> include would attach duplicate load/scroll/click/beforeunload handlers.
+  if (window.zenstats && window.zenstats.l) return
+
   var location = window.location
   var document = window.document
   var scriptEl = document.currentScript || {};
@@ -9,8 +13,12 @@
   var dataDomain = scriptEl.getAttribute && scriptEl.getAttribute('data-domain')
 
   function defaultEndpoint() {
-    var src = scriptEl.src || ''
-    return new URL(src).origin + '/api/event'
+    // document.currentScript can be null (module/async/inline bundling); never throw in the host page.
+    try {
+      return new URL(scriptEl.src || '').origin + '/api/event'
+    } catch (e) {
+      return location.origin + '/api/event'
+    }
   }
 
   function onIgnoredEvent(eventName, reason, options) {
@@ -216,10 +224,11 @@
     {{/if}}
 
     {{#if (any COMPILE_OUTBOUND_LINKS COMPILE_FILE_DOWNLOADS)}}
-    var hrefWO = foundLink && typeof foundLink.href === 'string' && foundLink.href.split('?')[0]
+    // href without fragment / query string (privacy: tokens in outbound URLs are not reported)
+    var hrefWO = foundLink && typeof foundLink.href === 'string' && foundLink.href.split('#')[0].split('?')[0]
     {{/if}}
     {{#if COMPILE_OUTBOUND_LINKS}}
-    if (foundLink && isOutboundLink(foundLink)) return trigger('Outbound Link: Click', { props: { url: foundLink.href } })
+    if (foundLink && isOutboundLink(foundLink)) return trigger('Outbound Link: Click', { props: { url: hrefWO } })
     {{/if}}
     {{#if COMPILE_FILE_DOWNLOADS}}
     if (hrefWO && isDownloadToTrack(hrefWO)) return trigger('File Download', { props: { url: hrefWO } })
@@ -380,8 +389,7 @@
     }
   }
 
-  // Initialize (guard against double-load)
-  if (window.zenstats && window.zenstats.l) return
+  // Initialize (double-load guard is at the top of this IIFE)
   var queue = (window.zenstats && window.zenstats.q) || []
   window.zenstats = trigger
   window.zenstats.l = true

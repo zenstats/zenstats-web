@@ -1,42 +1,55 @@
 import { lazy } from "react";
 import type { RouteObject } from "react-router-dom";
 import { Navigate } from "react-router-dom";
+
+// ---- 首屏（冷启动）必需的页面保持同步导入：未登录 → 登录页；已登录 → 站点列表 ----
 import Login from "@/pages/login/login";
-import SubLogin from "@/pages/login/sub-login";
-import ForgotPassword from "@/pages/login/forgot-password";
-import ResetPassword from "@/pages/login/reset-password";
 import Sites from "@/pages/sites/sites";
-import NewSite from "@/pages/sites/new";
-import SiteInstallPage from "@/pages/sites/install";
-import SiteVerifyPage from "@/pages/sites/verify";
-// 重体积路由懒加载（recharts / react-grid-layout 等只在进入对应页面时加载，减小首屏包）
-const StatsPage = lazy(() => import("@/pages/sites/stats/stats"));
-const FunnelAnalysisPage = lazy(() => import("@/pages/sites/funnel-analysis/funnel-analysis"));
-import APIKeysPage from "@/pages/sites/apikeys/apikeys";
-import AccountSettingsPage from "@/pages/settings/account";
-import Setup from '@/pages/login/setup';
 import NotFoundPage from '@/pages/404';
-import LandingPage from '@/pages/landing/LandingPage';
-import SettingsLayout from './pages/sites/settings/layout';
-import { SettingsGeneralForm } from './pages/sites/settings/general-form';
-import SettingShieldsIpAddress from './pages/sites/settings/shields/ip_address';
-import SettingShieldsHostname from './pages/sites/settings/shields/hostname';
-import SettingShieldsCountries from './pages/sites/settings/shields/countries';
-import SettingShieldsReferrer from './pages/sites/settings/shields/referrer';
-import GoalsSettings from './pages/sites/settings/goals';
-import FunnelsSettings from './pages/sites/settings/funnels';
-import EmailReportsSettings from './pages/sites/settings/email-reports';
-import TrafficAlertSettings from './pages/sites/settings/traffic-alert';
-import SharedLinksSettings from './pages/sites/settings/shared-links';
-import SegmentsSettings from './pages/sites/settings/segments';
-import PanelsSettings from './pages/sites/settings/panels';
+import EmailGuard from '@/components/email-guard';
+import AdminGuard from '@/components/admin-guard';
+import RootRedirect from '@/components/root-redirect';
+import { preloadStats } from '@/lib/route-preload';
+
+// ---- 其余页面全部按路由懒加载 ----
+// 之前 13 个站点设置页、导入页（583 行）、API Key、账号/用户页、注册与验证页都在首屏 index 块里，
+// 而绝大多数会话只会访问其中 0-1 个。懒加载后首屏只包含 login/sites 两条路径的代码。
+// 导出 preload* 供列表页在空闲时预取下一步最可能进入的页面（见 sites.tsx）。
+const StatsPage = lazy(preloadStats);
+const FunnelAnalysisPage = lazy(() => import("@/pages/sites/funnel-analysis/funnel-analysis"));
 const ShareView = lazy(() => import('./pages/share/share-view'));
 const DocsPage = lazy(() => import('./pages/docs/DocsPage'));
-import ImportPage from './pages/sites/import/import';
+
+const SubLogin = lazy(() => import("@/pages/login/sub-login"));
+const ForgotPassword = lazy(() => import("@/pages/login/forgot-password"));
+const ResetPassword = lazy(() => import("@/pages/login/reset-password"));
+const Setup = lazy(() => import('@/pages/login/setup'));
+const Register = lazy(() => import('./pages/register/register'));
+
+const NewSite = lazy(() => import("@/pages/sites/new"));
+const SiteInstallPage = lazy(() => import("@/pages/sites/install"));
+const SiteVerifyPage = lazy(() => import("@/pages/sites/verify"));
+const ImportPage = lazy(() => import('./pages/sites/import/import'));
+const APIKeysPage = lazy(() => import("@/pages/sites/apikeys/apikeys"));
+const AccountSettingsPage = lazy(() => import("@/pages/settings/account"));
+
+// 站点设置：布局与各表单共用一个 chunk（进入任一设置页即整体加载，页内切换无二次等待）
+const SettingsLayout = lazy(() => import('./pages/sites/settings/layout'));
+const SettingsGeneralForm = lazy(() => import('./pages/sites/settings/general-form').then(m => ({ default: m.SettingsGeneralForm })));
+const SettingShieldsIpAddress = lazy(() => import('./pages/sites/settings/shields/ip_address'));
+const SettingShieldsHostname = lazy(() => import('./pages/sites/settings/shields/hostname'));
+const SettingShieldsCountries = lazy(() => import('./pages/sites/settings/shields/countries'));
+const SettingShieldsReferrer = lazy(() => import('./pages/sites/settings/shields/referrer'));
+const GoalsSettings = lazy(() => import('./pages/sites/settings/goals'));
+const FunnelsSettings = lazy(() => import('./pages/sites/settings/funnels'));
+const EmailReportsSettings = lazy(() => import('./pages/sites/settings/email-reports'));
+const TrafficAlertSettings = lazy(() => import('./pages/sites/settings/traffic-alert'));
+const SharedLinksSettings = lazy(() => import('./pages/sites/settings/shared-links'));
+const SegmentsSettings = lazy(() => import('./pages/sites/settings/segments'));
+const PanelsSettings = lazy(() => import('./pages/sites/settings/panels'));
 
 // Admin pages（后台仅管理员访问，整体懒加载）
-import AdminGuard from '@/components/admin-guard';
-import AdminLayout from './pages/admin/layout';
+const AdminLayout = lazy(() => import('./pages/admin/layout'));
 const AdminDashboard = lazy(() => import('./pages/admin/dashboard'));
 const AdminUsers = lazy(() => import('./pages/admin/users'));
 const AdminGroups = lazy(() => import('./pages/admin/groups'));
@@ -46,25 +59,14 @@ const AdminEmailLogs = lazy(() => import('./pages/admin/email-logs'));
 const AdminSettings = lazy(() => import('./pages/admin/settings'));
 
 // User pages
-import Register from './pages/register/register';
-import UserSources from './pages/user/sources';
-import UserSubAccounts from './pages/user/sub-accounts';
-import UserQuota from './pages/user/quota';
+const UserSources = lazy(() => import('./pages/user/sources'));
+const UserSubAccounts = lazy(() => import('./pages/user/sub-accounts'));
+const UserQuota = lazy(() => import('./pages/user/quota'));
 
 // Verification pages
-import VerifyEmail from './pages/verify-email/verify-email';
-import VerifyEmailSuccess from './pages/verify-email/verify-email-success';
-import PendingVerification from './pages/pending-verification';
-import EmailGuard from '@/components/email-guard';
-
-// Root redirect component: show landing page for guests, dashboard for logged-in users
-function RootRedirect() {
-  const token = localStorage.getItem("token");
-  if (token) {
-    return <Navigate to="/sites" replace />;
-  }
-  return <LandingPage />;
-}
+const VerifyEmail = lazy(() => import('./pages/verify-email/verify-email'));
+const VerifyEmailSuccess = lazy(() => import('./pages/verify-email/verify-email-success'));
+const PendingVerification = lazy(() => import('./pages/pending-verification'));
 
 const routes: RouteObject[] = [
   {

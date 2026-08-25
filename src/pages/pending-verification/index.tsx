@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { clearAuthStorage } from "@/utils/auth"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from 'react-i18next'
 import { Button } from "@/components/ui/button"
@@ -61,11 +62,7 @@ export default function PendingVerification() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("refreshToken")
-    localStorage.removeItem("name")
-    localStorage.removeItem("email")
-    localStorage.removeItem("is_admin")
+    clearAuthStorage()
     localStorage.removeItem("email_verified")
     navigate("/login")
   }

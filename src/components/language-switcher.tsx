@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { changeLanguage } from '@/i18n';
 
 const languages = [
   { code: 'en', label: 'English', flag: '🇺🇸' },
@@ -19,8 +20,7 @@ export default function LanguageSwitcher() {
   const currentLang = languages.find((l) => l.code === i18n.language) || languages[0];
 
   const handleLanguageChange = (code: string) => {
-    i18n.changeLanguage(code);
-    localStorage.setItem('zenstats-language', code);
+    void changeLanguage(code);
   };
 
   return (

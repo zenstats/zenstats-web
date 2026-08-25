@@ -774,8 +774,8 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
-        {/* Header bar */}
-        <div className="flex items-center justify-between mb-4">
+        {/* Header bar：窄屏下允许控件换行到第二行，避免整页横向滚动 */}
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mb-4">
           {/* Domain selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -825,7 +825,7 @@ export default function StatsPage() {
           </DropdownMenu>
 
           {/* Right side controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Current visitors */}
             <CurrentVisitorsComponent
               domain={domain!}

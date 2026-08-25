@@ -53,7 +53,7 @@ export default function AdminUsers() {
         params: { page, page_size: 20 }
       })
       if (data.code === 200) {
-        setUsers(data.data.users)
+        setUsers(data.data.users ?? [])
         setTotalCount(data.data.total_count)
       }
     } catch {
@@ -67,7 +67,7 @@ export default function AdminUsers() {
     try {
       const { data } = await axios.get<BaseResponse<{ groups: AdminGroup[] }>>("/admin/groups")
       if (data.code === 200) {
-        setGroups(data.data.groups)
+        setGroups(data.data.groups ?? [])
       }
     } catch {
       toast.error(t('admin.usersPage.loadGroupsFailed'))
