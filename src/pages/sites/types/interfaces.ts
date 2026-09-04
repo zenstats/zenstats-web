@@ -250,6 +250,8 @@ export interface CreateGoalRequest {
 
 // Funnel types
 export interface FunnelStep {
+  step_id?: number;
+  parent_step_id?: number | null; // 树形：父步骤 ID；根为空
   step_order: number;
   goal_id: number;
   goal_name: string;
@@ -273,7 +275,8 @@ export interface FunnelDetail {
 
 export interface CreateFunnelRequest {
   name: string;
-  steps: { goal_id: number }[];
+  // parent 为父步骤在 steps 数组中的下标（必须更早）；省略时下标0为根、其余接上一步（线性）
+  steps: { goal_id: number; parent?: number }[];
 }
 
 // Funnel Analysis types
@@ -285,8 +288,21 @@ export interface FunnelStepResult {
   conversion_rate: number;
 }
 
+// 树形节点结果：按根→节点完整路径统计，转化率相对父节点
+export interface FunnelNodeResult {
+  step_id: number;
+  parent_step_id?: number | null;
+  step_order: number;
+  goal_name: string;
+  visitors: number;
+  drop_off: number;
+  conversion_rate: number;
+  is_root: boolean;
+}
 export interface FunnelAnalysisResult {
   total_visitors: number;
   steps: FunnelStepResult[];
   conversion_rate: number;
+  // 树形视图数据：每个节点带 step_id/parent_step_id，据此重建多层树
+  nodes?: FunnelNodeResult[];
 }

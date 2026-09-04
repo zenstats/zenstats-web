@@ -955,7 +955,13 @@
       "delete": "Delete",
       "needAtLeast2Goals": "You need at least 2 goals to create a funnel.",
       "createGoalsFirst": "Create goals first",
-      "stepCount": "{{count}} steps"
+      "stepCount": "{{count}} steps",
+      "previewTitle": "Structure preview",
+      "linearFunnel": "Linear funnel",
+      "treeFunnel": "Tree funnel",
+      "dragHint": "Drag a node onto another to make it a child of that node.",
+      "previewUnselected": "(select a goal)",
+      "previewRootHint": "Start node (fixed)"
     },
     "shields": {
       "ip": {
@@ -1236,7 +1242,20 @@
       "visitors": "Visitors",
       "dropOff": "Drop-off",
       "conversion": "Conversion"
-    }
+    },
+    "viewFunnel": "Funnel",
+    "viewTree": "Tree",
+    "treeRoot": "Start",
+    "treeDescription": "Conversion from the first step to each later event independently — compare where visitors from the same page go.",
+    "treeRateHint": "Conversion relative to the parent step",
+    "branches": "Branches",
+    "nodes": "Nodes",
+    "parentStep": "Parent step",
+    "conversionFromParent": "Conv. from parent",
+    "treeShareOfRoot": "{{pct}}% of start",
+    "treeEdgeOf": "of {{parent}}",
+    "treeDropOff": "{{n}} dropped off",
+    "treeLegend": "Percentage on each edge = conversion from the parent step (base named). \"of start\" inside a node = share of the start node, shown from the 3rd level where it differs from the parent rate."
   },
   "error": {
     "notFound": "Page not found",

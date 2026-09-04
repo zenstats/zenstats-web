@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -43,6 +43,7 @@ import type {
   FunnelAnalysisResult,
 } from "../types/interfaces";
 import FunnelVisualization from "./components/funnel-visualization";
+import FunnelTree, { flattenTreeDfs, isTreeFunnel } from "./components/funnel-tree";
 
 const PERIOD_OPTIONS = [
   { key: "day", labelKey: "funnelAnalysis.period.today" },
@@ -62,6 +63,20 @@ export default function FunnelAnalysisPage() {
   const [selectedFunnelId, setSelectedFunnelId] = useState<number | null>(null);
   const [funnelDetail, setFunnelDetail] = useState<FunnelDetail | null>(null);
   const [analysisResult, setAnalysisResult] = useState<FunnelAnalysisResult | null>(null);
+  const [funnelView, setFunnelView] = useState<"funnel" | "tree">("funnel");
+
+  // 树形感知的派生数据：是否分叉、按树 DFS 顺序展开的节点（明细表用，消除"按添加顺序"的歧义）
+  const treeNodes = analysisResult?.nodes ?? [];
+  const isTree = useMemo(() => isTreeFunnel(treeNodes), [treeNodes]);
+  const dfsNodes = useMemo(() => flattenTreeDfs(treeNodes), [treeNodes]);
+  const leafCount = useMemo(
+    () => treeNodes.filter((n) => !treeNodes.some((c) => c.parent_step_id === n.step_id)).length,
+    [treeNodes],
+  );
+  // 分叉漏斗下线性视图有歧义，默认切到树形
+  useEffect(() => {
+    if (isTree) setFunnelView("tree");
+  }, [isTree]);
 
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
@@ -291,16 +306,19 @@ export default function FunnelAnalysisPage() {
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardDescription>{t('funnelAnalysis.conversionRate')}</CardDescription>
+                    {/* 线性：整体转化率（末步/根）。树形：末步无意义，改显示分支（叶）数 */}
+                    <CardDescription>
+                      {isTree ? t('funnelAnalysis.branches') : t('funnelAnalysis.conversionRate')}
+                    </CardDescription>
                     <CardTitle className="text-2xl flex items-center gap-2">
                       <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                      {analysisResult.conversion_rate.toFixed(1)}%
+                      {isTree ? leafCount : `${analysisResult.conversion_rate.toFixed(1)}%`}
                     </CardTitle>
                   </CardHeader>
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardDescription>{t('funnelAnalysis.steps')}</CardDescription>
+                    <CardDescription>{isTree ? t('funnelAnalysis.nodes') : t('funnelAnalysis.steps')}</CardDescription>
                     <CardTitle className="text-2xl">
                       {analysisResult.steps.length}
                     </CardTitle>
@@ -312,10 +330,31 @@ export default function FunnelAnalysisPage() {
             {/* Funnel visualization */}
             <Card>
               <CardHeader>
-                <CardTitle>{t('funnelAnalysis.funnelVisualization')}</CardTitle>
-                <CardDescription>
-                  {t('funnelAnalysis.visualizationDescription')}
-                </CardDescription>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle>{t('funnelAnalysis.funnelVisualization')}</CardTitle>
+                    <CardDescription>
+                      {funnelView === "tree"
+                        ? t('funnelAnalysis.treeDescription')
+                        : t('funnelAnalysis.visualizationDescription')}
+                    </CardDescription>
+                  </div>
+                  {/* 视图切换：漏斗（线性时序）/ 树形（同一起点分支到各事件） */}
+                  <div className="inline-flex rounded-md border border-border p-0.5 text-xs shrink-0">
+                    <button
+                      onClick={() => setFunnelView("funnel")}
+                      className={`px-3 py-1 rounded ${funnelView === "funnel" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      {t('funnelAnalysis.viewFunnel')}
+                    </button>
+                    <button
+                      onClick={() => setFunnelView("tree")}
+                      className={`px-3 py-1 rounded ${funnelView === "tree" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      {t('funnelAnalysis.viewTree')}
+                    </button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {analyzing ? (
@@ -324,6 +363,11 @@ export default function FunnelAnalysisPage() {
                       <Skeleton key={i} className="h-16 w-full" />
                     ))}
                   </div>
+                ) : funnelView === "tree" && analysisResult?.nodes ? (
+                  <FunnelTree
+                    nodes={analysisResult.nodes}
+                    totalVisitors={analysisResult.total_visitors}
+                  />
                 ) : analysisResult?.steps ? (
                   <FunnelVisualization
                     steps={analysisResult.steps}
@@ -352,34 +396,44 @@ export default function FunnelAnalysisPage() {
                       <Skeleton key={i} className="h-12 w-full" />
                     ))}
                   </div>
-                ) : analysisResult?.steps ? (
+                ) : dfsNodes.length > 0 ? (
+                  /* 明细按树 DFS 顺序（根→子→孙）排列并缩进，流失/转化均相对父节点，避免"按添加顺序"的歧义 */
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-[60px]">{t('funnelAnalysis.step')}</TableHead>
                         <TableHead>{t('funnelAnalysis.goal')}</TableHead>
+                        <TableHead>{t('funnelAnalysis.parentStep')}</TableHead>
                         <TableHead className="text-right">{t('funnelAnalysis.visitors')}</TableHead>
                         <TableHead className="text-right">{t('funnelAnalysis.dropOff')}</TableHead>
-                        <TableHead className="text-right">{t('funnelAnalysis.conversion')}</TableHead>
+                        <TableHead className="text-right">{t('funnelAnalysis.conversionFromParent')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {analysisResult.steps.map((step) => (
-                        <TableRow key={step.step_order}>
+                      {dfsNodes.map(({ node, depth, parentName }) => (
+                        <TableRow key={node.step_id}>
                           <TableCell>
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
-                              {step.step_order}
+                            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium ${node.is_root ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                              {node.step_order}
                             </span>
                           </TableCell>
-                          <TableCell className="font-medium">{step.goal_name}</TableCell>
+                          <TableCell className="font-medium">
+                            <span style={{ paddingLeft: `${depth * 20}px` }} className="inline-flex items-center gap-1.5">
+                              {depth > 0 && <span className="text-muted-foreground">└</span>}
+                              {node.goal_name}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {node.is_root ? t('funnelAnalysis.treeRoot') : parentName ?? "-"}
+                          </TableCell>
                           <TableCell className="text-right font-mono">
-                            {step.visitors.toLocaleString()}
+                            {node.visitors.toLocaleString()}
                           </TableCell>
                           <TableCell className="text-right font-mono text-red-500">
-                            {step.drop_off > 0 ? `-${step.drop_off.toLocaleString()}` : "-"}
+                            {!node.is_root && node.drop_off > 0 ? `-${node.drop_off.toLocaleString()}` : "-"}
                           </TableCell>
                           <TableCell className="text-right font-mono">
-                            {step.conversion_rate.toFixed(1)}%
+                            {node.is_root ? "-" : `${node.conversion_rate.toFixed(1)}%`}
                           </TableCell>
                         </TableRow>
                       ))}

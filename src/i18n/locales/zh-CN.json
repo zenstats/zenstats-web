@@ -955,7 +955,13 @@
       "delete": "删除",
       "needAtLeast2Goals": "创建漏斗至少需要 2 个目标。",
       "createGoalsFirst": "请先创建目标",
-      "stepCount": "{{count}} 个步骤"
+      "stepCount": "{{count}} 个步骤",
+      "previewTitle": "结构预览",
+      "linearFunnel": "线性漏斗",
+      "treeFunnel": "树形漏斗",
+      "dragHint": "把节点拖到另一个节点上，即可挂到它下面。",
+      "previewUnselected": "（请选择目标）",
+      "previewRootHint": "起点（固定）"
     },
     "shields": {
       "ip": {
@@ -1236,7 +1242,20 @@
       "visitors": "访客",
       "dropOff": "流失",
       "conversion": "转化"
-    }
+    },
+    "viewFunnel": "漏斗",
+    "viewTree": "树形",
+    "treeRoot": "起点",
+    "treeDescription": "从第一步独立统计到各后续事件的转化——对比同一页面的访客都去做了哪些事件。",
+    "treeRateHint": "相对父步骤的转化率",
+    "branches": "分支数",
+    "nodes": "节点数",
+    "parentStep": "父步骤",
+    "conversionFromParent": "相对父转化",
+    "treeShareOfRoot": "占起点 {{pct}}%",
+    "treeEdgeOf": "相对 {{parent}}",
+    "treeDropOff": "流失 {{n}}",
+    "treeLegend": "边上的百分比 = 相对父步骤的转化率（已标明基准）;节点内「占起点」= 相对起点的占比，仅从第 3 层起显示（第 2 层与相对父相同）。"
   },
   "error": {
     "notFound": "页面未找到",

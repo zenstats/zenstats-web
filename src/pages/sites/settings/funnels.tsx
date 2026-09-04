@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import FunnelBuilderPreview, { canReparent } from "./funnel-builder-preview";
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Filter, ChevronRight, GripVertical, BarChart3 } from "lucide-react";
 import axios, { type BaseResponse } from "@utils/axios";
@@ -48,6 +49,8 @@ export default function FunnelsSettings() {
   // Form state
   const [funnelName, setFunnelName] = useState("");
   const [selectedGoals, setSelectedGoals] = useState<number[]>([]);
+  // 每步的父步骤下标（-1 = 根）。默认接上一步（线性）；可改为任意更早步骤以构建多层树形漏斗。
+  const [stepParents, setStepParents] = useState<number[]>([]);
 
   const fetchData = useCallback(async () => {
     if (!domain) return;
@@ -88,7 +91,19 @@ export default function FunnelsSettings() {
     try {
       const body: CreateFunnelRequest = {
         name: funnelName.trim(),
-        steps: selectedGoals.map((goalId) => ({ goal_id: goalId })),
+        // 按树 DFS（根→子→孙）重排后提交：保证父先于子插入（后端约束），
+        // 同时让步骤编号跟随树结构而非添加顺序；拖拽重挂载后也能正确提交。
+        steps: (() => {
+          const kids = (p: number) => stepParents.map((sp, i) => (sp === p ? i : -1)).filter((i) => i >= 0);
+          const order: number[] = [];
+          const walk = (i: number) => { order.push(i); kids(i).forEach(walk); };
+          stepParents.forEach((p, i) => { if (p === -1) walk(i); });
+          const pos = new Map(order.map((idx, k) => [idx, k]));
+          return order.map((idx) => {
+            const p = stepParents[idx];
+            return p >= 0 ? { goal_id: selectedGoals[idx], parent: pos.get(p)! } : { goal_id: selectedGoals[idx] };
+          });
+        })(),
       };
 
       await axios.post<BaseResponse<Funnel>>(`/sites/${domain}/funnels`, body);
@@ -121,6 +136,7 @@ export default function FunnelsSettings() {
   const resetForm = () => {
     setFunnelName("");
     setSelectedGoals([]);
+    setStepParents([]);
   };
 
   const openCreateDialog = () => {
@@ -134,7 +150,10 @@ export default function FunnelsSettings() {
       toast.error(t('settings.funnels.maxSteps'));
       return;
     }
+    const newIndex = selectedGoals.length;
     setSelectedGoals([...selectedGoals, 0]);
+    // 新步骤默认接上一步（线性）；第一个为根
+    setStepParents([...stepParents, newIndex === 0 ? -1 : newIndex - 1]);
   };
 
   const removeStep = (index: number) => {
@@ -142,7 +161,14 @@ export default function FunnelsSettings() {
       toast.error(t('settings.funnels.stepsRequired'));
       return;
     }
+    const removedParent = stepParents[index] ?? -1;
     setSelectedGoals(selectedGoals.filter((_, i) => i !== index));
+    // 被删节点的子节点接到其父；更晚的下标整体前移
+    setStepParents(
+      stepParents
+        .filter((_, i) => i !== index)
+        .map((p) => (p === index ? removedParent : p > index ? p - 1 : p)),
+    );
   };
 
   const updateStep = (index: number, goalId: number) => {
@@ -150,6 +176,15 @@ export default function FunnelsSettings() {
     newGoals[index] = goalId;
     setSelectedGoals(newGoals);
   };
+
+  const updateParent = (index: number, parentIdx: number) => {
+    const next = [...stepParents];
+    next[index] = parentIdx;
+    setStepParents(next);
+  };
+
+  const goalNameOf = (goalId: number) =>
+    goals.find((g) => g.id === goalId)?.display_name ?? `#${goalId}`;
 
   const openAnalysis = (funnelId: number) => {
     if (domain) {
@@ -284,6 +319,14 @@ export default function FunnelsSettings() {
                   {t('settings.funnels.stepsHint')}
                 </p>
 
+                {/* 实时结构预览：自动标注线性/树形，节点可拖到另一节点上重新挂载 */}
+                <FunnelBuilderPreview
+                  goals={goals}
+                  selectedGoals={selectedGoals}
+                  stepParents={stepParents}
+                  onReparent={updateParent}
+                />
+
                 <div className="space-y-2 mt-3">
                   {selectedGoals.map((goalId, index) => (
                     <div key={index} className="flex items-center gap-2">
@@ -291,6 +334,27 @@ export default function FunnelsSettings() {
                         {index + 1}
                       </span>
                       <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+                      {/* 父步骤选择：构建树形漏斗（默认接上一步 = 线性） */}
+                      {index > 0 && (
+                        <Select
+                          value={String(stepParents[index] ?? index - 1)}
+                          onValueChange={(v) => updateParent(index, parseInt(v))}
+                        >
+                          <SelectTrigger className="w-[150px] shrink-0 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {/* 与拖拽同一规则：可挂到任意不成环的节点下 */}
+                            {selectedGoals.map((gid, j) =>
+                              canReparent(stepParents, index, j) ? (
+                                <SelectItem key={j} value={String(j)}>
+                                  ← #{j + 1} {goalNameOf(gid)}
+                                </SelectItem>
+                              ) : null,
+                            )}
+                          </SelectContent>
+                        </Select>
+                      )}
                       <Select
                         value={goalId.toString()}
                         onValueChange={(v) => updateStep(index, parseInt(v))}
