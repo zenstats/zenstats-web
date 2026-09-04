@@ -1497,23 +1497,66 @@
       },
       "trackingScript": {
         "description": "在每个需要追踪的页面添加一个 <script> 标签，默认不设置 Cookie。",
-        "note": "将 example.com 替换为在 ZenStats 中注册的域名，脚本 gzip 后不足 2 KB。",
-        "customEvents": {
-          "heading": "自定义事件",
-          "description": "使用 zenstats.track() 追踪页面浏览之外的用户交互。"
+        "note": "将 example.com 替换为在 ZenStats 中注册的域名。可选特性（标签事件、外链、文件下载等）在站点的「安装」页勾选，系统会生成对应的脚本变体。",
+        "instrumentation": {
+          "heading": "埋点总览",
+          "description": "ZenStats 里的每条数据都是一个事件：事件名（n 字段）+ 可选的键值属性。页面浏览本质上就是名为 pageview 的事件。共有四种埋点方式：",
+          "ways": {
+            "auto": "自动采集——脚本自动记录页面浏览、参与度，以及（启用后的）外链点击、文件下载和表单提交，无需额外代码。",
+            "tagged": "标签式埋点——给任意元素加上形如 event-name=Signup 的 class，无需写 JavaScript。",
+            "js": "JavaScript API——在自己的代码里调用 zenstats('事件名', { props })。",
+            "server": "服务端上报——从后端向 /api/event 提交事件载荷（目前收入数据必须走这条路）。"
+          }
         },
-        "engagement": {
-          "heading": "参与度追踪",
-          "description": "ZenStats 会在访客离开页面时自动采集停留时长和滚动深度，这些数据直接驱动 time_on_page 和 scroll_depth 指标，无需额外配置。"
+        "auto": {
+          "heading": "内置事件名",
+          "description": "以下事件名由脚本自身发出，属于保留名；它们和自定义事件一样出现在 event:name 维度里。",
+          "events": {
+            "pageview": "始终开启。首次加载、前进/后退、SPA 路由切换时发送；驱动 visitors、visits、pageviews、bounce_rate 以及页面类目标。",
+            "engagement": "始终开启。标签页隐藏或访客离开时发送，携带活跃时长与最大滚动深度；驱动 time_on_page 和 scroll_depth，不计入 events 指标。",
+            "outbound": "需启用「外链」特性。点击指向其他域名的 <a> 时发送，url 属性为目标地址（不含查询串与锚点）。",
+            "download": "需启用「文件下载」特性。点击以受追踪扩展名结尾的链接时发送（data-file-types，默认 pdf、xlsx、docx 等），url 属性为文件地址。",
+            "form": "需启用标签事件、外链或文件下载任一特性。未带 event-name class 的 <form> 提交。"
+          },
+          "callout": "外链、文件下载、标签事件是编译进脚本变体里的（在「安装」页勾选后复制对应脚本）——没有逐元素开启的 HTML 属性。"
         },
-        "outbound": {
-          "heading": "外链追踪",
-          "description": "在任意链接上添加 data-zenstats-outbound 属性，即可自动将点击记录为名为「Outbound Link: Click」的自定义事件。"
+        "eventName": {
+          "heading": "事件名",
+          "description": "事件名是一切的锚点：筛选和下钻靠它（event:name），事件类目标按它匹配，漏斗步骤也由它构成。",
+          "rules": {
+            "exact": "匹配是精确且区分大小写的：Signup、signup、Sign Up 是三个不同事件。事件类目标只在 event_name 与目标名完全相等时才计数。",
+            "reserved": "pageview 与 engagement 为脚本保留名，不要用作自定义事件。",
+            "stable": "确定一套命名约定并保持稳定，例如「对象: 动作」（Pricing: Click、Checkout: Complete）。事后改名会把历史数据割裂。",
+            "props": "把可变信息放进属性而不是名字：一个 Purchase 事件 + plan=pro，优于 Purchase Pro / Purchase Team 两个独立事件名。"
+          }
+        },
+        "js": {
+          "heading": "方式一：JavaScript API",
+          "description": "脚本暴露全局函数 zenstats(eventName, options)。options 支持：props（对象）、interactive（布尔，默认 true）、callback（函数），以及 u / url 手动指定页面 URL。"
+        },
+        "tagged": {
+          "heading": "方式二：标签式埋点（无代码）",
+          "description": "启用「标签事件」特性后，class 列表里含 event-name=<名称> 的元素在点击（表单为提交）时发送该事件；形如 event-<键>=<值> 的额外 class 会成为属性。",
+          "rules": {
+            "plus": "用 + 表示空格：event-name=Button+Click 记录为「Button Click」。",
+            "parents": "会检查被点击元素及其向上 3 层父元素，因此给外层容器打标签同样有效。",
+            "link": "链接会自动填入 url 属性（取 href）；已打标签的链接不会再被重复记为外链点击或下载。"
+          },
+          "callout": "「标签事件」必须在「安装」页启用（它会改变你嵌入的脚本文件），否则 event-name class 会被忽略。"
+        },
+        "props": {
+          "heading": "自定义属性",
+          "description": "属性是附在事件上的自由键值对（JS API 的 props、event-<键>=<值> class，或载荷里的 p 对象），值一律按字符串存储。用 event:props:<键> 维度下钻，或作为过滤条件，例如 [\"is\", \"event:props:plan\", [\"pro\"]]。",
+          "callout": "事件类目标也可以要求属性（自定义属性）：此时只有事件名匹配、且所列属性逐一相等的事件才会被计入。"
+        },
+        "server": {
+          "heading": "方式三：服务端上报",
+          "description": "浏览器里观察不到的行为（支付、注册确认、API 调用）可直接 POST 到 /api/event。n（事件名）、d（已注册且已验证的域名）、u（页面 URL）应始终填写；p（属性）、revenue、t（客户端时间，ISO 8601，须在最近一小时内）可选。不带 Origin/Referer 头的请求按服务端客户端放行；若携带，其主机必须是站点域名或后台配置的允许来源，否则返回 403。"
         },
         "revenue": {
           "heading": "收入（电商）",
           "description": "在事件里附带 revenue 对象即可记录收入；amount 接受字符串或数字，currency 为 ISO 货币码。用 total_revenue / average_revenue 指标查询。",
-          "callout": "追踪脚本暂不自动发送收入——请从你的服务端或结算流程向 /api/event 提交带 revenue 字段的事件。"
+          "callout": "追踪脚本暂不自动发送收入——请按方式三，从服务端或结算流程向 /api/event 提交带 revenue 字段的事件。"
         }
       },
       "aggregate": {
@@ -1566,7 +1609,7 @@
           "pageview": "页面浏览",
           "pageviewDesc": "访客访问匹配某 URL 模式的页面时触发，支持通配符，如 /blog/*。",
           "event": "自定义事件",
-          "eventDesc": "调用 zenstats.track(\"EventName\") 时触发，事件名称须完全匹配。"
+          "eventDesc": "由自定义事件触发——JS 里的 zenstats(\"EventName\")、元素上的 event-name=EventName class，或服务端 POST。事件名须完全匹配（区分大小写）；若目标配置了自定义属性，属性也须逐一相等。"
         },
         "breakdown": {
           "heading": "查询目标",
@@ -1732,7 +1775,8 @@
       "utmMedium": "UTM 媒介（utm_medium）。",
       "utmCampaign": "UTM 活动（utm_campaign）。",
       "utmContent": "UTM 内容（utm_content）。",
-      "utmTerm": "UTM 关键词（utm_term）。"
+      "utmTerm": "UTM 关键词（utm_term）。",
+      "eventProps": "自定义事件属性（<key> 替换为属性名）"
     },
     "filters": {
       "is": "精确匹配，支持多个值（同一过滤器内为 OR 逻辑）。",

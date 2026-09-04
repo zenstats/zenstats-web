@@ -279,23 +279,101 @@ export default function DocsPage() {
 ></script>`}</CodeBlock>
             <p className="text-sm text-slate-600 dark:text-slate-400">{t("docs.sections.trackingScript.note")}</p>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.customEvents.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.customEvents.description")}</p>
-            <CodeBlock label="JavaScript">{`// Track a named event
-zenstats.track('Signup')
+            {/* 埋点总览：事件 = 事件名 + 属性；四种采集方式 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.instrumentation.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.instrumentation.description")}</p>
+            <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-400 space-y-1 mb-2">
+              <li>{t("docs.sections.trackingScript.instrumentation.ways.auto")}</li>
+              <li>{t("docs.sections.trackingScript.instrumentation.ways.tagged")}</li>
+              <li>{t("docs.sections.trackingScript.instrumentation.ways.js")}</li>
+              <li>{t("docs.sections.trackingScript.instrumentation.ways.server")}</li>
+            </ul>
 
-// Track with custom properties
-zenstats.track('Purchase', {
-  plan:   'pro',
-  amount: 49
+            {/* 内置事件名（自动采集） */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.auto.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.auto.description")}</p>
+            <ParamTable rows={[
+              { name: "pageview", desc: t("docs.sections.trackingScript.auto.events.pageview") },
+              { name: "engagement", desc: t("docs.sections.trackingScript.auto.events.engagement") },
+              { name: "Outbound Link: Click", desc: t("docs.sections.trackingScript.auto.events.outbound") },
+              { name: "File Download", desc: t("docs.sections.trackingScript.auto.events.download") },
+              { name: "Form: Submission", desc: t("docs.sections.trackingScript.auto.events.form") },
+            ]} />
+            <Callout type="info">{t("docs.sections.trackingScript.auto.callout")}</Callout>
+
+            {/* 事件名规则 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.eventName.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.eventName.description")}</p>
+            <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-400 space-y-1 mb-2">
+              <li>{t("docs.sections.trackingScript.eventName.rules.exact")}</li>
+              <li>{t("docs.sections.trackingScript.eventName.rules.reserved")}</li>
+              <li>{t("docs.sections.trackingScript.eventName.rules.stable")}</li>
+              <li>{t("docs.sections.trackingScript.eventName.rules.props")}</li>
+            </ul>
+
+            {/* 方式一：JS API */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.js.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.js.description")}</p>
+            <CodeBlock label="JavaScript">{`// Named event
+zenstats('Signup')
+
+// With custom properties
+zenstats('Purchase', {
+  props: { plan: 'pro', amount: 49 }
+})
+
+// Non-interactive: does not affect bounce rate
+zenstats('Scroll Depth', { interactive: false })
+
+// Callback: status = HTTP code, ignored = filtered (bot / exclusion)
+zenstats('Download', {
+  callback: (r) => console.log(r.status, r.ignored)
 })`}</CodeBlock>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.engagement.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">{t("docs.sections.trackingScript.engagement.description")}</p>
+            {/* 方式二：CSS class 无代码埋点 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.tagged.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.tagged.description")}</p>
+            <CodeBlock label="HTML">{`<!-- Button click -->
+<button class="event-name=Signup">Sign Up</button>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.outbound.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.outbound.description")}</p>
-            <CodeBlock label="HTML">{`<a href="https://github.com" data-zenstats-outbound>GitHub</a>`}</CodeBlock>
+<!-- Link click ("+" becomes a space: "Pricing Click"); url prop is added automatically -->
+<a href="/pricing" class="event-name=Pricing+Click">View Pricing</a>
+
+<!-- Extra props via event-<key>=<value> -->
+<button class="event-name=Purchase event-plan=Pro event-amount=99">Buy Pro</button>
+
+<!-- Form submission (otherwise recorded as "Form: Submission") -->
+<form class="event-name=Contact+Form">…</form>`}</CodeBlock>
+            <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-400 space-y-1 mb-2">
+              <li>{t("docs.sections.trackingScript.tagged.rules.plus")}</li>
+              <li>{t("docs.sections.trackingScript.tagged.rules.parents")}</li>
+              <li>{t("docs.sections.trackingScript.tagged.rules.link")}</li>
+            </ul>
+            <Callout type="warn">{t("docs.sections.trackingScript.tagged.callout")}</Callout>
+
+            {/* 自定义属性：如何发、如何查 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.props.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.props.description")}</p>
+            <CodeBlock label="Breakdown by property">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+  -H "Authorization: Bearer <token>" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "period": "p30",
+    "metrics": ["visitors", "events"],
+    "dimensions": ["event:props:plan"],
+    "filters": [["is", "event:name", ["Purchase"]]]
+  }'`}</CodeBlock>
+            <Callout type="info">{t("docs.sections.trackingScript.props.callout")}</Callout>
+
+            {/* 方式三：服务端上报 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.server.heading")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.server.description")}</p>
+            <CodeBlock label="POST /api/event">{`{
+  "n": "Purchase",
+  "d": "example.com",
+  "u": "https://example.com/checkout",
+  "p": { "plan": "pro" }
+}`}</CodeBlock>
 
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.revenue.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.revenue.description")}</p>
@@ -536,6 +614,7 @@ zenstats.track('Purchase', {
               { code: "visit:device", desc: t("docs.dimensions.device") },
               { code: "visit:screen_size", desc: t("docs.dimensions.screenSize") },
               { code: "event:name", desc: t("docs.dimensions.eventName") },
+              { code: "event:props:<key>", desc: t("docs.dimensions.eventProps") },
               { code: "visit:entry_page_hostname", desc: t("docs.dimensions.entryPageHostname") },
               { code: "visit:exit_page_hostname", desc: t("docs.dimensions.exitPageHostname") },
               { code: "event:hostname", desc: t("docs.dimensions.hostname") },

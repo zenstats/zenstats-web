@@ -1497,23 +1497,66 @@
       },
       "trackingScript": {
         "description": "Add a single <script> tag to every page you want to track. No cookies are set by default.",
-        "note": "Replace example.com with the domain you registered in ZenStats. The script is less than 2 KB gzipped.",
-        "customEvents": {
-          "heading": "Custom events",
-          "description": "Track user interactions beyond pageviews using zenstats.track()."
+        "note": "Replace example.com with the domain you registered in ZenStats. Optional features (Tagged Events, Outbound Links, File Downloads, ...) are toggled on the site's Install page, which generates the matching script variant.",
+        "instrumentation": {
+          "heading": "Instrumentation overview",
+          "description": "Every data point in ZenStats is an event: an event name (the n field) plus optional key/value properties. Pageviews are just events named pageview. There are four ways to record events:",
+          "ways": {
+            "auto": "Automatic — the script records pageviews, engagement and (if enabled) outbound clicks, downloads and form submissions with no extra code.",
+            "tagged": "Tagged elements — add a CSS class like event-name=Signup to any element; no JavaScript required.",
+            "js": "JavaScript API — call zenstats('Event Name', { props }) from your own code.",
+            "server": "Server-side — POST the event payload to /api/event from your backend (required for revenue today)."
+          }
         },
-        "engagement": {
-          "heading": "Engagement tracking",
-          "description": "ZenStats automatically collects engagement time and scroll depth when the visitor leaves the page. These power the time_on_page and scroll_depth metrics without any additional configuration."
+        "auto": {
+          "heading": "Built-in event names",
+          "description": "These names are reserved and emitted by the script itself. They show up in the event:name dimension like any custom event.",
+          "events": {
+            "pageview": "Always on. Sent on initial load, back/forward navigation and SPA route changes. Drives visitors, visits, pageviews, bounce_rate, and pageview goals.",
+            "engagement": "Always on. Sent when the tab is hidden or the visitor leaves; carries active time and max scroll depth. Drives time_on_page and scroll_depth. Not counted in the events metric.",
+            "outbound": "Requires the Outbound Links feature. Click on an <a> pointing to another domain; url property holds the target (without query string / fragment).",
+            "download": "Requires the File Downloads feature. Click on a link ending with a tracked extension (data-file-types, default pdf, xlsx, docx, ...); url property holds the file.",
+            "form": "Requires Tagged Events, Outbound Links or File Downloads. Any <form> submit without an event-name class."
+          },
+          "callout": "Outbound Links, File Downloads and Tagged Events are compiled into the script variant you copy from the Install page — there is no HTML attribute to turn them on per element."
         },
-        "outbound": {
-          "heading": "Outbound link tracking",
-          "description": "Add the data-zenstats-outbound attribute to any link to automatically track clicks as custom events named Outbound Link: Click."
+        "eventName": {
+          "heading": "Event names",
+          "description": "The event name is the key that everything else hangs on: it is what you filter and break down by (event:name), what an event goal matches, and what funnel steps are built from.",
+          "rules": {
+            "exact": "Matching is exact and case-sensitive: Signup, signup and Sign Up are three different events. An event goal fires only when event_name equals the goal's name exactly.",
+            "reserved": "pageview and engagement are reserved for the script. Don't reuse them for custom events.",
+            "stable": "Pick a convention and keep names stable, e.g. Object: Action (Pricing: Click, Checkout: Complete). Renaming an event later splits its history.",
+            "props": "Keep variable data out of the name. Use properties instead: one Purchase event with plan=pro beats Purchase Pro / Purchase Team as separate names."
+          }
+        },
+        "js": {
+          "heading": "Method 1 — JavaScript API",
+          "description": "The script exposes a global zenstats(eventName, options) function. Options: props (object), interactive (boolean, default true), callback (function), and u / url for a manual pageview URL."
+        },
+        "tagged": {
+          "heading": "Method 2 — Tagged elements (no code)",
+          "description": "With the Tagged Events feature enabled, any element whose class list contains event-name=<Name> sends that event on click (or on submit for forms). Extra classes of the form event-<key>=<value> become properties.",
+          "rules": {
+            "plus": "Use + for spaces: event-name=Button+Click is recorded as \"Button Click\".",
+            "parents": "The clicked element and up to 3 parent levels are inspected, so tagging a wrapper works.",
+            "link": "For links the url property is filled automatically from href; tagged links are not double-counted as outbound clicks or downloads."
+          },
+          "callout": "Tagged Events must be enabled on the Install page (it changes the script file you embed). Without it the event-name classes are ignored."
+        },
+        "props": {
+          "heading": "Custom properties",
+          "description": "Properties are free-form key/value pairs attached to an event (props in the JS API, event-<key>=<value> classes, or the p object in the payload). Values are stored as strings. Query them with the event:props:<key> dimension or filter on them, e.g. [\"is\", \"event:props:plan\", [\"pro\"]].",
+          "callout": "An event goal can also require properties (custom props). The goal then counts only events whose name matches and whose every listed property equals the given value."
+        },
+        "server": {
+          "heading": "Method 3 — Server-side events",
+          "description": "Anything you can't observe in the browser (payments, sign-up confirmations, API usage) can be posted straight to /api/event. n (event name), d (a registered and verified domain) and u (page URL) should always be set; p (properties), revenue and t (client timestamp, ISO 8601 within the last hour) are optional. Requests without Origin/Referer headers are accepted as server clients; if you do send them, the host must be the site domain or one of its configured allowed origins, otherwise the event is rejected with 403."
         },
         "revenue": {
           "heading": "Revenue (ecommerce)",
           "description": "Attach revenue to an event by including a revenue object; amount accepts a string or number, currency is an ISO code. Query it with the total_revenue / average_revenue metrics.",
-          "callout": "The tracking script does not send revenue automatically yet — post the event (with the revenue field) to /api/event from your server or checkout flow."
+          "callout": "The tracking script does not send revenue automatically yet — post the event (with the revenue field) to /api/event from your server or checkout flow, as in Method 3."
         }
       },
       "aggregate": {
@@ -1566,7 +1609,7 @@
           "pageview": "Pageview",
           "pageviewDesc": "Triggered when a visitor views a URL that matches a pattern. Supports wildcards, e.g. /blog/*.",
           "event": "Custom event",
-          "eventDesc": "Triggered when zenstats.track(\"EventName\") is called. The event name must match exactly."
+          "eventDesc": "Triggered by a custom event — zenstats(\"EventName\") in JS, an event-name=EventName class, or a server-side POST. The event name must match exactly (case-sensitive); optional custom props must all match too."
         },
         "breakdown": {
           "heading": "Querying goals",
@@ -1732,7 +1775,8 @@
       "utmMedium": "UTM medium (utm_medium).",
       "utmCampaign": "UTM campaign (utm_campaign).",
       "utmContent": "UTM content (utm_content).",
-      "utmTerm": "UTM term (utm_term)."
+      "utmTerm": "UTM term (utm_term).",
+      "eventProps": "Custom event property (replace <key>)"
     },
     "filters": {
       "is": "Exact match. Accepts multiple values (OR logic within one filter).",
