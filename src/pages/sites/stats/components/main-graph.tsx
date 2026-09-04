@@ -64,6 +64,7 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
     setLocalInterval(activeInterval);
   }, [activeInterval]);
 
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -101,10 +102,30 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
     ? chartData.reduce((sum, d) => sum + (d.compareValue ?? 0), 0)
     : undefined;
 
-  // Filter interval options based on period - realtime only shows minute
+  // 按周期过滤颗粒度选项：
+  // - realtime 只有按分钟；
+  // - 长周期（6mo/12mo/year，或 custom 跨度 > 45 天）隐藏按小时——桶数过多，
+  //   后端也会以 maxTimeSeriesBuckets 拒绝此类组合。
+  const customSpanDays = (() => {
+    if (query.period !== "custom" || !query.from || !query.to) return 0;
+    const ms = new Date(query.to).getTime() - new Date(query.from).getTime();
+    return Number.isFinite(ms) ? ms / 86_400_000 : 0;
+  })();
+  const hourlyTooCoarse =
+    ["6mo", "12mo", "year"].includes(query.period) || customSpanDays > 45;
   const availableIntervals = query.period === "realtime"
     ? INTERVAL_OPTIONS.filter((i) => i.key === "minute")
-    : INTERVAL_OPTIONS.filter((i) => i.key !== "minute");
+    : INTERVAL_OPTIONS.filter(
+        (i) => i.key !== "minute" && !(hourlyTooCoarse && i.key === "hourly")
+      );
+
+  // 周期切换后当前颗粒度可能已不在可选列表（如 30d+按小时 → 切到 12mo），回退到该周期的默认值
+  useEffect(() => {
+    if (!availableIntervals.some((i) => i.key === localInterval)) {
+      setLocalInterval(defaultIntervalForPeriod(query.period));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query.period, customSpanDays]);
 
   const handleIntervalChange = (interval: Interval) => {
     setLocalInterval(interval);
