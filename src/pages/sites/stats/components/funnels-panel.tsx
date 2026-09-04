@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import axios, { type BaseResponse } from "@utils/axios";
 import type { StatsRequest } from "../../types/interfaces";
 import type { Funnel, FunnelDetail, FunnelAnalysisResult } from "../../types/interfaces";
 import FunnelVisualization from "../../funnel-analysis/components/funnel-visualization";
+import FunnelTree, { isTreeFunnel } from "../../funnel-analysis/components/funnel-tree";
 
 interface FunnelsPanelProps {
   query: StatsRequest;
@@ -32,6 +33,17 @@ export default function FunnelsPanel({ query, domain }: FunnelsPanelProps) {
   const [analysisResult, setAnalysisResult] = useState<FunnelAnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  // 与漏斗分析页一致：树形漏斗默认以树形展示，可切回线性漏斗图（此时按"相对起点"口径）。
+  const [funnelView, setFunnelView] = useState<"funnel" | "tree">("funnel");
+  const treeNodes = useMemo(() => analysisResult?.nodes ?? [], [analysisResult]);
+  const isTree = useMemo(() => isTreeFunnel(treeNodes), [treeNodes]);
+  const leafCount = useMemo(
+    () => treeNodes.filter((n) => !treeNodes.some((c) => c.parent_step_id === n.step_id)).length,
+    [treeNodes],
+  );
+  useEffect(() => {
+    setFunnelView(isTree ? "tree" : "funnel");
+  }, [isTree, selectedFunnelId]);
 
   // Fetch funnels list
   const fetchFunnels = useCallback(async () => {
@@ -187,26 +199,59 @@ export default function FunnelsPanel({ query, domain }: FunnelsPanelProps) {
                 </div>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                <div className="text-xs text-muted-foreground mb-1">{t("stats.funnels.conversionRate")}</div>
+                <div className="text-xs text-muted-foreground mb-1">
+                  {isTree ? t("funnelAnalysis.branches") : t("stats.funnels.conversionRate")}
+                </div>
                 <div className="text-2xl font-bold flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                  {analysisResult.conversion_rate.toFixed(1)}%
+                  {isTree ? leafCount : `${analysisResult.conversion_rate.toFixed(1)}%`}
                 </div>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                <div className="text-xs text-muted-foreground mb-1">{t("stats.funnels.steps")}</div>
-                <div className="text-2xl font-bold">{analysisResult.steps.length}</div>
+                <div className="text-xs text-muted-foreground mb-1">
+                  {isTree ? t("funnelAnalysis.nodes") : t("stats.funnels.steps")}
+                </div>
+                <div className="text-2xl font-bold">{isTree ? treeNodes.length : analysisResult.steps.length}</div>
               </div>
             </div>
 
-            {/* Funnel visualization */}
-            <FunnelVisualization
-              steps={analysisResult.steps}
-              totalVisitors={analysisResult.total_visitors}
-            />
+            {/* 树形漏斗：提供 漏斗/树形 切换；线性漏斗只显示漏斗图 */}
+            {isTree && (
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">
+                  {funnelView === "tree" ? t("funnelAnalysis.treeRateHint") : t("funnelAnalysis.treeDescription")}
+                </p>
+                <div className="flex items-center gap-1 text-xs bg-muted rounded-md p-0.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setFunnelView("funnel")}
+                    className={`px-3 py-1 rounded ${funnelView === "funnel" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {t("funnelAnalysis.viewFunnel")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFunnelView("tree")}
+                    className={`px-3 py-1 rounded ${funnelView === "tree" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {t("funnelAnalysis.viewTree")}
+                  </button>
+                </div>
+              </div>
+            )}
 
-            {/* Steps detail */}
-            {funnelDetail && (
+            {/* Funnel visualization */}
+            {funnelView === "tree" && treeNodes.length > 0 ? (
+              <FunnelTree nodes={treeNodes} totalVisitors={analysisResult.total_visitors} />
+            ) : (
+              <FunnelVisualization
+                steps={analysisResult.steps}
+                totalVisitors={analysisResult.total_visitors}
+              />
+            )}
+
+            {/* Steps detail：线性链式面包屑仅对线性漏斗有意义，树形由树图自身表达结构 */}
+            {funnelDetail && !isTree && (
               <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
                 {funnelDetail.steps.map((step, i) => (
                   <span key={step.step_order} className="flex items-center gap-1">

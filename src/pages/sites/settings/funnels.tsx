@@ -283,14 +283,15 @@ export default function FunnelsSettings() {
 
         {/* Create Funnel Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-lg">
+          {/* 节点多时预览树会变宽变高：弹窗限高可滚动、宽度放宽到 2xl，grid 子项 min-w-0 防止把弹窗撑破 */}
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t('settings.funnels.createFunnel')}</DialogTitle>
               <DialogDescription>
                 {t('settings.funnels.dialogDescription')}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 min-w-0">
               <div className="space-y-2">
                 <Label htmlFor="funnel-name">{t('settings.funnels.funnelName')}</Label>
                 <Input

@@ -122,7 +122,8 @@ export default function FunnelBuilderPreview({ goals, selectedGoals, stepParents
   };
 
   return (
-    <div className="rounded-md border border-dashed border-border p-3 bg-muted/30">
+    // min-w-0 + max-w-full：作为 grid/flex 子项时不把自身内容宽度上抛，宽树在内部横向滚动
+    <div className="rounded-md border border-dashed border-border p-3 bg-muted/30 min-w-0 max-w-full">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium text-muted-foreground">{t("settings.funnels.previewTitle")}</span>
         <span
@@ -134,7 +135,7 @@ export default function FunnelBuilderPreview({ goals, selectedGoals, stepParents
           {linear ? t("settings.funnels.linearFunnel") : t("settings.funnels.treeFunnel")}
         </span>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-[40vh] overflow-y-auto">
         <div className="flex justify-center gap-6 min-w-max px-1 py-1">{roots.map((r) => render(r))}</div>
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground">{t("settings.funnels.dragHint")}</p>
