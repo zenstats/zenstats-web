@@ -51,6 +51,7 @@ const PanelsSettings = lazy(() => import('./pages/sites/settings/panels'));
 // Admin pages（后台仅管理员访问，整体懒加载）
 const AdminLayout = lazy(() => import('./pages/admin/layout'));
 const AdminDashboard = lazy(() => import('./pages/admin/dashboard'));
+const AdminIngestionQuality = lazy(() => import('./pages/admin/ingestion-quality'));
 const AdminUsers = lazy(() => import('./pages/admin/users'));
 const AdminGroups = lazy(() => import('./pages/admin/groups'));
 const AdminSites = lazy(() => import('./pages/admin/sites'));
@@ -272,6 +273,10 @@ const routes: RouteObject[] = [
         path: "/admin",
         element: <AdminGuard />,
         children: [
+          {
+            path: "ingestion-quality",
+            element: <AdminLayout><AdminIngestionQuality /></AdminLayout>
+          },
           {
             index: true,
             element: <Navigate to="/admin/dashboard" replace />

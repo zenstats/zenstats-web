@@ -27,7 +27,7 @@
     if (eventName === 'pageview') currentEngagementIgnored = true
   }
 
-  var currentEngagementIgnored
+  var currentEngagementIgnored = true
   var currentEngagementURL = location.href
   var currentEngagementProps = {}
   var currentEngagementMaxScrollDepth = -1
@@ -58,7 +58,7 @@
   }
 
   function getEngagementTime() {
-    return runningEngagementStart ? currentEngagementTime + (Date.now() - runningEngagementStart) : currentEngagementTime
+    return runningEngagementStart !== null ? currentEngagementTime + (Date.now() - runningEngagementStart) : currentEngagementTime
   }
 
   var currentDocumentHeight = getDocumentHeight()
@@ -89,15 +89,17 @@
 
   function triggerEngagement() {
     var et = getEngagementTime()
-    if (!currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || et >= 3000)) {
+    if (!currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || et > 0)) {
       currentEngagementMaxScrollDepth = maxScrollDepthPx
-      sendRequest(endpoint, {
-        n: 'engagement', sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
+      addToQueue({
+        n: 'engagement', sd: currentDocumentHeight > 0 ? Math.min(100, Math.max(0, Math.round((maxScrollDepthPx / currentDocumentHeight) * 100))) : 0,
         d: dataDomain, u: currentEngagementURL, p: currentEngagementProps, e: et,
+        {{#if COMPILE_HASH}}h: 1,{{/if}}
         v: '{{TRACKER_SCRIPT_VERSION}}',
         t: new Date().toISOString()
       })
-      runningEngagementStart = null
+      // Heartbeats report deltas; keep timing the next interval while active.
+      if (runningEngagementStart !== null) runningEngagementStart = Date.now()
       currentEngagementTime = 0
     }
   }
@@ -109,6 +111,7 @@
       currentEngagementTime = getEngagementTime()
       runningEngagementStart = null
       triggerEngagement()
+      if (document.visibilityState === 'hidden') flushQueue()
     }
   }
 
@@ -301,6 +304,7 @@
     {{/if}}
     var payload = {
       n: eventName, v: '{{TRACKER_SCRIPT_VERSION}}', t: new Date().toISOString(),
+      {{#if COMPILE_HASH}}h: 1,{{/if}}
       u: {{#if COMPILE_MANUAL}}(customURL || location.href){{else}}location.href{{/if}}, d: dataDomain, r: document.referrer || null
     }
     if (options && options.meta) payload.m = JSON.stringify(options.meta)
@@ -323,7 +327,7 @@
       currentEngagementProps = payload.p
       currentEngagementMaxScrollDepth = -1
       currentEngagementTime = 0
-      if (document.visibilityState === 'visible') runningEngagementStart = Date.now()
+      if (document.visibilityState === 'visible' && document.hasFocus()) runningEngagementStart = Date.now()
       else runningEngagementStart = null
       registerEngagementListener()
       startEngagementTimer()
@@ -361,7 +365,10 @@
     if (eventQueue.length > 0) batchTimer = setTimeout(flushQueue, BATCH_INTERVAL)
   }
 
-  window.addEventListener('beforeunload', function() {
+  // pagehide also covers mobile navigation and BFCache without disabling it.
+  window.addEventListener('pagehide', function() {
+    currentEngagementTime = getEngagementTime()
+    runningEngagementStart = null
     triggerEngagement()
     flushQueue()
   })
@@ -398,10 +405,12 @@
   // SPA pageview tracking
   var lastPage;
   function page(isSPANav) {
-    {{#unless COMPILE_HASH}}
-    if (isSPANav && lastPage === location.pathname) return;
-    {{/unless}}
-    lastPage = location.pathname
+    var pageKey = location.pathname
+    {{#if COMPILE_HASH}}
+    pageKey += location.hash.split('?')[0]
+    {{/if}}
+    if (isSPANav && lastPage === pageKey) return;
+    lastPage = pageKey
     trigger('pageview')
   }
   var onSPANav = function() { page(true) }
@@ -411,8 +420,10 @@
   {{else}}
   var his = window.history
   if (his.pushState) {
-    var orig = his['pushState']
+    var orig = his.pushState
     his.pushState = function() { orig.apply(this, arguments); onSPANav() }
+    var origReplace = his.replaceState
+    his.replaceState = function() { origReplace.apply(this, arguments); onSPANav() }
     window.addEventListener('popstate', onSPANav)
   }
   {{/if}}

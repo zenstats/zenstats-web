@@ -1,7 +1,7 @@
 import { Separator } from "@/components/ui/separator"
 import { SidebarNav, type SidebarNavItem } from "@/components/sidebar-nav"
 import { useNavigate } from "react-router-dom";
-import { BarChart3, Users, Package, Globe, Settings, ArrowLeft, Search, Mail } from "lucide-react";
+import { Activity, BarChart3, Users, Package, Globe, Settings, ArrowLeft, Search, Mail } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 interface AdminLayoutProps {
@@ -13,6 +13,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { t } = useTranslation();
 
   const sidebarNavItems: SidebarNavItem[] = [
+    {
+      id: "ingestion-quality",
+      title: t('admin.ingestion.title'),
+      icon: <Activity className="mr-2 h-4 w-4" />,
+      href: "/admin/ingestion-quality",
+    },
     {
       id: "dashboard",
       title: t('admin.dashboard', 'Dashboard'),

@@ -143,7 +143,10 @@ Once installed, ZenStats automatically tracks:
 
 - **Active time**: Measured only when the tab is visible and focused
 - **Scroll depth**: Maximum scroll percentage reached
-- Engagement events fire when the tab becomes hidden or after 10 seconds of active time
+- Active-time deltas are recorded every 10 seconds, with the remainder recorded on navigation, blur, tab hiding or page exit
+- The queue is flushed on tab hiding and `pagehide`, including visits shorter than 2 seconds
+- `time_on_page` is total reported active time divided by pageviews, including zero for views without engagement; background time is excluded
+- Engagement heartbeats do not count toward the events metric or change bounce status on their own
 
 ### Outbound Link Clicks
 
@@ -230,9 +233,9 @@ zenstats('pageview', { url: '/virtual-path' })
 
 ## SPA Routing
 
-By default, the script uses **History API** (PushState / popstate) for SPA pageview tracking.
+By default, the script uses **History API** (pushState / replaceState / popstate) for SPA pageview tracking. Query-only changes on the same path do not add a pageview.
 
-If your SPA uses **hash‑based routing** (`#/path`), select the **Hash Routing** checkbox on the Install page. This changes the script to listen for `hashchange` events and includes a `h: 1` marker in the pageview payload.
+If your SPA uses **hash-based routing** (`#/path`), select the **Hash Routing** checkbox on the Install page. The script listens for `hashchange` and includes `h: 1` on all events, keeping pageviews and engagement on the same page. Query parameters inside the hash are excluded from page paths and do not add pageviews by themselves.
 
 ---
 
@@ -383,8 +386,8 @@ Or use an **Insert Headers and Footers** plugin.
 
 ### Engagement data missing
 
-- Engagement fires on tab hide or after 10s of active time
-- Visits shorter than 2 seconds produce no engagement event
+- Active-time deltas are recorded every 10 seconds, including the final partial interval on hiding or leaving the page
+- Short visits attempt to flush on tab hiding or `pagehide`; process termination, network loss or blockers can still prevent delivery
 
 ### Debug mode
 
