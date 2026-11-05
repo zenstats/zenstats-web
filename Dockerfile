@@ -41,7 +41,7 @@ COPY --from=tracker-builder /build/tracker/dist /build/public/js
 RUN pnpm build
 
 # ---- Stage 3: Caddy Runtime ----
-FROM --platform=$TARGETPLATFORM caddy:2-alpine
+FROM caddy:2-alpine
 
 COPY --from=frontend-builder /build/dist /srv
 COPY Caddyfile /etc/caddy/Caddyfile
