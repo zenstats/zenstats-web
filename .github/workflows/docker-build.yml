@@ -37,3 +37,14 @@ jobs:
             -t ${IMAGE}:latest \
             --push \
             -f Dockerfile .
+
+      - name: Build & Push screenshot worker
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ github.repository }}-screenshot"
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --provenance=false --sbom=false \
+            -t ${IMAGE}:sha-${GITHUB_SHA:0:7} \
+            -t ${IMAGE}:${GITHUB_REF_NAME} \
+            -t ${IMAGE}:latest \
+            --push -f screenshot/Dockerfile screenshot

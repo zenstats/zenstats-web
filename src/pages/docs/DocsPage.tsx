@@ -24,7 +24,7 @@ const NAV_SECTIONS = [
   },
   {
     groupKey: "features",
-    items: ["goals", "funnels", "segments", "sharedLinks"],
+    items: ["heatmap", "goals", "funnels", "segments", "sharedLinks"],
   },
   {
     groupKey: "siteManagement",
@@ -680,6 +680,20 @@ zenstats('Download', {
           </section>
 
           {/* Goals */}
+          <section id="heatmap" className="mb-16 scroll-mt-8">
+            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t('docs.nav.heatmap')}</h2>
+            {['docOverview','docGroups','docLayout','docScreenshot','docRetention','docAPI'].map(key=><p key={key} className="mb-4 text-sm text-slate-600 dark:text-slate-400">{t(`heatmap.${key}`)}</p>)}
+            <CodeBlock label="Tracker">{`<script defer src="https://stats.example.com/js/script.js" data-domain="example.com"
+  data-heatmap="true" data-heatmap-key="software-detail"
+  data-heatmap-version="release-1" data-heatmap-variant="default"></script>
+<button data-zs-id="download.primary">Download</button>
+<div data-zs-ignore>Private content</div>`}</CodeBlock>
+            <CodeBlock label="API">{`GET /api/sites/:domain/heatmap/pages?start=2026-11-01&end=2026-11-09&scope=key
+GET /api/sites/:domain/heatmap/data?start=2026-11-01&end=2026-11-09&scope=key&page=<page JSON>
+POST /api/sites/:domain/heatmap/capture
+{ "url": "https://example.com/soft/example.html", "scope": "key", "page": { "...": "selected layout" } }`}</CodeBlock>
+          </section>
+
           <section id="goals" className="mb-16 scroll-mt-8">
             <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.goals")}</h2>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.goals.description")}</p>

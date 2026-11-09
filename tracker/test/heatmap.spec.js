@@ -3,13 +3,14 @@ const path = require('path')
 
 async function install(page, options = {}) {
   const batches = [], events = [], errors = [], resources = []
-  let config = { enabled: true, protocol_version: 1, paths: ['/*', '/#/*'], sample_rate: 1, max_clicks: 100 }
+  let config = { groups:options.groups||[], enabled: true, protocol_version: 1, paths: ['/*', '/#/*'], sample_rate: 1, max_clicks: 100 }
+  if (options.legacy) delete config.groups
   const html = `<html><head><style>body{margin:0;height:2400px}button{width:120px;height:60px}#normal{position:absolute;left:200px;top:1100px}#fixed{position:fixed;right:0;top:0}#sticky{position:sticky;top:0;left:0}#scroll{position:absolute;top:100px;left:400px;height:100px;width:160px;overflow:auto}#scroll div{height:400px}</style></head><body>
     <button id="fixed" data-zs-id="fixed">Fixed</button><button id="sticky" data-zs-id="sticky">Sticky</button>
     <div id="scroll"><div><button data-zs-id="nested">Nested</button></div></div>
     <button id="normal" data-zs-id="signup"><span>Private text</span></button>
     <div data-zs-ignore><button id="ignore">Secret</button></div><form><button id="form" type="button">Submit</button></form><button id="safe" style="position:absolute;top:350px">Safe</button>
-    <script>window.__zenstats=true</script><script defer data-domain="example.com" ${options.optOut ? '' : 'data-heatmap="true"'} data-heatmap-version="v1" src="/js/${options.hash ? 'script.hash.js' : 'script.js'}"></script></body></html>`
+    <script>window.__zenstats=true</script><script defer data-domain="example.com" ${options.optOut ? '' : 'data-heatmap="true"'} data-heatmap-version="v1" data-heatmap-key="${options.key||''}" src="/js/${options.hash ? 'script.hash.js' : 'script.js'}"></script></body></html>`
   page.on('pageerror', error => errors.push(error.message))
   await page.route('https://example.com/**', async route => {
     const req = route.request(), url = new URL(req.url())
@@ -107,5 +108,28 @@ test('configuration disable and recovery retain the original per-page sampling r
   await page.locator('#safe').click(); await flush(page)
   await expect.poll(() => state.batches.length).toBe(1)
   expect(state.batches[0].payload.sample_rate).toBe(1)
+  expect(state.errors).toEqual([])
+})
+
+
+test('aggregation key uses the first configured path rule over the script key',async({page})=>{
+  const state=await install(page,{key:'script-key',groups:[{path:'/*',key:'template-key'},{path:'/*',key:'later'}]})
+  await page.locator('#safe').click();await flush(page)
+  await expect.poll(()=>state.batches.length).toBe(1)
+  expect(state.batches[0].payload.clicks[0].page.aggregation_key).toBe('template-key')
+  expect(state.batches[0].payload.clicks[0].page.path).toBe('/')
+})
+test('tracker supplied aggregation key works without a path mapping',async({page})=>{
+  const state=await install(page,{key:'script-key'})
+  await page.locator('#safe').click();await flush(page)
+  await expect.poll(()=>state.batches.length).toBe(1)
+  expect(state.batches[0].payload.clicks[0].page.aggregation_key).toBe('script-key')
+})
+
+test('new tracker omits aggregation fields when an older API lacks the capability',async({page})=>{
+  const state=await install(page,{key:'script-key',legacy:true})
+  await page.locator('#safe').click();await flush(page)
+  await expect.poll(()=>state.batches.length).toBe(1)
+  expect(state.batches[0].payload.clicks[0].page).not.toHaveProperty('aggregation_key')
   expect(state.errors).toEqual([])
 })

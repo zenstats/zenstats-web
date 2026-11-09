@@ -93,6 +93,9 @@
     if (vw < 100 || vh < 100 || vw > 8192 || vh > 8192 || dw > 100000 || dh > 100000) return
     var version = settings.script.getAttribute('data-heatmap-version') || 'unknown'
     var variant = settings.script.getAttribute('data-heatmap-variant') || 'default'
+    var aggregationKey = settings.script.getAttribute('data-heatmap-key') || ''
+    if (config.groups) { config.groups.some(function (g) { if (matches(current.path,g.path)) { aggregationKey=g.key; return true } return false }) }
+    if (aggregationKey && !label.test(aggregationKey)) return
     if (!label.test(version) || !label.test(variant)) return
     var element = target.closest('[data-zs-id]'), key = element && element.getAttribute('data-zs-id') || ''
     var rx = 0, ry = 0
@@ -105,10 +108,14 @@
     } else key = ''
     var x = event.pageX, y = event.pageY
     if (!isFinite(x) || !isFinite(y) || x < 0 || y < 0 || x >= dw || y >= dh) return
+    var page = { hostname: current.hostname, path: current.path, version: version, variant: variant,
+      viewport_width: vw, viewport_height: vh, document_width: dw, document_height: dh }
+    // Old APIs reject unknown fields. Public groups is the capability signal
+    // that lets this optional addition work through rolling deployments.
+    if (Array.isArray(config.groups)) page.aggregation_key = aggregationKey
     queue.push({ rate: current.rate, click: {
       id: id(), timestamp: new Date().toISOString(),
-      page: { hostname: current.hostname, path: current.path, version: version, variant: variant,
-        viewport_width: vw, viewport_height: vh, document_width: dw, document_height: dh },
+      page: page,
       x: x, y: y, element: key, relative_x: rx, relative_y: ry, position: positioning(target)
     } })
     pageClicks++
