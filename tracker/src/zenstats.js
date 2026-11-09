@@ -24,7 +24,10 @@
   function onIgnoredEvent(eventName, reason, options) {
     if (reason) console.warn('Ignoring Event: ' + reason);
     options && options.callback && options.callback({ status: 0, ignored: true })
-    if (eventName === 'pageview') currentEngagementIgnored = true
+    if (eventName === 'pageview') {
+      currentEngagementIgnored = true
+      if (window.__zenstatsHeatmap) window.__zenstatsHeatmap.page(location.href, true)
+    }
   }
 
   var currentEngagementIgnored = true
@@ -324,6 +327,7 @@
     if (isPageview) {
       currentEngagementIgnored = false
       currentEngagementURL = payload.u
+      if (window.__zenstatsHeatmap) window.__zenstatsHeatmap.page(payload.u, false)
       currentEngagementProps = payload.p
       currentEngagementMaxScrollDepth = -1
       currentEngagementTime = 0
@@ -400,6 +404,29 @@
   var queue = (window.zenstats && window.zenstats.q) || []
   window.zenstats = trigger
   window.zenstats.l = true
+
+  // Heatmaps are opt-in and loaded separately so ordinary tracking stays small.
+  if (scriptEl.getAttribute && scriptEl.getAttribute('data-heatmap') === 'true' && !window.__zenstatsHeatmapLoading) {
+    window.__zenstatsHeatmapLoading = true
+    try {
+      var heatmapAPI = scriptEl.getAttribute('data-heatmap-api')
+      if (!heatmapAPI) {
+        var heatmapURL = new URL(endpoint, location.href)
+        heatmapURL.pathname = /\/event$/.test(heatmapURL.pathname) ? heatmapURL.pathname.replace(/\/event$/, '/heatmap') : '/api/heatmap'
+        heatmapURL.search = ''; heatmapURL.hash = ''; heatmapAPI = heatmapURL.href
+      }
+      var heatmapScript = document.createElement('script')
+      heatmapScript.src = scriptEl.getAttribute('data-heatmap-src') || new URL('heatmap.js', scriptEl.src).href
+      heatmapScript.async = true
+      heatmapScript.onload = function () {
+        if (window.__zenstatsHeatmap) window.__zenstatsHeatmap.start({ script: scriptEl, domain: dataDomain,
+          api: heatmapAPI.replace(/\/$/, ''), url: currentEngagementURL, ignored: currentEngagementIgnored,
+          hash: {{#if COMPILE_HASH}}true{{else}}false{{/if}} })
+      }
+      heatmapScript.onerror = function () { window.__zenstatsHeatmapLoading = false }
+      document.head.appendChild(heatmapScript)
+    } catch (e) { window.__zenstatsHeatmapLoading = false }
+  }
   for (var i = 0; i < queue.length; i++) trigger.apply(this, queue[i])
 
   // SPA pageview tracking

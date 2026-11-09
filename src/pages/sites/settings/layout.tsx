@@ -34,6 +34,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
       id: "grp-analysis",
       title: t('settings.layout.group.analysis'),
       children: [
+        { id: "heatmap", title: t("heatmap.title"), href: `/sites/${domain}/heatmap` },
         { id: "goals",    title: t('settings.layout.nav.goals'),    icon: <Target className="mr-2 h-4 w-4" />,     href: `${baseUrl}/goals`,    perm: "goals:write" },
         { id: "funnels",  title: t('settings.layout.nav.funnels'),  icon: <Filter className="mr-2 h-4 w-4" />,     href: `${baseUrl}/funnels`,  perm: "funnels:write" },
         { id: "segments", title: t('settings.layout.nav.segments'), icon: <Layers className="mr-2 h-4 w-4" />,     href: `${baseUrl}/segments`, perm: "segments:write" },

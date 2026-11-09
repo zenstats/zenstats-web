@@ -139,6 +139,7 @@ export default function SiteInstallPage({ embedded = false }: { embedded?: boole
         </CardHeader>
 
         <CardContent className="space-y-6">
+          <Button variant="outline" onClick={() => navigate(`/sites/${domain}/heatmap`)}>{t("heatmap.installLink")}</Button>
           {/* Feature checkboxes */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">{t('sites.install.featureLabel')}</Label>

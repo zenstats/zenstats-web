@@ -1,3 +1,4 @@
+import HeatmapQuality from "./heatmap-quality"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Activity, RefreshCw } from "lucide-react"
@@ -164,6 +165,7 @@ export default function IngestionQuality() {
           </CardContent>
         </Card>
       </>}
+      <HeatmapQuality />
     </div>
   )
 }
