@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,10 @@ export default function Heatmap() {
   const base = `/sites/${encodeURIComponent(domain)}/heatmap`;
   const [config, setConfig] = useState<HeatmapConfig | null>(null);
   const readOnly = isSubAccount() || config?.can_write === false;
-  const [scope, setScope] = useState("url");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const scope = searchParams.get("scope") === "key" ? "key" : "url";
+  const filterKey = scope === "key" ? searchParams.get("key") || "" : "";
+  const filterPath = scope === "url" ? searchParams.get("path") || "" : "";
   const [captureURL, setCaptureURL] = useState(""),
     [capturing, setCapturing] = useState(false);
   const [pages, setPages] = useState<PageCount[]>([]);
@@ -60,6 +63,8 @@ export default function Heatmap() {
   const [opacity, setOpacity] = useState(0.7);
   const dataRequestKey = JSON.stringify([
     scope,
+    filterKey,
+    filterPath,
     selected,
     range.start,
     range.end,
@@ -112,7 +117,7 @@ export default function Heatmap() {
     setSnapshots([]);
     Promise.all([
       axios.get<BaseResponse<PageCount[]>>(base + "/pages", {
-        params: { ...range, scope },
+        params: { ...range, scope, key: filterKey, path: filterPath },
         signal: controller.signal,
         timeout: 10000,
       }),
@@ -140,7 +145,7 @@ export default function Heatmap() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [base, ready, range, revision, scope]);
+  }, [base, ready, range, revision, scope, filterKey, filterPath]);
 
   useEffect(() => {
     setData(null);
@@ -157,7 +162,14 @@ export default function Heatmap() {
         if (!controller.signal.aborted) {
           setData(res.data.data);
           setLoadedDataKey(
-            JSON.stringify([scope, selected, range.start, range.end]),
+            JSON.stringify([
+              scope,
+              filterKey,
+              filterPath,
+              selected,
+              range.start,
+              range.end,
+            ]),
           );
         }
       })
@@ -165,7 +177,7 @@ export default function Heatmap() {
         if (!controller.signal.aborted) setError(true);
       });
     return () => controller.abort();
-  }, [base, ready, selected, range, pages, scope]);
+  }, [base, ready, selected, range, pages, scope, filterKey, filterPath]);
 
   useEffect(() => {
     setImage("");
@@ -314,7 +326,7 @@ export default function Heatmap() {
                   className={`${field} ml-2`}
                   value={scope}
                   onChange={(e) => {
-                    setScope(e.target.value);
+                    setSearchParams({ scope: e.target.value });
                     setSelected("");
                     setData(null);
                     setImage("");
@@ -325,6 +337,18 @@ export default function Heatmap() {
                   <option value="key">{t("heatmap.byKey")}</option>
                 </select>
               </label>
+              {(filterKey || filterPath) && (
+                <p className="text-sm text-muted-foreground">
+                  {t("heatmap.currentFilter")}:{" "}
+                  <code>{filterKey || filterPath}</code> ·{" "}
+                  <Link
+                    className="text-primary hover:underline"
+                    to={`/sites/${domain}/heatmap`}
+                  >
+                    {t("heatmap.showAll")}
+                  </Link>
+                </p>
+              )}
               {scope === "key" && (
                 <p className="text-sm text-muted-foreground">
                   {t("heatmap.groupLayoutHelp")}

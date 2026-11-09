@@ -18,14 +18,16 @@ test.describe('heatmap management', () => {
       localStorage.setItem('user_type', sub ? 'sub_account' : 'user')
       localStorage.setItem('zenstats-language', 'en')
     }, subAccount)
+    let fixtureConfig={ screenshot_available:true,groups:[{path:'/pricing',key:'software',example_url:'https://example.test/pricing'}], enabled:true,paths:['/pricing'],sample_rate:.1,max_clicks:100,raw_days:7,aggregate_days:90,timezone:'Asia/Shanghai' }
     await page.route('**/api/**', async route => {
       const url = new URL(route.request().url())
       const method = route.request().method()
       if (method !== 'GET') writes.push({ path: url.pathname, body: route.request().postDataJSON() })
       if (url.pathname.endsWith('/image')) return route.fulfill({ contentType: 'image/png', body: Buffer.from(png, 'base64') })
       let data = {}
-      if (url.pathname.endsWith('/config')) data = { screenshot_available:true,groups:[{path:'/pricing',key:'software',example_url:'https://example.test/pricing'}], enabled: true, paths: ['/pricing'], sample_rate: .1, max_clicks: 100, raw_days: 7, aggregate_days: 90, timezone: 'Asia/Shanghai' }
+      if (url.pathname.endsWith('/config')) {if(method==='PUT')fixtureConfig={...fixtureConfig,...route.request().postDataJSON()};data=fixtureConfig}
       if (url.pathname.endsWith('/pages')) data = [{ ...layout, path:url.searchParams.get('scope')==='key'?'/':layout.path, clicks: 3 }, { ...layout, path:url.searchParams.get('scope')==='key'?'/':layout.path, version: 'v2', clicks: 1 }]
+      if (url.pathname.endsWith('/pages') && url.searchParams.get('path')==='/docs/*') data=[]
       if (url.pathname.endsWith('/snapshots')) data = [{ ...layout, id: 7, image_width: 400, image_height: 800, created_at: '2026-11-09T00:00:00Z', expires_at: '2027-01-01T00:00:00Z' }]
       if (url.pathname.endsWith('/capture')) data={...layout,id:8,source_url:'https://example.test/pricing',created_at:new Date().toISOString()}
       if (url.pathname.endsWith('/data')) data = { points: [{ x: 192, y: 992, count: 2 }], elements: [{ element: 'signup', count: 3 }], clicks: 3, unmapped: 1, truncated: false, grid_size: 16 }
@@ -86,6 +88,27 @@ test.describe('heatmap management', () => {
     expect(writes[0].body.scope).toBe('key');expect(writes[0].body.page.aggregation_key).toBe('software')
     expect(writes[0].body.url).toBe('https://example.test/pricing')
     await expect(page.getByText('Background source:',{exact:false})).toBeVisible()
+    await expect(page.locator('canvas')).toHaveCount(1)
+  })
+
+  test('settings list shows saved entries and opens the configured key or path directly',async({page})=>{
+    await install(page)
+    await page.getByRole('link',{name:'Heatmap settings',exact:true}).click()
+    const table=page.getByRole('table')
+    await expect(table.getByRole('row')).toHaveCount(2)
+    await expect(table.getByRole('link',{name:'View heatmap'})).toHaveAttribute('href','/sites/example.test/heatmap?scope=key&key=software')
+    await page.getByRole('textbox',{name:'Page allowlist (one per line)'}).fill('/pricing\n/docs/*')
+    await expect(table.getByRole('row')).toHaveCount(2) // Unsaved edits do not enter the list.
+    await page.getByRole('button',{name:'Save settings',exact:true}).click()
+    await expect(table.getByRole('row')).toHaveCount(3)
+    await table.getByRole('row').filter({hasText:'/docs/*'}).getByRole('link',{name:'View heatmap'}).click()
+    await expect.poll(()=>new URL(page.url()).searchParams.get('path')).toBe('/docs/*')
+    await expect(page.getByText('Current heatmap:',{exact:false})).toContainText('/docs/*')
+    await expect(page.getByRole('link',{name:'View all',exact:true})).toBeVisible()
+    await page.getByRole('link',{name:'Heatmap settings',exact:true}).click()
+    await table.getByRole('row').filter({hasText:'software'}).getByRole('link',{name:'View heatmap'}).click()
+    await expect(page).toHaveURL(/scope=key&key=software/)
+    await expect(page.getByRole('combobox',{name:'View by',exact:true})).toHaveValue('key')
     await expect(page.locator('canvas')).toHaveCount(1)
   })
 

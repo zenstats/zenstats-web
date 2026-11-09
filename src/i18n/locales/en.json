@@ -1972,11 +1972,19 @@
     "captureReady": "Screenshot service is configured. Generate backgrounds from the heatmap viewer.",
     "sourceURL": "Background source",
     "documentation": "Heatmap documentation",
-    "docOverview": "Heatmaps are off by default. Open Site settings → Heatmap settings, enable collection, configure allowed paths and sampling, then add data-heatmap=\"true\" to the Tracker. Normal traffic collection is independent.",
+    "docOverview": "Heatmaps are off by default. Open Site settings → Heatmap settings, enable collection, configure allowed paths and sampling, then add data-heatmap=\"true\" to the Tracker. Normal traffic collection is independent. The settings page lists saved heatmaps with direct links to each key or path rule.",
     "docGroups": "Map /soft/*.html to software-detail and provide an example URL to view similar pages by key. A script can also set data-heatmap-key. The first matching path rule takes precedence. Original URLs remain available and new rules only affect future clicks.",
     "docLayout": "Key views still separate hostname, version, variant, viewport and document dimensions. Equal dimensions do not guarantee equal layouts: only combine the same template and update data-heatmap-version when positions change. Different heights are never stretched together. Fixed, sticky and nested-scroll elements count but are not projected onto a full-page image.",
     "docScreenshot": "Select dates and a layout, enter the specific URL or rule example URL, and capture a background. A separate browser generates a full-page PNG at that viewport. Version and dimensions are verified before saving. Public HTTP(S) pages only, with no login state. Private destinations are blocked by default. Manual upload is available without a worker.",
     "docRetention": "Raw clicks default to 7 days and hourly aggregates to 90 days, configurable per site. Dates use the frozen site timezone. Counts reflect actual sampled clicks without extrapolation; repeated click IDs are deduplicated. HTTP 202 means in-memory acceptance only. Administrators can inspect collection quality.",
-    "docAPI": "Query and snapshot APIs use JWT and site membership. Members can read; parent-account site owners/admins can configure, capture, upload and delete. The screenshot worker is internal only; never expose its token to the Tracker or frontend."
+    "docAPI": "Query and snapshot APIs use JWT and site membership. Members can read; parent-account site owners/admins can configure, capture, upload and delete. The screenshot worker is internal only; never expose its token to the Tracker or frontend.",
+    "configuredList": "Configured heatmaps",
+    "configuredHelp": "Saved aggregation keys and collection path rules. Save the settings below to update this list. Configurations appear even before any clicks are collected.",
+    "noConfigured": "No configured heatmaps. Add allowed paths or aggregation rules below and save.",
+    "configuredName": "Heatmap",
+    "actions": "Actions",
+    "viewConfigured": "View heatmap",
+    "currentFilter": "Current heatmap",
+    "showAll": "View all"
   }
 }

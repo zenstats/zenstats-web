@@ -13,6 +13,7 @@ export default function HeatmapSettings() {
     { t } = useTranslation();
   const base = `/sites/${encodeURIComponent(domain)}/heatmap`;
   const [config, setConfig] = useState<HeatmapConfig | null>(null);
+  const [savedConfig, setSavedConfig] = useState<HeatmapConfig | null>(null);
   const [rules, setRules] = useState(""),
     [saving, setSaving] = useState(false),
     [error, setError] = useState(false);
@@ -20,13 +21,16 @@ export default function HeatmapSettings() {
   useEffect(() => {
     const controller = new AbortController();
     setConfig(null);
+    setSavedConfig(null);
     setError(false);
     axios
       .get<BaseResponse<HeatmapConfig>>(base + "/config", {
         signal: controller.signal,
       })
       .then(({ data: res }) => {
-        setConfig({ ...res.data, groups: res.data.groups || [] });
+        const saved = { ...res.data, groups: res.data.groups || [] };
+        setConfig(saved);
+        setSavedConfig(saved);
         setRules(res.data.paths.join("\n"));
       })
       .catch(() => {
@@ -48,11 +52,13 @@ export default function HeatmapSettings() {
             .filter(Boolean),
         },
       );
-      setConfig({
+      const saved = {
         ...res.data.data,
         can_write: config.can_write,
         screenshot_available: config.screenshot_available,
-      });
+      };
+      setConfig(saved);
+      setSavedConfig(saved);
       setRules(res.data.data.paths.join("\n"));
       toast.success(t("heatmap.saved"));
     } catch {
@@ -61,6 +67,29 @@ export default function HeatmapSettings() {
       setSaving(false);
     }
   }
+
+  const entries = savedConfig
+    ? [
+        ...savedConfig.groups.map((g, index) => ({
+          id: `group-${index}`,
+          type: "key",
+          name: g.key,
+          path: g.path,
+          example: g.example_url,
+          query: new URLSearchParams({ scope: "key", key: g.key }).toString(),
+        })),
+        ...savedConfig.paths
+          .filter((path) => !savedConfig.groups.some((g) => g.path === path))
+          .map((path) => ({
+            id: `path-${path}`,
+            type: "url",
+            name: path,
+            path,
+            example: "",
+            query: new URLSearchParams({ scope: "url", path }).toString(),
+          })),
+      ]
+    : [];
 
   return (
     <div className="space-y-5">
@@ -74,6 +103,83 @@ export default function HeatmapSettings() {
       {!config && !error && <p>{t("common.loading")}</p>}
       {config && (
         <>
+          <section
+            className="space-y-3 rounded-lg border p-4"
+            aria-labelledby="configured-heatmaps"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h4 id="configured-heatmaps" className="font-medium">
+                {t("heatmap.configuredList")} ({entries.length})
+              </h4>
+              <span className="text-sm text-muted-foreground">
+                {t(
+                  savedConfig?.enabled ? "heatmap.enabled" : "heatmap.disabled",
+                )}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {t("heatmap.configuredHelp")}
+            </p>
+            {entries.length === 0 ? (
+              <p className="py-4 text-sm text-muted-foreground">
+                {t("heatmap.noConfigured")}
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b text-muted-foreground">
+                      <th className="p-2 font-medium">
+                        {t("heatmap.configuredName")}
+                      </th>
+                      <th className="p-2 font-medium">
+                        {t("heatmap.rulePath")}
+                      </th>
+                      <th className="p-2 font-medium">
+                        {t("heatmap.exampleURL")}
+                      </th>
+                      <th className="p-2 font-medium">
+                        {t("heatmap.actions")}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {entries.map((entry) => (
+                      <tr key={entry.id} className="border-b last:border-0">
+                        <td className="p-2">
+                          <span className="break-all font-medium">
+                            {entry.name}
+                          </span>
+                          <p className="text-xs text-muted-foreground">
+                            {t(
+                              entry.type === "key"
+                                ? "heatmap.byKey"
+                                : "heatmap.byURL",
+                            )}
+                          </p>
+                        </td>
+                        <td className="p-2">
+                          <code className="break-all">{entry.path}</code>
+                        </td>
+                        <td className="max-w-64 break-all p-2 text-muted-foreground">
+                          {entry.example || "—"}
+                        </td>
+                        <td className="p-2">
+                          <Button asChild variant="outline" size="sm">
+                            <Link
+                              to={`/sites/${domain}/heatmap?${entry.query}`}
+                            >
+                              {t("heatmap.viewConfigured")}
+                            </Link>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
           <section className="rounded-lg border p-4">
             <p className="font-medium">
               {t("heatmap.settings")} ·{" "}

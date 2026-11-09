@@ -805,7 +805,6 @@ export default function StatsPage() {
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem onClick={() => navigate(`/sites/${domain}/heatmap`)}>{t("heatmap.title")}</DropdownMenuItem>
               {sites.map((site) => (
                 <DropdownMenuItem
                   key={site.domain}
