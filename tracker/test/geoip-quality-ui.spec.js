@@ -13,7 +13,7 @@ test.describe('geolocation quality', () => {
       const counters = { received: 10, accepted: 10, persisted: 10, filtered: 0, rejected: 0, failed: 0, requests: 10, invalid_requests: 0 }
       const heatmap = { instance_id: 'fixture', started_at: now, ...counters, pending: 0, retries: 0, oldest_age_seconds: 0, last_success: null, last_failure: null }
       const quality = { instance_id: 'fixture', started_at: now, timestamp: now, counters, pending: { events: 0, oldest_age_seconds: 0, stages: {} }, reasons: [], writers: {}, history: [], geoip }
-      return route.fulfill({ json: { code: 200, data: /(?:heatmap|scroll)-quality/.test(route.request().url()) ? heatmap : quality } })
+      return route.fulfill({ json: { code: 200, data: /(?:heatmap|scroll|performance)-quality/.test(route.request().url()) ? heatmap : quality } })
     })
     await page.goto(webURL + '/admin/ingestion-quality')
   }

@@ -1302,6 +1302,13 @@ export default function StatsPage() {
           ))}
           <button
             type="button"
+            onClick={() => navigate(`/sites/${domain}/performance`)}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap text-violet-600 hover:bg-white/50 dark:text-violet-400 dark:hover:bg-gray-900/50"
+          >
+            {t("performance.title")}
+          </button>
+          <button
+            type="button"
             onClick={() => navigate(`/sites/${domain}/heatmap`)}
             className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-white/50 dark:hover:bg-gray-900/50"
           >

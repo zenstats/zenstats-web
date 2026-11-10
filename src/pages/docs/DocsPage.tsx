@@ -34,7 +34,7 @@ const NAV_SECTIONS = [
   },
   {
     groupKey: "features",
-    items: ["heatmap", "userFlows", "goals", "funnels", "segments", "sharedLinks"],
+    items: ["performance", "heatmap", "userFlows", "goals", "funnels", "segments", "sharedLinks"],
   },
   {
     groupKey: "siteManagement",
@@ -1009,6 +1009,19 @@ zenstats('Download', {
                 </p>
               </div>
             </div>
+          </section>
+
+          <section id="performance" className="mb-16 scroll-mt-8">
+            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("performance.title")}</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">{t("performance.description")}</p>
+            <Callout type="info">{t("performance.settingsHelp")}</Callout>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("performance.install")}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">{t("performance.installHelp")}</p>
+            <CodeBlock label="Core Web Vitals">{`<script defer src="https://your-instance.com/js/script.js"
+  data-domain="example.com"
+  data-performance="true"
+  data-performance-version="release-1"></script>`}</CodeBlock>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">{t("performance.interpretation")}</p>
           </section>
 
           {/* User Flows */}

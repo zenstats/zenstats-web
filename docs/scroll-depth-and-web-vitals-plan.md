@@ -1,6 +1,6 @@
 # 滚动深度热力图与 Web Vitals：Web 实施规划
 
-日期：2026-11-10。状态：滚动深度第一阶段已实现并在本地验证；历史汇总与 Core Web Vitals 待实施。
+日期：2026-11-10。状态：滚动深度第一阶段已实现并在本地验证；Core Web Vitals 采集与面板已实现；历史汇总待实施。
 
 统计定义、数据模型、接口、资源预算及调研来源以[后端总方案](../../zenstats/docs/scroll-depth-and-web-vitals-plan.md)为准；本文件记录Web与Tracker工作，不复制一份独立口径。
 
@@ -13,6 +13,18 @@
 5. 管理员在采集质量页查看独立滚动队列。计数单位为报告，API 202仅表示内存接受；PV、UV、Session和常规业务事件数不受滚动报告影响。
 
 浏览器回归覆盖无点击样本、重试身份稳定、SPA新浏览、滚动默认关闭、短页100%触达、独立开关保存、聚合截图、无截图和只读访问。真实数据库验证重复／乱序revision、页面增高、排除分母、跨站隔离、保留期和后台合并前后计数一致。
+
+## Core Web Vitals 已实现
+
+- **入口**：Stats 标签栏的 `Core Web Vitals`，或站点设置 → 性能监控设置 → 查看性能监控。页面路由 `/sites/:domain/performance`，设置路由 `/sites/:domain/settings/performance`。
+- 首版采集 LCP、INP、CLS、TTFB、FCP，显示每指标P75、分级数量和占比、有效样本与覆盖率、每日趋势及前50个慢页面。支持日期、主机、路径／通配符、发布版本、UA设备组、浏览器、国家代码及导航类型筛选。
+- 默认关闭，与热力图开关独立；现有脚本加入 `data-performance="true"`、`data-performance-version`，根据配置与页面采样结果加载自托管 `vitals.js`。无需增加Tracker变体；需同时发布API和Tracker资产。
+- 官方标准库锁定 `web-vitals@6.2.3`，默认不启用attribution、reportAllChanges或soft navigation。文档内注册一次，BFCache使用新生命周期；SPA与Hash路由保留文档初始路径归属，NavigationTiming省略Hash时不会丢弃指标。
+- context不伪造数值；未上报INP保留空值。TTFB依赖NavigationTiming，与PerformanceObserver支持独立；背景初始化的导航保留质量信息但不计入有效指标分母。初始化延迟超过2秒单独标记，仍保留样本。
+- 每个指标实例最多32个revision，最终超限快照标记并排除；最多16个文档／BFCache生命周期。队列200报告、单批20条／16KiB、最多3次发送尝试，重试保持ID和body不变。
+- 最近仅支持配置内1～7个自然日。按导航开始时间统一分桶，P75从去重后的样本直接计算，不平均每日P75。各核心指标少于100个有效样本时整体显示数据不足，这是产品展示门槛。
+- 管理员采集质量页新增性能报告计数。202与sendBeacon成功仅代表排队；不承诺端到端零丢失。性能不增加普通PV／UV／Session或业务事件。
+- 本地Node22构建测量：`script.js` raw8562／gzip3384／Brotli2970B；`heatmap.js` raw8988／gzip3435／Brotli3035B；`vitals.js` raw13000／gzip5092／Brotli4610B。体积包含适配与传输代码，并随构建变化。许可证随资产发布。
 
 ## 1. 实施顺序
 

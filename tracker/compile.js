@@ -171,3 +171,13 @@ const heatmapResult = uglify.minify(fs.readFileSync(relPath('src/heatmap.js'), '
 if (heatmapResult.error) throw heatmapResult.error
 fs.writeFileSync(path.join(outputDir, 'heatmap.js'), heatmapResult.code)
 console.log(`  heatmap.js (${(heatmapResult.code.length / 1024).toFixed(1)}KB, opt-in)`)
+
+// Bundle the pinned official standard library into a self-hosted optional asset.
+const esbuild = require('esbuild')
+esbuild.buildSync({ entryPoints: [relPath('src/vitals.js')], outfile: path.join(outputDir, 'vitals.js'), bundle: true, minify: true, format: 'iife', target: ['es2020'], legalComments: 'eof', banner: { js: '/*! web-vitals 6.2.3, Copyright Google LLC, Apache-2.0; see web-vitals.LICENSE.txt */' } })
+fs.copyFileSync(path.join(path.dirname(require.resolve('web-vitals')), '../LICENSE'), path.join(outputDir, 'web-vitals.LICENSE.txt'))
+const zlib = require('zlib')
+for (const file of ['script.js','heatmap.js','vitals.js']) {
+  const bytes = fs.readFileSync(path.join(outputDir, file))
+  console.log(`  ${file}: raw=${bytes.length} gzip=${zlib.gzipSync(bytes).length} brotli=${zlib.brotliCompressSync(bytes).length} bytes`)
+}

@@ -486,4 +486,19 @@ Enable **Heatmap settings → Collection settings → Collect scroll depth**, an
 
 The heatmap workspace now has a **Scroll depth** mode with 80 vertical reach bands, URL or aggregation-key grouping, device groups, release versions, screenshots and a date range of at most 7 recent calendar days (or the shorter configured raw retention). No-click and no-scroll page views contribute an initial visible sample. Retries and revision updates do not create extra page views.
 
-Reach describes the captured page-view sample, not visitors or completed reading. Large document growth (>25%), report limits and unsupported layouts are flagged and excluded from the valid denominator; late initialization is flagged separately. Scroll reports use a separate bounded queue and do not increment ordinary PV, UV, sessions or custom events. A 202 response acknowledges memory admission only; administrators can inspect **Scroll collection quality**. Historical rollups and Core Web Vitals are planned separately.
+Reach describes the captured page-view sample, not visitors or completed reading. Large document growth (>25%), report limits and unsupported layouts are flagged and excluded from the valid denominator; late initialization is flagged separately. Scroll reports use a separate bounded queue and do not increment ordinary PV, UV, sessions or custom events. A 202 response acknowledges memory admission only; administrators can inspect **Scroll collection quality**. Historical rollups are planned separately. Core Web Vitals is available through the independent option below.
+
+## Core Web Vitals
+
+Open **Stats → Core Web Vitals**, or **Site settings → Performance settings → View performance**. Enable collection, configure the independent page allowlist, then add these attributes to your existing script tag:
+
+```html
+<script defer src="https://your-instance.com/js/script.js"
+  data-domain="example.com"
+  data-performance="true"
+  data-performance-version="release-1"></script>
+```
+
+Keep existing feature variants, hash routing and data-api settings. Deploy the updated API and Tracker assets together, including `vitals.js` and `web-vitals.LICENSE.txt`. The pinned official standard library measures LCP, INP, CLS and supporting FCP/TTFB. The optional asset is loaded only after configuration, path matching and sampling select the document.
+
+SPA route changes retain the document's initial URL; BFCache creates a new lifecycle. No soft navigation or DOM attribution is enabled. Coverage is valid metric samples / foreground sampled document navigations; INP without a callback remains missing, CLS=0 is valid. Each core metric needs 100 samples before an overall rating is assigned (a ZenStats display threshold). Raw queries cover the configured 1–7 recent calendar days in a frozen site timezone; historical rollups are not yet available. The performance settings are independent of heatmap configuration.
