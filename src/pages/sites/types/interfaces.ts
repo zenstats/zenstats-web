@@ -306,3 +306,28 @@ export interface FunnelAnalysisResult {
   // 树形视图数据：每个节点带 step_id/parent_step_id，据此重建多层树
   nodes?: FunnelNodeResult[];
 }
+
+// User Flows (Sankey) types
+export interface SankeyNode {
+  id: string;
+  name: string;
+  depth: number;
+  is_dropoff?: boolean;
+  is_other?: boolean;
+}
+
+export interface SankeyLink {
+  source: number;
+  target: number;
+  value: number;
+  source_name?: string;
+  target_name?: string;
+}
+
+export interface UserFlowsResponse {
+  nodes: SankeyNode[];
+  links: SankeyLink[];
+  total_sessions: number;
+  drop_off_sessions: number;
+  drop_off_rate: number;
+}

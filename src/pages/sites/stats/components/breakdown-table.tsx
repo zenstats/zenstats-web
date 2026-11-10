@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import type { BaseResponse } from "@utils/axios";
 import type { StatsRequest, BreakdownResponse } from "@/pages/sites/types/interfaces";
 import { Skeleton } from "@components/ui/skeleton";
 import BreakdownDetailDialog from "./breakdown-detail";
 import { useTranslation } from "react-i18next";
+import { Flame } from "lucide-react";
 
 interface BreakdownTableProps {
   title: string;
@@ -11,6 +13,7 @@ interface BreakdownTableProps {
   limit?: number;
   query: StatsRequest;
   setQuery: Dispatch<SetStateAction<StatsRequest>>;
+  onAddFilter?: (dimension: string, operator: string, label: string, values: string[]) => void;
   api: (dateRange: StatsRequest) => Promise<BaseResponse<BreakdownResponse>>;
   exportApi?: (dateRange: StatsRequest) => Promise<Blob>;
   icon?: React.ReactNode;
@@ -21,11 +24,14 @@ export default function BreakdownTable({
   limit = 50,
   query,
   setQuery,
+  onAddFilter,
   api,
   exportApi,
   icon,
 }: BreakdownTableProps) {
   const INITIAL_DISPLAY = 9;
+  const { domain } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<BreakdownResponse | null>(null);
   const { t } = useTranslation();
@@ -77,8 +83,25 @@ export default function BreakdownTable({
 
   const handleFilterClick = (rowValue: string) => {
     const property = query.property || "visit:source";
-    const filterValue = JSON.stringify([["is", property, [rowValue]]]);
-    setQuery((prev) => ({ ...prev, filters: filterValue }));
+    if (onAddFilter) {
+      onAddFilter(property, "is", title, [rowValue]);
+    } else {
+      setQuery((prev) => {
+        let existing: unknown[] = [];
+        try {
+          existing = JSON.parse(prev.filters || "[]");
+          if (!Array.isArray(existing)) existing = [];
+        } catch {
+          existing = [];
+        }
+        const next = [...existing, ["is", property, [rowValue]]];
+        return {
+          ...prev,
+          filters: JSON.stringify(next),
+          refresh: new Date(),
+        };
+      });
+    }
   };
 
   return (
@@ -139,7 +162,7 @@ export default function BreakdownTable({
                     <span className="text-xs text-gray-400 w-5 text-right shrink-0">
                       {index + 1}
                     </span>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 flex items-center gap-1">
                       <button
                         onClick={() => handleFilterClick(keyValue)}
                         className="text-sm text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400 truncate max-w-[200px] text-left"
@@ -147,6 +170,19 @@ export default function BreakdownTable({
                       >
                         {keyValue}
                       </button>
+                      {query.property === "event:page" && domain && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/sites/${domain}/heatmap?scope=url&path=${encodeURIComponent(keyValue)}`);
+                          }}
+                          title={t("heatmap.title", "点击热力图")}
+                          className="opacity-0 group-hover:opacity-100 p-0.5 text-gray-400 hover:text-orange-500 transition-opacity rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                          <Flame className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">

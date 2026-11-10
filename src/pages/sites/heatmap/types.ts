@@ -40,6 +40,9 @@ export interface HeatmapData {
   unmapped: number;
   truncated: boolean;
   grid_size: number;
+  coordinate_space?: "normalized";
+  grid_columns?: number;
+  grid_rows?: number;
 }
 export function pageIdentity(p: HeatmapPage): HeatmapPage {
   return {
@@ -54,7 +57,24 @@ export function pageIdentity(p: HeatmapPage): HeatmapPage {
     document_height: p.document_height,
   };
 }
-export const pageKey = (p: HeatmapPage) => JSON.stringify(pageIdentity(p));
+// Identity uses responsive width classes, so historical backgrounds remain usable
+// when the selected page has a different window size or document length.
+export function deviceClass(p: HeatmapPage) {
+  return p.viewport_width < 768
+    ? "mobile"
+    : p.viewport_width < 1024
+      ? "tablet"
+      : "desktop";
+}
+export const pageKey = (p: HeatmapPage) =>
+  JSON.stringify({
+    aggregation_key: p.aggregation_key || "",
+    hostname: p.hostname,
+    path: p.path,
+    version: p.version,
+    variant: p.variant,
+    device: deviceClass(p),
+  });
 
 export function layoutKey(p: HeatmapPage, scope: string) {
   return pageKey(scope === "key" ? { ...p, path: "/" } : p);

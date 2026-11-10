@@ -1,4 +1,5 @@
 import HeatmapQuality from "./heatmap-quality"
+import GeoIPQuality, { type GeoIPStatus } from "./geoip-quality"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Activity, RefreshCw } from "lucide-react"
@@ -23,6 +24,7 @@ interface WriterStats {
   last_duration_ms: number
 }
 interface QualitySnapshot {
+  geoip?: GeoIPStatus
   instance_id: string
   started_at: string
   timestamp: string
@@ -165,6 +167,7 @@ export default function IngestionQuality() {
           </CardContent>
         </Card>
       </>}
+      <GeoIPQuality status={snapshot?.geoip} />
       <HeatmapQuality />
     </div>
   )

@@ -4,8 +4,9 @@ const webURL = process.env.ZENSTATS_WEB_TEST_URL
 test.describe('heatmap management', () => {
   test.skip(!webURL, 'set ZENSTATS_WEB_TEST_URL to a running frontend')
 
-  async function install(page, subAccount = false, configOverrides = {}) {
+  async function install(page, subAccount = false, configOverrides = {}, normalized = true) {
     const layout = { aggregation_key:'software', hostname: 'example.test', path: '/pricing', version: 'v1', variant: 'default', viewport_width: 800, viewport_height: 600, document_width: 800, document_height: 1600 }
+    const representative = { ...layout, viewport_width: 768, viewport_height: 1024, document_width: 768, document_height: 1024 }
     const writes = []
     const png = await page.evaluate(() => {
       const c = document.createElement('canvas'); c.width = 400; c.height = 800
@@ -26,29 +27,29 @@ test.describe('heatmap management', () => {
       if (url.pathname.endsWith('/image')) return route.fulfill({ contentType: 'image/png', body: Buffer.from(png, 'base64') })
       let data = {}
       if (url.pathname.endsWith('/config')) {if(method==='PUT')fixtureConfig={...fixtureConfig,...route.request().postDataJSON()};data=fixtureConfig}
-      if (url.pathname.endsWith('/pages')) data = [{ ...layout, path:url.searchParams.get('scope')==='key'?'/':layout.path, clicks: 3 }, { ...layout, path:url.searchParams.get('scope')==='key'?'/':layout.path, version: 'v2', clicks: 1 }]
+      if (url.pathname.endsWith('/pages')) data = [{ ...(normalized ? representative : layout), path:url.searchParams.get('scope')==='key'?'/':layout.path, clicks: 3 }, { ...(normalized ? representative : layout), path:url.searchParams.get('scope')==='key'?'/':layout.path, version: 'v2', clicks: 1 }]
       if (url.pathname.endsWith('/pages') && url.searchParams.get('path')==='/docs/*') data=[]
       if (url.pathname.endsWith('/snapshots')) data = [{ ...layout, id: 7, image_width: 400, image_height: 800, created_at: '2026-11-09T00:00:00Z', expires_at: '2027-01-01T00:00:00Z' }]
-      if (url.pathname.endsWith('/capture')) data={...layout,id:8,source_url:'https://example.test/pricing',created_at:new Date().toISOString()}
-      if (url.pathname.endsWith('/data')) data = { points: [{ x: 192, y: 992, count: 2 }], elements: [{ element: 'signup', count: 3 }], clicks: 3, unmapped: 1, truncated: false, grid_size: 16 }
+      if (url.pathname.endsWith('/capture')) data={...layout,image_width:400,image_height:800,id:8,source_url:'https://example.test/pricing',created_at:new Date().toISOString()}
+      if (url.pathname.endsWith('/data')) data = { ...(normalized ? {coordinate_space:'normalized',grid_columns:40,grid_rows:80} : {}), points: [normalized ? {x:29,y:64,count:2} : { x: 192, y: 992, count: 2 }], elements: [{ element: 'signup', count: 3 }], clicks: 3, unmapped: 1, truncated: false, grid_size: 16 }
       return route.fulfill({ json: { code: 200, message: 'success', data } })
     })
     await page.goto(webURL + '/sites/example.test/heatmap')
-    await expect(page.getByRole('heading', { name: 'Click heatmap', exact: true })).toBeVisible()
+    await expect(page.getByText('Click heatmap', { exact: true })).toBeVisible()
     return { layout, writes }
   }
 
-  test('renders a correctly scaled overlay, saves settings, and never reuses a mismatched screenshot', async ({ page }) => {
+  test('renders percentage regions on a different sized background, saves settings, and separates versions', async ({ page }) => {
     const { writes } = await install(page)
     await expect(page.locator('canvas')).toHaveCount(1)
     await expect(page.getByText('signup', { exact: true })).toBeVisible()
     await expect.poll(() => page.locator('canvas').evaluate(canvas => {
-      const x = Math.round(200 / 800 * canvas.width), y = Math.round(1000 / 1600 * canvas.height)
+      const x = Math.round(29.5 / 40 * canvas.width), y = Math.round(64.5 / 80 * canvas.height)
       return canvas.getContext('2d').getImageData(x, y, 1, 1).data[3]
     })).toBeGreaterThan(0)
     const geometry = await page.locator('canvas').evaluate(canvas => {
       const r = canvas.getBoundingClientRect(), image = canvas.previousElementSibling.getBoundingClientRect()
-      const x = Math.round(200 / 800 * canvas.width), y = Math.round(1000 / 1600 * canvas.height)
+      const x = Math.round(29.5 / 40 * canvas.width), y = Math.round(64.5 / 80 * canvas.height)
       return { width: r.width, height: r.height, imageWidth: image.width, imageHeight: image.height, alpha: canvas.getContext('2d').getImageData(x, y, 1, 1).data[3] }
     })
     expect(Math.abs(geometry.height / geometry.width - 2)).toBeLessThan(.01)
@@ -63,11 +64,32 @@ test.describe('heatmap management', () => {
     expect(writes[0].body.groups[0].key).toBe('software')
     await page.goto(webURL+'/sites/example.test/heatmap')
     await expect(page.locator('canvas')).toHaveCount(1)
-    const options = await page.getByRole('combobox', { name: 'Page / version / viewport → document size (CSS pixels)' }).locator('option').all()
-    await page.getByRole('combobox', { name: 'Page / version / viewport → document size (CSS pixels)' }).selectOption(await options[1].getAttribute('value'))
+    const options = await page.getByRole('combobox', { name: 'Page / version / device' }).locator('option').all()
+    await page.getByRole('combobox', { name: 'Page / version / device' }).selectOption(await options[1].getAttribute('value'))
     await expect(page.locator('canvas')).toHaveCount(0)
     await expect(page.getByText('No matching background.', { exact: false })).toBeVisible()
     await page.screenshot({ path: '/tmp/zenstats-heatmap-ui.png', fullPage: true })
+  })
+
+  test('keeps legacy CSS point responses usable', async ({page})=>{
+    await install(page,false,{},false)
+    await expect(page.locator('canvas')).toHaveCount(1)
+    await expect.poll(()=>page.locator('canvas').evaluate(canvas=>{
+      const x=Math.round(200/800*canvas.width), y=Math.round(1000/1600*canvas.height)
+      return canvas.getContext('2d').getImageData(x,y,1,1).data[3]
+    })).toBeGreaterThan(0)
+  })
+
+  test('a screenshot from a different device cannot be used for the selected page',async({page})=>{
+    await install(page)
+    await page.route('**/heatmap/snapshots',route=>route.fulfill({json:{code:200,data:[{
+      aggregation_key:'software',hostname:'example.test',path:'/pricing',version:'v1',variant:'default',
+      viewport_width:390,viewport_height:844,document_width:390,document_height:1600,
+      id:9,image_width:390,image_height:1600,created_at:'2026-11-09T00:00:00Z'
+    }]}}))
+    await page.reload()
+    await expect(page.getByText('No matching background.',{exact:false})).toBeVisible()
+    await expect(page.locator('canvas')).toHaveCount(0)
   })
 
   test('subaccounts can inspect data but cannot change settings or screenshots', async ({ page }) => {
@@ -89,10 +111,11 @@ test.describe('heatmap management', () => {
   })
   test('key mode uses the example URL and selects a captured background',async({page})=>{
     const {writes}=await install(page)
-    await page.getByRole('combobox',{name:'View by',exact:true}).selectOption('key')
-    await expect(page.getByRole('textbox',{name:'Example URL',exact:true})).toHaveValue('https://example.test/pricing')
+    await page.getByRole('button',{name:'Aggregation key',exact:true}).click()
     await expect(page.locator('canvas')).toHaveCount(1)
     await page.getByRole('button',{name:'Capture background',exact:true}).click()
+    await expect(page.locator('form input[type=url]')).toHaveValue('https://example.test/pricing')
+    await page.locator('form').getByRole('button',{name:'Capture background',exact:true}).click()
     await expect.poll(()=>writes.length).toBe(1)
     expect(writes[0].body.scope).toBe('key');expect(writes[0].body.page.aggregation_key).toBe('software')
     expect(writes[0].body.url).toBe('https://example.test/pricing')
@@ -126,7 +149,7 @@ test.describe('heatmap management', () => {
     await expect(page.getByRole('table').getByRole('row')).toHaveCount(3)
     await page.getByRole('table').getByRole('row').filter({hasText:'/docs/*'}).getByRole('link',{name:'View heatmap'}).click()
     await expect.poll(()=>new URL(page.url()).searchParams.get('path')).toBe('/docs/*')
-    await expect(page.getByText('Current heatmap:',{exact:false})).toContainText('/docs/*')
+    await expect(page.getByText('Current heatmap:',{exact:true}).locator('..')).toContainText('/docs/*')
   })
 
   test('clicking an entry shows only its details and editing preserves other heatmaps and rule order',async({page})=>{

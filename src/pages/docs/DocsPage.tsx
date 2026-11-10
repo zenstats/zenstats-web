@@ -1,6 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { useTheme } from "next-themes";
+import {
+  Search,
+  X,
+  Menu,
+  Sun,
+  Moon,
+  ExternalLink,
+  ArrowLeft,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import LogoHorizontal from "@/assets/logo-h.svg";
 import LogoHorizontalDark from "@/assets/logo-h-dark.svg";
@@ -24,7 +34,7 @@ const NAV_SECTIONS = [
   },
   {
     groupKey: "features",
-    items: ["heatmap", "goals", "funnels", "segments", "sharedLinks"],
+    items: ["heatmap", "userFlows", "goals", "funnels", "segments", "sharedLinks"],
   },
   {
     groupKey: "siteManagement",
@@ -137,9 +147,23 @@ function RefGrid({ items }: { items: { code: string; desc: string }[] }) {
 }
 
 export default function DocsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [active, setActive] = useState("introduction");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const toggleTheme = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
+
+  const toggleLang = () => {
+    const nextLang = i18n.language.startsWith("zh") ? "en" : "zh-CN";
+    i18n.changeLanguage(nextLang);
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -165,55 +189,205 @@ export default function DocsPage() {
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
       setActive(id);
+      setMobileMenuOpen(false);
     }
   };
 
   const navKey = (item: string) => `docs.nav.${item}`;
 
+  // 搜索过滤小节
+  const filteredNavSections = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return NAV_SECTIONS;
+
+    return NAV_SECTIONS.map((group) => {
+      const groupTitle = t(`docs.nav.groups.${group.groupKey}`).toLowerCase();
+      const matchedItems = group.items.filter((item) => {
+        const itemTitle = t(navKey(item)).toLowerCase();
+        return item.toLowerCase().includes(q) || itemTitle.includes(q) || groupTitle.includes(q);
+      });
+      return {
+        ...group,
+        items: matchedItems,
+      };
+    }).filter((group) => group.items.length > 0);
+  }, [searchQuery, t]);
+
   return (
-    <div className="flex min-h-screen bg-white dark:bg-gray-950">
-      {/* Sidebar */}
-      <aside className="fixed top-0 left-0 w-64 h-screen overflow-y-auto z-50 flex flex-col bg-slate-50 border-r border-slate-200 dark:bg-[#0d1117] dark:border-[#21262d]">
-        {/* Logo */}
-        <div className="px-5 py-5 border-b border-slate-200 dark:border-[#21262d]">
-          <Link to="/" className="flex items-center gap-2 no-underline">
-            <img src={LogoHorizontal} alt="ZenStats" className="h-6 w-auto dark:hidden" />
-            <img src={LogoHorizontalDark} alt="ZenStats" className="h-6 w-auto hidden dark:block" />
-            <span className="font-mono text-[9px] bg-emerald-100 text-emerald-700 dark:bg-amber-100 dark:text-amber-800 px-1 py-0.5 rounded font-semibold">
+    <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col md:flex-row">
+      {/* 移动端顶部吸顶 Bar */}
+      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-14 bg-white/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            aria-label="Open menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+          <Link to="/" className="flex items-center gap-2">
+            <img src={isDark ? LogoHorizontalDark : LogoHorizontal} alt="ZenStats" className="h-7 w-auto" />
+            <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
               Docs
             </span>
           </Link>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          >
+            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+          </button>
+          <button
+            onClick={toggleLang}
+            className="px-2 py-1 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          >
+            {i18n.language.startsWith("zh") ? "EN" : "中"}
+          </button>
+        </div>
+      </div>
 
-        {/* Nav */}
-        <nav className="flex-1 py-4 px-2">
-          {NAV_SECTIONS.map((group) => (
-            <div key={group.groupKey} className="mb-5">
-              <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-[#4b5563]">
-                {t(`docs.nav.groups.${group.groupKey}`)}
-              </div>
-              {group.items.map((item) => (
-                <button
-                  key={item}
-                  onClick={() => scrollTo(item)}
-                  className={cn(
-                    "w-full text-left px-3 py-1.5 rounded text-[13px] transition-colors block",
-                    active === item
-                      ? "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-[#161b22]"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-[#7d8590] dark:hover:text-[#e6edf3] dark:hover:bg-transparent",
-                  )}
-                >
-                  {t(navKey(item))}
-                </button>
-              ))}
+      {/* 移动端遮罩层 */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* 侧边栏 Sidebar */}
+      <aside
+        className={cn(
+          "fixed top-0 left-0 h-screen w-72 md:w-64 z-50 flex flex-col bg-slate-50/90 dark:bg-[#0d1117] border-r border-slate-200/90 dark:border-[#21262d] backdrop-blur-sm transition-transform duration-200 ease-in-out md:translate-x-0 overflow-hidden shadow-xs",
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+        )}
+      >
+        {/* Logo 标题区域 */}
+        <div className="px-5 py-4 border-b border-slate-200/80 dark:border-[#21262d] flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5 no-underline group">
+            <img src={isDark ? LogoHorizontalDark : LogoHorizontal} alt="ZenStats" className="h-7 w-auto transition-transform group-hover:scale-102" />
+            <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-100/80 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
+              Docs
+            </span>
+          </Link>
+          <Link
+            to="/"
+            className="px-2 py-1 rounded-md text-[11px] font-medium text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-800/80 transition flex items-center gap-1"
+            title="返回产品首页"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">主页</span>
+          </Link>
+        </div>
+
+        {/* 侧边栏搜索框 */}
+        <div className="p-3 border-b border-slate-200/70 dark:border-[#21262d]/80 bg-white/40 dark:bg-slate-950/30">
+          <div className="relative flex items-center">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("docs.searchPlaceholder", "快速检索 API / 小节...")}
+              className="w-full pl-8 pr-8 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-hidden focus:ring-1 focus:ring-emerald-500 shadow-2xs transition"
+            />
+            {searchQuery ? (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            ) : (
+              <kbd className="absolute right-2 text-[10px] font-mono text-slate-400 px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 select-none">
+                /
+              </kbd>
+            )}
+          </div>
+        </div>
+
+        {/* 导航菜单列表 */}
+        <nav className="flex-1 py-4 px-2 overflow-y-auto">
+          {filteredNavSections.length === 0 ? (
+            <div className="py-8 text-center text-xs text-slate-400">
+              未找到匹配的文档小节
             </div>
-          ))}
+          ) : (
+            filteredNavSections.map((group) => (
+              <div key={group.groupKey} className="mb-5">
+                <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-[#6e7681]">
+                  {t(`docs.nav.groups.${group.groupKey}`)}
+                </div>
+                {group.items.map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => scrollTo(item)}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 rounded text-[13px] transition-colors block truncate",
+                      active === item
+                        ? "text-emerald-600 bg-emerald-50 font-medium dark:text-emerald-400 dark:bg-[#161b22]"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-[#7d8590] dark:hover:text-[#e6edf3] dark:hover:bg-slate-800/40",
+                    )}
+                  >
+                    {t(navKey(item))}
+                  </button>
+                ))}
+              </div>
+            ))
+          )}
         </nav>
+
+        {/* 侧边栏底部快捷操作 */}
+        <div className="p-3 border-t border-slate-200 dark:border-[#21262d] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-[#0d1117]">
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-1.5 hover:text-slate-800 dark:hover:text-slate-200 transition"
+          >
+            {isDark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5" />}
+            <span>{isDark ? "Light" : "Dark"}</span>
+          </button>
+          <button
+            onClick={toggleLang}
+            className="px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800 text-[11px] font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          >
+            {i18n.language.startsWith("zh") ? "English" : "简体中文"}
+          </button>
+        </div>
       </aside>
 
-      {/* Content */}
-      <main ref={contentRef} className="ml-64 flex-1 min-w-0">
-        <div className="max-w-3xl mx-auto px-8 py-12">
+      {/* 主内容区 Content */}
+      <main ref={contentRef} className="md:ml-64 flex-1 min-w-0 flex flex-col">
+        {/* 桌面端顶部小工具条 */}
+        <div className="hidden md:flex items-center justify-between px-8 py-3.5 border-b border-slate-100 dark:border-slate-800/80 text-xs text-slate-500">
+          <div className="flex items-center gap-2">
+            <Link to="/" className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 transition">
+              <ArrowLeft className="w-3 h-3" />
+              <span>{t("docs.backHome", "返回产品首页")}</span>
+            </Link>
+            <span className="text-slate-300 dark:text-slate-700">/</span>
+            <span className="font-mono text-slate-800 dark:text-slate-200">REST API & Documentation</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://github.com/zenstats/zenstats"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 transition"
+            >
+              <span>GitHub</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+            <Link
+              to="/login"
+              className="px-3 py-1 rounded-md bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition"
+            >
+              {t("docs.loginDashboard", "登录控制台")}
+            </Link>
+          </div>
+        </div>
+
+        <div className="max-w-3xl mx-auto px-6 md:px-8 py-8 md:py-12 w-full">
 
           {/* Introduction */}
           <section id="introduction" className="mb-16 scroll-mt-8">
@@ -679,19 +853,192 @@ zenstats('Download', {
             ]} />
           </section>
 
-          {/* Goals */}
+          {/* Heatmap */}
           <section id="heatmap" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t('docs.nav.heatmap')}</h2>
-            {['docOverview','docGroups','docLayout','docScreenshot','docRetention','docAPI'].map(key=><p key={key} className="mb-4 text-sm text-slate-600 dark:text-slate-400">{t(`heatmap.${key}`)}</p>)}
-            <CodeBlock label="Tracker">{`<script defer src="https://stats.example.com/js/script.js" data-domain="example.com"
-  data-heatmap="true" data-heatmap-key="software-detail"
-  data-heatmap-version="release-1" data-heatmap-variant="default"></script>
-<button data-zs-id="download.primary">Download</button>
-<div data-zs-ignore>Private content</div>`}</CodeBlock>
-            <CodeBlock label="API">{`GET /api/sites/:domain/heatmap/pages?start=2026-11-01&end=2026-11-09&scope=key
-GET /api/sites/:domain/heatmap/data?start=2026-11-01&end=2026-11-09&scope=key&page=<page JSON>
-POST /api/sites/:domain/heatmap/capture
-{ "url": "https://example.com/soft/example.html", "scope": "key", "page": { "...": "selected layout" } }`}</CodeBlock>
+            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">
+              {t('docs.nav.heatmap')}
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
+              ZenStats 原生内置高性能点击热力图（Click Heatmaps）系统，基于 ClickHouse 列式存储与相对坐标网格归一化算法，无需引入庞大的第三方重型 SDK（如 Hotjar / CrazyEgg），即可直观还原访客在页面各区域与交互元素上的真实点击密度分布。
+            </p>
+
+            <Callout type="info">
+              热力点击事件通过独立的批处理管道（Batch Ingestion）上报与隔离存储，<strong>绝不污染常规站点的 PV、UV、会话数与业务转化指标</strong>，保障核心统计数据的绝对干净。
+            </Callout>
+
+            {/* 核心特性与设备断点 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
+              设备自适应与网格归一化 (Viewport Breakpoints)
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-3">
+              访客使用的屏幕分辨率千差万别，ZenStats 自动将访客视口划分为三大设备断点，并在 40×80 比例网格内计算相对点击百分比坐标：
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
+              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                <div className="font-semibold text-xs text-slate-800 dark:text-slate-200">桌面端 (Desktop)</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">视口宽度 ≥ 1024px，默认捕获 1280×800 标准底图</div>
+              </div>
+              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                <div className="font-semibold text-xs text-slate-800 dark:text-slate-200">平板端 (Tablet)</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">视口宽度 768px ~ 1023px，适合移动横屏与 iPad 分析</div>
+              </div>
+              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                <div className="font-semibold text-xs text-slate-800 dark:text-slate-200">移动端 (Mobile)</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">视口宽度 &lt; 768px，垂直流式布局点击聚合</div>
+              </div>
+            </div>
+
+            {/* Tracker 客户端配置 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
+              Tracker 客户端埋点与属性配置
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
+              在站点引入统计脚本时，添加以下 HTML 数据属性即可启用热力图高级捕获：
+            </p>
+            <ParamTable
+              rows={[
+                { name: "data-heatmap", req: true, desc: "设为 \"true\" 开启当前页面的点击热力捕获" },
+                { name: "data-heatmap-key", desc: "模板聚合 Key。适用于动态路由页面（如 /product/:id 或 /blog/:slug），传入统一 Key（如 \"product-detail\"）将多个动态页面归纳合并到同一热力图下" },
+                { name: "data-heatmap-version", desc: "发布版本号（如 \"v2.1\" 或 \"release-2026-11\"），支持按版本切片观察 UI 迭代前后的点击对比" },
+                { name: "data-heatmap-variant", desc: "变体标识符（如 \"default\" 或 \"variant-b\"），用于 A/B 测试场景下多实验组点击热力对比" },
+              ]}
+            />
+            <CodeBlock label="Tracker Embed Example">
+{`<script defer src="https://your-domain.com/tracker.js"
+  data-site-id="demo.site"
+  data-heatmap="true"
+  data-heatmap-key="pricing-page"
+  data-heatmap-version="v2.0"
+  data-heatmap-variant="default">
+</script>`}
+            </CodeBlock>
+
+            {/* 元素语义绑定与隐私忽略 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
+              元素语义锚定与隐私屏蔽属性
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
+              为了避免前端发布发版造成 CSS 选择器变动，以及严格遵守隐私合规要求，ZenStats 支持针对 DOM 元素配置专属属性：
+            </p>
+            <ParamTable
+              rows={[
+                {
+                  name: "data-zs-id",
+                  desc: (
+                    <span>
+                      显式指定元素的永久语义 ID（例如 <code>data-zs-id="signup.submit"</code>）。Tracker 在上报时将优先使用此 ID 作为元素标识，在元素点击排行中一目了然，彻底杜绝选择器漂移。
+                    </span>
+                  ),
+                },
+                {
+                  name: "data-zs-ignore",
+                  desc: (
+                    <span>
+                      标记忽略区域。在敏感表单、个人账户信息卡片、支付输入框添加此属性后，<strong>Tracker 会主动忽略其内部发生的任何点击事件</strong>，不记录坐标与选择器。
+                    </span>
+                  ),
+                },
+              ]}
+            />
+            <CodeBlock label="HTML Markup Example">
+{`<!-- 显式绑定语义 ID 的重要按钮 -->
+<button data-zs-id="header.cta_upgrade" class="btn btn-primary">
+  立即升级套餐
+</button>
+
+<!-- 包含敏感信息的隐私忽略区域 -->
+<div data-zs-ignore class="user-sensitive-billing-card">
+  <input type="password" placeholder="输入密码" />
+  <p>用户敏感私人账单信息（此处任何点击将被完全忽略）</p>
+</div>`}
+            </CodeBlock>
+
+            {/* RESTful API 参考 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
+              热力图 RESTful API 参考
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-3">
+              可通过 API 查询热力图配置、页面聚合列表与点击热点数据：
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <MethodBadge method="GET" />
+                  <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
+                    /sites/:domain/heatmap/pages
+                  </code>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                  获取在指定时间范围内存在热力点击的页面 URL 或聚合 Key 列表。支持参数 <code>start</code>、<code>end</code>、<code>scope</code> (<code>key</code> | <code>page</code>)。
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <MethodBadge method="GET" />
+                  <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
+                    /sites/:domain/heatmap/data
+                  </code>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                  获取点击密度热点散点阵列与元素点击排行榜（Top Elements）。
+                </p>
+                <CodeBlock label="cURL Example">
+{`curl -X GET "https://your-instance.com/api/sites/example.com/heatmap/data?start=2026-11-01&end=2026-11-10&scope=key&key=pricing-page" \\
+  -H "Authorization: Bearer <token>"`}
+                </CodeBlock>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <MethodBadge method="POST" />
+                  <code className="font-mono text-xs text-blue-700 dark:text-blue-400">
+                    /sites/:domain/heatmap/capture
+                  </code>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                  为指定页面或聚合 Key 生成/上传背景底图快照，供分析界面精准比对。
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* User Flows */}
+          <section id="userFlows" className="mb-16 scroll-mt-8">
+            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t('docs.nav.userFlows')}</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">{t('docs.sections.userFlows.description')}</p>
+            <Callout type="info">{t('docs.sections.userFlows.callout')}</Callout>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t('docs.sections.userFlows.query.heading')}</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
+              <MethodBadge method="GET" />
+              <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">/stats/:domain/user-flows</code>
+            </p>
+            <ParamTable rows={[
+              { name: "period", req: true, desc: t("docs.params.period") },
+              { name: "entry_path", desc: "限定起始落地页路径（如 / 或 /pricing），默认为空聚合全部落地页" },
+              { name: "steps", desc: "流转深度步数（2 ~ 4 步，默认 3）" },
+              { name: "limit", desc: "每步热门路径保留数量（3 ~ 12，默认 6），长尾页面归入 (other)" },
+            ]} />
+            <CodeBlock label="cURL">{`curl -X GET "https://your-instance.com/api/stats/example.com/user-flows?period=p30&steps=3&limit=6" \\
+  -H "Authorization: Bearer <token>"`}</CodeBlock>
+            <CodeBlock label="Example Response">{`{
+  "code": 0,
+  "data": {
+    "nodes": [
+      { "id": "0:/", "name": "/", "depth": 0 },
+      { "id": "1:/pricing", "name": "/pricing", "depth": 1 },
+      { "id": "1:(exit)", "name": "(exit)", "depth": 1, "is_dropoff": true }
+    ],
+    "links": [
+      { "source": 0, "target": 1, "value": 1420 },
+      { "source": 0, "target": 2, "value": 480 }
+    ],
+    "total_sessions": 1900,
+    "drop_off_sessions": 480,
+    "drop_off_rate": 25.3
+  }
+}`}</CodeBlock>
           </section>
 
           <section id="goals" className="mb-16 scroll-mt-8">
