@@ -479,3 +479,11 @@ Notes:
 | `Form: Submission` | Auto‑tracked form submissions |
 | `batch` | Multiple queued events sent together |
 
+
+## Optional scroll depth heatmaps
+
+Enable **Heatmap settings → Collection settings → Collect scroll depth**, and retain `data-heatmap="true"` on your existing Tracker tag. Update both the API and self-hosted `heatmap.js`; older APIs do not advertise the scroll capability. Clicks and scroll collection have independent switches and are gated by the heatmap master switch, path allowlist and page sampling rate.
+
+The heatmap workspace now has a **Scroll depth** mode with 80 vertical reach bands, URL or aggregation-key grouping, device groups, release versions, screenshots and a date range of at most 7 recent calendar days (or the shorter configured raw retention). No-click and no-scroll page views contribute an initial visible sample. Retries and revision updates do not create extra page views.
+
+Reach describes the captured page-view sample, not visitors or completed reading. Large document growth (>25%), report limits and unsupported layouts are flagged and excluded from the valid denominator; late initialization is flagged separately. Scroll reports use a separate bounded queue and do not increment ordinary PV, UV, sessions or custom events. A 202 response acknowledges memory admission only; administrators can inspect **Scroll collection quality**. Historical rollups and Core Web Vitals are planned separately.

@@ -14,6 +14,8 @@ export interface HeatmapConfig {
   screenshot_available?: boolean;
   groups: { path: string; key: string; example_url: string }[];
   enabled: boolean;
+  clicks_enabled?: boolean;
+  scroll_enabled?: boolean;
   paths: string[];
   sample_rate: number;
   max_clicks: number;
@@ -24,6 +26,23 @@ export interface HeatmapConfig {
 export interface PageCount extends HeatmapPage {
   clicks: number;
   last_click: string;
+}
+export interface ScrollPage extends HeatmapPage {
+  sampled_views: number;
+  last_view: string;
+}
+export interface ScrollData {
+  regions: { depth: number; views: number; rate: number }[];
+  sampled_views: number;
+  valid_views: number;
+  dynamic_views: number;
+  clipped_views: number;
+  unsupported_views: number;
+  late_init_views: number;
+  average_max_depth: number;
+  average_fold: number;
+  mixed_sampling: boolean;
+  raw_days: number;
 }
 export interface Snapshot extends HeatmapPage {
   id: number;

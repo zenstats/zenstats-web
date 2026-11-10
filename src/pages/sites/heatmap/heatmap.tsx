@@ -25,6 +25,7 @@ import dayjs from "dayjs";
 import axios, { type BaseResponse } from "@utils/axios";
 import { isSubAccount } from "@utils/auth";
 import HeatmapCanvas from "./heatmap-canvas";
+import ScrollWorkspace from "./scroll-workspace";
 import {
   deviceClass,
   layoutKey,
@@ -81,6 +82,7 @@ export default function Heatmap() {
   const [config, setConfig] = useState<HeatmapConfig | null>(null);
   const readOnly = isSubAccount() || config?.can_write === false;
   const [searchParams, setSearchParams] = useSearchParams();
+  const mode = searchParams.get("mode") === "scroll" ? "scroll" : "click";
   const scope = searchParams.get("scope") === "key" ? "key" : "url";
   const filterKey = scope === "key" ? searchParams.get("key") || "" : "";
   const filterPath = scope === "url" ? searchParams.get("path") || "" : "";
@@ -216,7 +218,7 @@ export default function Heatmap() {
   }, [base]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || mode !== "click") return;
     const controller = new AbortController();
     setLoading(true);
     setError(false);
@@ -253,11 +255,11 @@ export default function Heatmap() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [base, ready, range, revision, scope, filterKey, filterPath]);
+  }, [base, ready, range, revision, scope, filterKey, filterPath, mode]);
 
   useEffect(() => {
     setData(null);
-    if (!ready || !page) return;
+    if (!ready || !page || mode !== "click") return;
     const controller = new AbortController();
     axios
       .get<BaseResponse<HeatmapData>>(base + "/data", {
@@ -288,7 +290,7 @@ export default function Heatmap() {
         if (!controller.signal.aborted) setError(true);
       });
     return () => controller.abort();
-  }, [base, ready, selected, range, page, scope, filterKey, filterPath]);
+  }, [base, ready, selected, range, page, scope, filterKey, filterPath, mode]);
 
   useEffect(() => {
     setImage("");
@@ -429,7 +431,7 @@ export default function Heatmap() {
             <span>/</span>
             <span className="text-gray-900 dark:text-gray-100 font-medium flex items-center gap-1.5">
               <Flame className="h-4 w-4 text-orange-500" />
-              {t("heatmap.title")}
+              {t(mode === "scroll" ? "heatmap.scroll.title" : "heatmap.title")}
             </span>
           </div>
 
@@ -525,6 +527,27 @@ export default function Heatmap() {
         )}
 
         {config && (
+          <div className="flex gap-2" role="group" aria-label={t("heatmap.scroll.mode")}>
+            {(["click", "scroll"] as const).map(value => (
+              <Button
+                key={value}
+                variant={mode === value ? "default" : "outline"}
+                aria-pressed={mode === value}
+                onClick={() => {
+                  const next = new URLSearchParams(searchParams);
+                  next.set("mode", value);
+                  setSearchParams(next);
+                }}
+              >
+                {t(`heatmap.scroll.${value}Mode`)}
+              </Button>
+            ))}
+          </div>
+        )}
+        {config && mode === "scroll" && (
+          <ScrollWorkspace key={base} base={base} config={config} readOnly={readOnly} />
+        )}
+        {config && mode === "click" && (
           <>
             {/* Top Toolbar Card: Scope Tabs, Date Presets & Picker */}
             <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm p-4 space-y-4">

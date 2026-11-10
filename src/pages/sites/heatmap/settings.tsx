@@ -148,6 +148,12 @@ export default function HeatmapSettings() {
     }
   }
 
+  const collectionStatus = config
+    ? t("heatmap.scroll.collectionStatus", {
+        clicks: t(config.enabled && config.clicks_enabled !== false ? "heatmap.enabled" : "heatmap.disabled"),
+        scroll: t(config.enabled && config.scroll_enabled ? "heatmap.enabled" : "heatmap.disabled"),
+      })
+    : "";
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -200,7 +206,7 @@ export default function HeatmapSettings() {
                   {t("heatmap.configuredList")} ({entries.length})
                 </h4>
                 <span className="text-sm text-muted-foreground">
-                  {t(config.enabled ? "heatmap.enabled" : "heatmap.disabled")}
+                  {collectionStatus}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -340,7 +346,7 @@ export default function HeatmapSettings() {
                   raw: config.raw_days,
                   aggregate: config.aggregate_days,
                 })}{" "}
-                · {t(config.enabled ? "heatmap.enabled" : "heatmap.disabled")}
+                · {collectionStatus}
               </p>
               {!readOnly && (
                 <div className="flex flex-wrap gap-2">
@@ -498,6 +504,25 @@ export default function HeatmapSettings() {
                   />
                   {t("heatmap.enable")}
                 </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={collection.clicks_enabled !== false}
+                    onChange={e => setCollection({ ...collection, clicks_enabled: e.target.checked })}
+                  />
+                  {t("heatmap.scroll.enableClicks")}
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={collection.scroll_enabled === true}
+                    onChange={e => setCollection({ ...collection, scroll_enabled: e.target.checked })}
+                  />
+                  {t("heatmap.scroll.enableScroll")}
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  {t("heatmap.scroll.help", { days: Math.min(collection.raw_days, 7) })}
+                </p>
                 {collection.paths.length === 0 && (
                   <p className="text-sm text-muted-foreground">
                     {t("heatmap.noConfigured")}

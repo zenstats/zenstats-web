@@ -866,6 +866,13 @@ zenstats('Download', {
               热力点击事件通过独立的批处理管道（Batch Ingestion）上报与隔离存储，<strong>绝不污染常规站点的 PV、UV、会话数与业务转化指标</strong>，保障核心统计数据的绝对干净。
             </Callout>
 
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
+              {t("heatmap.scroll.title")}
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
+              {t("heatmap.scroll.docHelp")}
+            </p>
+
             {/* 核心特性与设备断点 */}
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
               设备自适应与网格归一化 (Viewport Breakpoints)
@@ -897,7 +904,7 @@ zenstats('Download', {
             </p>
             <ParamTable
               rows={[
-                { name: "data-heatmap", req: true, desc: "设为 \"true\" 开启当前页面的点击热力捕获" },
+                { name: "data-heatmap", req: true, desc: "设为 \"true\" 加载热力图模块；点击与滚动采集由站点设置分别控制" },
                 { name: "data-heatmap-key", desc: "模板聚合 Key。适用于动态路由页面（如 /product/:id 或 /blog/:slug），传入统一 Key（如 \"product-detail\"）将多个动态页面归纳合并到同一热力图下" },
                 { name: "data-heatmap-version", desc: "发布版本号（如 \"v2.1\" 或 \"release-2026-11\"），支持按版本切片观察 UI 迭代前后的点击对比" },
                 { name: "data-heatmap-variant", desc: "变体标识符（如 \"default\" 或 \"variant-b\"），用于 A/B 测试场景下多实验组点击热力对比" },
