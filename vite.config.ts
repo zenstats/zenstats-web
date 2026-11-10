@@ -12,6 +12,12 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       host: "0.0.0.0",
+      proxy: {
+        '/api': {
+          target: env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8080',
+          changeOrigin: false,
+        },
+      },
     },
 
     // 强制转为顶层 vite 的 PluginOption[]：pnpm 会给 @tailwindcss/vite 装一份嵌套的 vite，

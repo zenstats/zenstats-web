@@ -165,3 +165,9 @@ if (fs.existsSync(fullSrc)) {
 }
 
 console.log('\nDone.')
+
+// Optional module is one separate asset, independent of tracker variants.
+const heatmapResult = uglify.minify(fs.readFileSync(relPath('src/heatmap.js'), 'utf8'))
+if (heatmapResult.error) throw heatmapResult.error
+fs.writeFileSync(path.join(outputDir, 'heatmap.js'), heatmapResult.code)
+console.log(`  heatmap.js (${(heatmapResult.code.length / 1024).toFixed(1)}KB, opt-in)`)

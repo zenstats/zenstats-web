@@ -1,7 +1,7 @@
 import { Separator } from "@components/ui/separator"
 import { SidebarNav, type SidebarNavItem } from "./components/sidebar-nav"
 import { useNavigate, useParams } from "react-router-dom";
-import { Code2, Database, Mail, Rocket, ShieldAlert, Target, BellRing, Link, Layers, LayoutGrid, Filter } from "lucide-react";
+import { Code2, Database, Mail, Rocket, ShieldAlert, Target, BellRing, Link, Layers, LayoutGrid, Filter, MousePointer2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { isSubAccount, hasPerm } from "@utils/auth";
 
@@ -34,6 +34,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
       id: "grp-analysis",
       title: t('settings.layout.group.analysis'),
       children: [
+        { id: "heatmap", title: t("heatmap.settings"), icon: <MousePointer2 className="mr-2 h-4 w-4" />, href: `${baseUrl}/heatmap` },
         { id: "goals",    title: t('settings.layout.nav.goals'),    icon: <Target className="mr-2 h-4 w-4" />,     href: `${baseUrl}/goals`,    perm: "goals:write" },
         { id: "funnels",  title: t('settings.layout.nav.funnels'),  icon: <Filter className="mr-2 h-4 w-4" />,     href: `${baseUrl}/funnels`,  perm: "funnels:write" },
         { id: "segments", title: t('settings.layout.nav.segments'), icon: <Layers className="mr-2 h-4 w-4" />,     href: `${baseUrl}/segments`, perm: "segments:write" },

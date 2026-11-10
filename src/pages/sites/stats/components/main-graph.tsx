@@ -49,43 +49,93 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
 
   // Determine active metric (default visitors) — from local state, not query
   const currentMetric = activeMetric || "visitors";
+
   // Determine active interval (default based on period)
-  const defaultIntervalForPeriod = (p?: string): Interval => {
+  const defaultIntervalForPeriod = useCallback((p?: string): Interval => {
     if (p === "realtime") return "minute";
     if (p === "day" || p === "yesterday") return "hourly";
     if (p === "6mo" || p === "12mo" || p === "year") return "monthly";
     return "daily";
-  };
-  const activeInterval = query.interval || defaultIntervalForPeriod(query.period);
-  const [localInterval, setLocalInterval] = useState<Interval>(activeInterval);
+  }, []);
 
-  // Sync local interval from query
-  useEffect(() => {
-    setLocalInterval(activeInterval);
-  }, [activeInterval]);
+  // 按周期过滤颗粒度选项：
+  // - realtime 只有按分钟；
+  // - 长周期（6mo/12mo/year，或 custom 跨度 > 45 天）隐藏按小时——桶数过多，
+  //   后端也会以 maxTimeSeriesBuckets 拒绝此类组合。
+  const customSpanDays = useMemo(() => {
+    if (query.period !== "custom" || !query.from || !query.to) return 0;
+    const ms = new Date(query.to).getTime() - new Date(query.from).getTime();
+    return Number.isFinite(ms) ? ms / 86_400_000 : 0;
+  }, [query.period, query.from, query.to]);
 
+  const hourlyTooCoarse =
+    ["6mo", "12mo", "year"].includes(query.period) || customSpanDays > 45;
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const request: StatsRequest = { ...query, interval: localInterval, metrics: currentMetric };
-      const result = await api(request);
-      if (result.data) {
-        setData(result.data);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+  const availableIntervals = useMemo(() => {
+    if (query.period === "realtime") {
+      return INTERVAL_OPTIONS.filter((i) => i.key === "minute");
     }
-  }, [api, query, localInterval, currentMetric]);
+    return INTERVAL_OPTIONS.filter(
+      (i) => i.key !== "minute" && !(hourlyTooCoarse && i.key === "hourly")
+    );
+  }, [query.period, hourlyTooCoarse, INTERVAL_OPTIONS]);
 
-  // fetchData 的依赖已包含 query（含 refresh）、localInterval、currentMetric，
-  // 用单个 effect 即可覆盖"父组件刷新 / 切换区间 / 切换指标"三种触发；
-  // 之前两个 effect 会在挂载与每次切换时各发一次相同请求。
+  const defaultInterval = defaultIntervalForPeriod(query.period);
+
+  const [localInterval, setLocalInterval] = useState<Interval>(
+    query.interval || defaultInterval
+  );
+
+  // 严格推导当前周期与范围下合法有效的 interval，杜绝切换实时/时间时携带非法或滞后 interval 发起请求
+  const effectiveInterval: Interval = useMemo(() => {
+    if (query.interval && availableIntervals.some((i) => i.key === query.interval)) {
+      return query.interval;
+    }
+    if (localInterval && availableIntervals.some((i) => i.key === localInterval)) {
+      return localInterval;
+    }
+    return defaultInterval;
+  }, [query.interval, availableIntervals, localInterval, defaultInterval]);
+
+  // 同步 localInterval 状态
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (localInterval !== effectiveInterval) {
+      setLocalInterval(effectiveInterval);
+    }
+  }, [effectiveInterval, localInterval]);
+
+  // 获取时序数据，增加取消保护防止快速切换周期导致的异步乱序覆盖
+  useEffect(() => {
+    let isCancelled = false;
+    setLoading(true);
+
+    const request: StatsRequest = {
+      ...query,
+      interval: effectiveInterval,
+      metrics: currentMetric,
+    };
+
+    api(request)
+      .then((result) => {
+        if (!isCancelled && result?.data) {
+          setData(result.data);
+        }
+      })
+      .catch((error) => {
+        if (!isCancelled) {
+          console.error("Failed to fetch main-graph data:", error);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [api, query, effectiveInterval, currentMetric]);
 
   // Transform data for recharts: [{timestamp, metrics: {visitors, pageviews}}] → [{time, value, compareValue}]
   const compKey = `${currentMetric}_comparison`;
@@ -101,31 +151,6 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
   const compareTotal = hasComparison
     ? chartData.reduce((sum, d) => sum + (d.compareValue ?? 0), 0)
     : undefined;
-
-  // 按周期过滤颗粒度选项：
-  // - realtime 只有按分钟；
-  // - 长周期（6mo/12mo/year，或 custom 跨度 > 45 天）隐藏按小时——桶数过多，
-  //   后端也会以 maxTimeSeriesBuckets 拒绝此类组合。
-  const customSpanDays = (() => {
-    if (query.period !== "custom" || !query.from || !query.to) return 0;
-    const ms = new Date(query.to).getTime() - new Date(query.from).getTime();
-    return Number.isFinite(ms) ? ms / 86_400_000 : 0;
-  })();
-  const hourlyTooCoarse =
-    ["6mo", "12mo", "year"].includes(query.period) || customSpanDays > 45;
-  const availableIntervals = query.period === "realtime"
-    ? INTERVAL_OPTIONS.filter((i) => i.key === "minute")
-    : INTERVAL_OPTIONS.filter(
-        (i) => i.key !== "minute" && !(hourlyTooCoarse && i.key === "hourly")
-      );
-
-  // 周期切换后当前颗粒度可能已不在可选列表（如 30d+按小时 → 切到 12mo），回退到该周期的默认值
-  useEffect(() => {
-    if (!availableIntervals.some((i) => i.key === localInterval)) {
-      setLocalInterval(defaultIntervalForPeriod(query.period));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query.period, customSpanDays]);
 
   const handleIntervalChange = (interval: Interval) => {
     setLocalInterval(interval);
@@ -170,7 +195,9 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
     );
   };
 
-  const intervalLabel = INTERVAL_OPTIONS.find((i) => i.key === localInterval)?.label || t('stats.graph.intervalByDay');
+  const intervalLabel =
+    INTERVAL_OPTIONS.find((i) => i.key === effectiveInterval)?.label ||
+    t("stats.graph.intervalByDay");
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-lg">
@@ -204,7 +231,7 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
                 <DropdownMenuItem
                   key={opt.key}
                   onClick={() => handleIntervalChange(opt.key)}
-                  className={cn(localInterval === opt.key && "bg-gray-50 dark:bg-gray-800")}
+                  className={cn(effectiveInterval === opt.key && "bg-gray-50 dark:bg-gray-800")}
                 >
                   {opt.label}
                 </DropdownMenuItem>

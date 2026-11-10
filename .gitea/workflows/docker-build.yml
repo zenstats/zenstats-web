@@ -45,3 +45,17 @@ jobs:
             ${TAGS} \
             --push \
             -f Dockerfile .
+
+      - name: Build & Push screenshot worker
+        run: |
+          SHA="${GITHUB_SHA:-latest}"
+          REF="${GITHUB_REF_NAME:-latest}"
+          IMAGE="${{ env.REGISTRY }}/${{ vars.ACR_NAMESPACE }}/zenstats-web-screenshot"
+          TAGS="-t ${IMAGE}:sha-${SHA:0:7} -t ${IMAGE}:${REF}"
+          if [ "${{ gitea.ref }}" = "refs/heads/main" ]; then
+            TAGS="${TAGS} -t ${IMAGE}:latest"
+          fi
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --provenance=false --sbom=false \
+            ${TAGS} --push -f screenshot/Dockerfile screenshot

@@ -15,6 +15,7 @@ import {
   Settings,
   Shield,
   ShieldAlert,
+  Flame,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -171,6 +172,18 @@ export default function Sites() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-7 w-7 text-gray-400 hover:text-orange-500 dark:hover:text-orange-400"
+                      title={t("heatmap.title", "点击热力图")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/sites/${site.domain}/heatmap`);
+                      }}
+                    >
+                      <Flame className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="h-7 w-7 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                       title={t("sites.installTrackingCode")}
                       onClick={(e) => {
@@ -251,6 +264,18 @@ export default function Sites() {
                     <td className="px-4 py-3.5 text-right">
                       {!subAccount && (
                         <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-gray-400 hover:text-orange-500 dark:hover:text-orange-400"
+                            title={t("heatmap.title", "点击热力图")}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/sites/${site.domain}/heatmap`);
+                            }}
+                          >
+                            <Flame className="h-3.5 w-3.5" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"

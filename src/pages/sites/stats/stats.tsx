@@ -40,6 +40,8 @@ import {
   Target,
   Layers,
   Filter,
+  Flame,
+  GitMerge,
 } from "lucide-react";
 import i18n from '@/i18n';
 import axios, { type BaseResponse } from "@utils/axios";
@@ -55,6 +57,7 @@ import type {
   QueryV2Request,
   QueryV2Response,
   Segment,
+  UserFlowsResponse,
 } from "../types/interfaces";
 import AggregateStats from "./components/aggregate-stats";
 import MainGraph from "./components/main-graph";
@@ -71,6 +74,7 @@ import DimensionSettings, {
 import GoalsPanel from "./components/goals-panel";
 import PropertiesPanel from "./components/properties-panel";
 import FunnelsPanel from "./components/funnels-panel";
+import UserFlowsPanel from "./components/user-flows-panel";
 import Forbidden from "@components/403";
 import { cn } from "@/lib/utils";
 
@@ -203,7 +207,7 @@ export default function StatsPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [hasAccess, setHasAccess] = useState<'loading' | 'granted' | 'no_access' | 'not_verified'>('loading');
   const [activeCategoryTab, setActiveCategoryTab] = useState<string>("traffic");
-  const [activePanel, setActivePanel] = useState<"stats" | "goals" | "properties" | "funnels" | "custom-query">("stats");
+  const [activePanel, setActivePanel] = useState<"stats" | "goals" | "properties" | "funnels" | "user-flows" | "custom-query">("stats");
 
   // Local metric selection (separate from query to avoid triggering all panels)
   const [activeMetric, setActiveMetric] = useState("visitors");
@@ -373,6 +377,19 @@ export default function StatsPage() {
         );
         return response.data;
       },
+      // User flows (Sankey graph)
+      getUserFlows: async (
+        dateRange: StatsRequest,
+        extra?: { entry_path?: string; steps?: number; limit?: number },
+        signal?: AbortSignal,
+      ) => {
+        const params: Record<string, unknown> = { ...dateRange, ...extra };
+        const response = await axios.get<BaseResponse<UserFlowsResponse>>(
+          "/stats/" + domain + "/user-flows",
+          { params, signal, timeout: 30000 },
+        );
+        return response.data.data;
+      },
       getSiteList: async () => {
         const response = await axios.get<BaseResponse<Site[]>>("/sites");
         return response.data;
@@ -380,6 +397,26 @@ export default function StatsPage() {
     }),
     [domain],
   );
+
+  const syncUrlParams = useCallback((nextQuery: StatsRequest) => {
+    const params: Record<string, string> = {
+      period: nextQuery.period || "day",
+    };
+    if (nextQuery.date) params.date = nextQuery.date;
+    if (nextQuery.from) params.from = nextQuery.from;
+    if (nextQuery.to) params.to = nextQuery.to;
+    if (nextQuery.filters) params.filters = nextQuery.filters;
+    if (nextQuery.compare) params.compare = nextQuery.compare;
+    if (nextQuery.compare_from) params.compare_from = nextQuery.compare_from;
+    if (nextQuery.compare_to) params.compare_to = nextQuery.compare_to;
+
+    const queryString = qs.stringify(params, { skipNulls: true });
+    const newUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (newUrl !== currentUrl) {
+      window.history.pushState({}, "", newUrl);
+    }
+  }, []);
 
   const fetchAllData = useCallback(() => {
     const q = qs.parse(window.location.search, { ignoreQueryPrefix: true });
@@ -397,6 +434,39 @@ export default function StatsPage() {
     if (date) request.date = dayjs(date).format("YYYY-MM-DD");
     if (from) request.from = dayjs(from).format("YYYY-MM-DD");
     if (to) request.to = dayjs(to).format("YYYY-MM-DD");
+
+    // 正确从 URL 恢复筛选条件
+    if (q.filters && typeof q.filters === "string") {
+      try {
+        const parsed = JSON.parse(q.filters);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          request.filters = q.filters;
+        }
+      } catch {
+        // ignore invalid json
+      }
+    }
+
+    if (q.compare === "1") {
+      request.compare = "1";
+      setCompareEnabled(true);
+      if (q.compare_from && q.compare_to) {
+        request.compare_from = q.compare_from as string;
+        request.compare_to = q.compare_to as string;
+        setCompareMode("custom");
+        setCompareLabel(
+          `${dayjs(q.compare_from as string).format(shortDateFormat)} - ${dayjs(q.compare_to as string).format(shortDateFormat)}`
+        );
+      } else {
+        setCompareMode("auto");
+        setCompareLabel("");
+      }
+    } else {
+      setCompareEnabled(false);
+      setCompareMode("auto");
+      setCompareLabel("");
+    }
+
     request.refresh = dayjs().toDate();
     setQuery(request);
   }, []);
@@ -451,22 +521,19 @@ export default function StatsPage() {
       }
 
       // Preserve current filters when changing date
-      setQuery((prev) => ({
-        ...params,
-        filters: prev.filters,
-        refresh: new Date(),
-      }));
-
-      const queryString = qs.stringify(params);
-      window.history.pushState(
-        {},
-        "",
-        `${window.location.pathname}?${queryString.toString()}`,
-      );
+      setQuery((prev) => {
+        const nextQuery: StatsRequest = {
+          ...prev,
+          ...params,
+          refresh: new Date(),
+        };
+        syncUrlParams(nextQuery);
+        return nextQuery;
+      });
 
       setIsDropdownOpen(false);
     },
-    [selectedDateRange, setQuery],
+    [selectedDateRange, setQuery, syncUrlParams],
   );
 
   // Compute primary period length in days (for matching compare range)
@@ -491,20 +558,24 @@ export default function StatsPage() {
     if (mode === "auto") {
       setCompareMode("auto");
       setCompareLabel("");
-      setQuery((q) => ({
-        ...q,
-        compare: "1",
-        compare_from: undefined,
-        compare_to: undefined,
-        refresh: new Date(),
-      }));
+      setQuery((q) => {
+        const nextQuery = {
+          ...q,
+          compare: "1",
+          compare_from: undefined,
+          compare_to: undefined,
+          refresh: new Date(),
+        };
+        syncUrlParams(nextQuery);
+        return nextQuery;
+      });
     } else if (mode === "custom") {
       // Open picker — no pre-selection, user picks freely
       setCompareCustomDate(undefined);
       setIsCompareDatePickerOpen(true);
     }
     setIsCompareDropdownOpen(false);
-  }, [setQuery, primaryPeriodDays]);
+  }, [setQuery, syncUrlParams]);
 
   // Handle compare custom date: compute full range matching primary period length
   useEffect(() => {
@@ -515,16 +586,20 @@ export default function StatsPage() {
       const toStr = endDate.format("YYYY-MM-DD");
       setCompareMode("custom");
       setCompareLabel(`${startDate.format(shortDateFormat)} - ${endDate.format(shortDateFormat)}`);
-      setQuery((q) => ({
-        ...q,
-        compare: "1",
-        compare_from: fromStr,
-        compare_to: toStr,
-        refresh: new Date(),
-      }));
+      setQuery((q) => {
+        const nextQuery = {
+          ...q,
+          compare: "1",
+          compare_from: fromStr,
+          compare_to: toStr,
+          refresh: new Date(),
+        };
+        syncUrlParams(nextQuery);
+        return nextQuery;
+      });
       setIsCompareDatePickerOpen(false);
     }
-  }, [compareCustomDate, setQuery, primaryPeriodDays]);
+  }, [compareCustomDate, setQuery, primaryPeriodDays, syncUrlParams]);
 
   useEffect(() => {
     if (selectedDateRange.from && selectedDateRange.to) {
@@ -602,10 +677,18 @@ export default function StatsPage() {
     setQuery((prev) => ({ ...prev, refresh: new Date() }));
   };
 
-  // Initial data load
+  // Initial data load & popstate listener for back/forward navigation
   useEffect(() => {
     fetchAllData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handlePopState = () => {
+      fetchAllData();
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [fetchAllData]);
 
   // Update selected option name when query date changes
   useEffect(() => {
@@ -622,7 +705,9 @@ export default function StatsPage() {
       try {
         original = JSON.parse(prev.filters || "[]");
       } catch {
-        return { ...prev, filters: undefined, refresh: new Date() };
+        const nextQuery = { ...prev, filters: undefined, refresh: new Date() };
+        syncUrlParams(nextQuery);
+        return nextQuery;
       }
       if (!Array.isArray(original) || original.length === 0) return prev;
 
@@ -644,16 +729,22 @@ export default function StatsPage() {
         original.splice(target._groupIndex, 1);
       }
 
-      return {
+      const nextQuery = {
         ...prev,
         filters: original.length > 0 ? JSON.stringify(original) : undefined,
         refresh: new Date(),
       };
+      syncUrlParams(nextQuery);
+      return nextQuery;
     });
   };
 
   const handleClearAllFilters = () => {
-    setQuery((prev) => ({ ...prev, filters: undefined, refresh: new Date() }));
+    setQuery((prev) => {
+      const nextQuery = { ...prev, filters: undefined, refresh: new Date() };
+      syncUrlParams(nextQuery);
+      return nextQuery;
+    });
   };
 
   const handleAddFilter = (dimension: string, operator: string, _label: string, values: string[]) => {
@@ -665,7 +756,9 @@ export default function StatsPage() {
 
       const newFilter = [operator, dimension, values.length === 1 ? [values[0]] : values];
       const next = [...existing, newFilter];
-      return { ...prev, filters: JSON.stringify(next), refresh: new Date() };
+      const nextQuery = { ...prev, filters: JSON.stringify(next), refresh: new Date() };
+      syncUrlParams(nextQuery);
+      return nextQuery;
     });
   };
 
@@ -682,12 +775,20 @@ export default function StatsPage() {
 
   const handleApplySegment = (seg: Segment) => {
     setActiveSegment(seg);
-    setQuery((prev) => ({ ...prev, filters: seg.filters, refresh: new Date() }));
+    setQuery((prev) => {
+      const nextQuery = { ...prev, filters: seg.filters, refresh: new Date() };
+      syncUrlParams(nextQuery);
+      return nextQuery;
+    });
   };
 
   const handleClearSegment = () => {
     setActiveSegment(null);
-    setQuery((prev) => ({ ...prev, filters: undefined, refresh: new Date() }));
+    setQuery((prev) => {
+      const nextQuery = { ...prev, filters: undefined, refresh: new Date() };
+      syncUrlParams(nextQuery);
+      return nextQuery;
+    });
   };
 
   // Save current filters as a new segment
@@ -832,6 +933,18 @@ export default function StatsPage() {
               query={{ period: "realtime" }}
               api={api.getCurrentVisitors}
             />
+
+            {/* Click Heatmap Quick Access */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/sites/${domain}/heatmap`)}
+              className="h-9 gap-1.5 text-xs text-gray-700 dark:text-gray-300"
+              title={t('heatmap.title', '点击热力图')}
+            >
+              <Flame className="h-4 w-4 text-orange-500" />
+              <span className="hidden sm:inline">{t('heatmap.title', '点击热力图')}</span>
+            </Button>
 
             {/* Date picker dialog */}
             <Dialog open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
@@ -1170,6 +1283,7 @@ export default function StatsPage() {
             { key: "goals", label: t("stats.sidebar.goals"), icon: <Target className="h-3.5 w-3.5" /> },
             { key: "properties", label: t("stats.sidebar.properties"), icon: <Layers className="h-3.5 w-3.5" /> },
             { key: "funnels", label: t("stats.sidebar.funnels"), icon: <Filter className="h-3.5 w-3.5" /> },
+            { key: "user-flows", label: t("stats.sidebar.flows"), icon: <GitMerge className="h-3.5 w-3.5" /> },
             { key: "custom-query", label: t("stats.sidebar.customQuery"), icon: <Code2 className="h-3.5 w-3.5" /> },
           ] as const).map((tab) => (
             <button
@@ -1186,6 +1300,14 @@ export default function StatsPage() {
               {tab.label}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => navigate(`/sites/${domain}/heatmap`)}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-white/50 dark:hover:bg-gray-900/50"
+          >
+            <Flame className="h-3.5 w-3.5 text-orange-500" />
+            {t("heatmap.title", "点击热力图")}
+          </button>
         </div>
 
         {/* Panel content */}
@@ -1256,6 +1378,7 @@ export default function StatsPage() {
                           limit={50}
                           query={{ ...query, property: dim.property }}
                           setQuery={setQuery}
+                          onAddFilter={handleAddFilter}
                           api={api.getBreakdown}
                           exportApi={api.exportBreakdown}
                           icon={DIMENSION_ICONS[dim.key] || <BarChart3 className="h-4 w-4" />}
@@ -1292,6 +1415,15 @@ export default function StatsPage() {
               <FunnelsPanel
                 query={query}
                 domain={domain!}
+              />
+            )}
+
+            {/* User Flows (Sankey) panel */}
+            {activePanel === "user-flows" && (
+              <UserFlowsPanel
+                query={query}
+                domain={domain!}
+                api={api.getUserFlows}
               />
             )}
 

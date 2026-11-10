@@ -43,6 +43,19 @@
 		}
 	}
 
+	handle /api/heatmap/* {
+		@heatmapOptions method OPTIONS
+		header @heatmapOptions Access-Control-Allow-Origin "*"
+		header @heatmapOptions Access-Control-Allow-Methods "GET, POST, OPTIONS"
+		header @heatmapOptions Access-Control-Allow-Headers "Content-Type, X-Requested-With"
+		header @heatmapOptions Access-Control-Allow-Private-Network "true"
+		header @heatmapOptions Access-Control-Max-Age "86400"
+		respond @heatmapOptions 204
+		reverse_proxy zenstats:8080 {
+			# Gin backend already emits CORS headers. Avoid duplicated values.
+		}
+	}
+
 	# API 请求代理到后端（包括事件上报端点 /api/event）
 	# 注意：必须使用 handle 而非 handle_path
 	# Go 后端路由注册为 /api/* 组（参见 cmd/server.go: api := r.Group("/api")）

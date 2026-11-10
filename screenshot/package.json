@@ -1,0 +1,8 @@
+{
+  "name": "zenstats-screenshot",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": { "start": "node server.mjs", "test": "node --test test/*.test.mjs" },
+  "dependencies": { "ipaddr.js": "2.2.0", "playwright": "1.65.0" }
+}
