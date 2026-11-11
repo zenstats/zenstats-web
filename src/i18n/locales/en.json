@@ -547,6 +547,9 @@
     }
   },
   "stats": {
+    "tabs": {
+      "analytics": "Analytics"
+    },
     "loading": "Checking access...",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -1609,7 +1612,36 @@
       "parameter": "Parameter",
       "description": "Description",
       "queryParameters": "Query parameters",
-      "requestBody": "Request body"
+      "requestBody": "Request body",
+      "required": "required",
+      "optional": "optional"
+    },
+    "labels": {
+      "baseUrl": "Base URL",
+      "successResponse": "Success Response",
+      "errorResponse": "Error Response",
+      "request": "Request",
+      "response": "Response",
+      "curl": "cURL",
+      "html": "HTML",
+      "javascript": "JavaScript",
+      "heatmapsAndVitals": "Heatmaps + Core Web Vitals",
+      "propBreakdown": "Breakdown by property",
+      "filterStructure": "Filter Structure",
+      "behaviorFilters": "Behavioral & case-insensitive filters",
+      "trackerEmbed": "Tracker Embed Example",
+      "htmlMarkup": "HTML Markup Example",
+      "curlExample": "cURL Example",
+      "coreWebVitals": "Core Web Vitals",
+      "userFlowCurl": "cURL",
+      "userFlowResponse": "Example Response",
+      "createSegment": "Create Segment",
+      "createSharedLink": "Create Shared Link",
+      "cloneStep": "1. Clone",
+      "configStep": "2. Configure",
+      "deployStep": "3. Deploy",
+      "wildcardExample": "Example",
+      "goalBreakdown": "Goal breakdown"
     },
     "params": {
       "period": "Time period. See",

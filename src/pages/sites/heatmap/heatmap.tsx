@@ -3,9 +3,18 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/variants/button-variants";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -419,31 +428,81 @@ export default function Heatmap() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5">
         {/* Breadcrumb & Navigation */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
+          <div className="flex items-center gap-3">
             <Link
               to={`/sites/${domain}/stats`}
-              className="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>{domain}</span>
             </Link>
-            <span>/</span>
-            <span className="text-gray-900 dark:text-gray-100 font-medium flex items-center gap-1.5">
-              <Flame className="h-4 w-4 text-orange-500" />
-              {t(mode === "scroll" ? "heatmap.scroll.title" : "heatmap.title")}
-            </span>
+            <div className="h-4 w-px bg-border" />
+            <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400">
+                <Flame className="h-4 w-4" />
+              </span>
+              <span>{t("heatmap.title", "热力图分析")}</span>
+            </h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {/* 顶栏 Segmented Switcher */}
+            <div className="flex items-center rounded-lg border bg-muted/40 p-1 shadow-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  const next = new URLSearchParams(searchParams);
+                  next.set("mode", "click");
+                  setSearchParams(next);
+                }}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all",
+                  mode === "click"
+                    ? "bg-background text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Flame
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    mode === "click" ? "text-orange-500" : "text-muted-foreground",
+                  )}
+                />
+                <span>{t("heatmap.scroll.clickMode", "点击热力图")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = new URLSearchParams(searchParams);
+                  next.set("mode", "scroll");
+                  setSearchParams(next);
+                }}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all",
+                  mode === "scroll"
+                    ? "bg-background text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Layers
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    mode === "scroll" ? "text-indigo-500" : "text-muted-foreground",
+                  )}
+                />
+                <span>{t("heatmap.scroll.scrollMode", "滚动深度")}</span>
+              </button>
+            </div>
+
             {config && (
               <Badge
                 variant="outline"
                 className={cn(
-                  "text-xs px-2.5 py-0.5",
+                  "text-xs px-2.5 py-1 font-medium",
                   config.enabled
                     ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700"
+                    : "bg-muted text-muted-foreground border-border",
                 )}
               >
                 {t(config.enabled ? "heatmap.enabled" : "heatmap.disabled")}
@@ -454,7 +513,7 @@ export default function Heatmap() {
               variant="outline"
               size="sm"
               asChild
-              className="h-8 gap-1.5 text-xs text-gray-600 dark:text-gray-300"
+              className="h-8 gap-1.5 text-xs shadow-xs"
             >
               <Link to={`/sites/${domain}/settings/heatmap`}>
                 <Settings className="h-3.5 w-3.5" />
@@ -463,9 +522,9 @@ export default function Heatmap() {
             </Button>
 
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
-              className="h-8 w-8 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              className="h-8 w-8 shadow-xs"
               onClick={() => {
                 if (ready) {
                   setRevision((v) => v + 1);
@@ -474,7 +533,7 @@ export default function Heatmap() {
                 }
               }}
             >
-              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+              <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
             </Button>
           </div>
         </div>
@@ -526,24 +585,6 @@ export default function Heatmap() {
           </div>
         )}
 
-        {config && (
-          <div className="flex gap-2" role="group" aria-label={t("heatmap.scroll.mode")}>
-            {(["click", "scroll"] as const).map(value => (
-              <Button
-                key={value}
-                variant={mode === value ? "default" : "outline"}
-                aria-pressed={mode === value}
-                onClick={() => {
-                  const next = new URLSearchParams(searchParams);
-                  next.set("mode", value);
-                  setSearchParams(next);
-                }}
-              >
-                {t(`heatmap.scroll.${value}Mode`)}
-              </Button>
-            ))}
-          </div>
-        )}
         {config && mode === "scroll" && (
           <ScrollWorkspace key={base} base={base} config={config} readOnly={readOnly} />
         )}
@@ -712,28 +753,32 @@ export default function Heatmap() {
                       <span>{t("heatmap.pageLayout")}</span>
                     </label>
                     <div className="flex-1 max-w-2xl">
-                      <select
-                        aria-label={t("heatmap.pageLayout")}
-                        className="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      <Select
                         value={selected}
-                        onChange={(e) => {
-                          setSelected(e.target.value);
+                        onValueChange={(val) => {
+                          setSelected(val);
                           setSnapshotID(null);
                         }}
                       >
-                        {pages.map((p) => {
-                          const dev = deviceClass(p);
-                          return (
-                            <option key={pageKey(p)} value={pageKey(p)}>
-                              {scope === "key"
+                        <SelectTrigger className="w-full h-8 text-xs font-medium">
+                          <SelectValue placeholder={t("heatmap.pageLayout")} />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-72">
+                          {pages.map((p) => {
+                            const dev = deviceClass(p);
+                            const label = `${
+                              scope === "key"
                                 ? `${p.aggregation_key} · ${p.hostname}`
-                                : `${p.hostname}${p.path}`}{" "}
-                              · {p.version}/{p.variant} · {t(`heatmap.device.${dev}`)} · {p.clicks}{" "}
-                              clicks
-                            </option>
-                          );
-                        })}
-                      </select>
+                                : `${p.hostname}${p.path}`
+                            } · ${p.version}/${p.variant} · ${t(`heatmap.device.${dev}`)} · ${p.clicks} clicks`;
+                            return (
+                              <SelectItem key={pageKey(p)} value={pageKey(p)} className="text-xs">
+                                {label}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
@@ -784,18 +829,21 @@ export default function Heatmap() {
                             <span className="text-gray-500 dark:text-gray-400">
                               {t("heatmap.snapshot")}:
                             </span>
-                            <select
-                              aria-label={t("heatmap.snapshot")}
-                              className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1 text-xs text-gray-700 dark:text-gray-200 focus:outline-none"
-                              value={snapshot?.id ?? ""}
-                              onChange={(e) => setSnapshotID(Number(e.target.value))}
+                            <Select
+                              value={snapshot?.id ? String(snapshot.id) : ""}
+                              onValueChange={(val) => setSnapshotID(Number(val))}
                             >
-                              {matching.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                  {new Date(s.created_at).toLocaleString()}
-                                </option>
-                              ))}
-                            </select>
+                              <SelectTrigger className="h-7 min-w-[170px] text-xs">
+                                <SelectValue placeholder={t("heatmap.snapshot")} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {matching.map((s) => (
+                                  <SelectItem key={s.id} value={String(s.id)} className="text-xs">
+                                    {new Date(s.created_at).toLocaleString()}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                         )}
                       </div>
@@ -806,16 +854,16 @@ export default function Heatmap() {
                         <div className="flex items-center gap-2">
                           <Sliders className="h-3.5 w-3.5 text-gray-400" />
                           <span className="text-xs text-gray-500">{t("heatmap.opacity")}</span>
-                          <input
-                            aria-label={t("heatmap.opacity")}
-                            type="range"
-                            min={0.1}
-                            max={1}
-                            step={0.05}
-                            value={opacity}
-                            onChange={(e) => setOpacity(Number(e.target.value))}
-                            className="w-20 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                          />
+                          <div className="w-24 flex items-center">
+                            <Slider
+                              value={[opacity]}
+                              onValueChange={(val) => setOpacity(val[0] ?? 0.7)}
+                              min={0.1}
+                              max={1}
+                              step={0.05}
+                              aria-label={t("heatmap.opacity")}
+                            />
+                          </div>
                           <span className="text-xs font-mono text-gray-500 w-8">
                             {Math.round(opacity * 100)}%
                           </span>
@@ -835,7 +883,12 @@ export default function Heatmap() {
                             </Button>
 
                             {scope !== "key" && (
-                              <label className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-md border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                              <label
+                                className={cn(
+                                  buttonVariants({ variant: "outline", size: "sm" }),
+                                  "h-7 text-xs gap-1 cursor-pointer font-medium"
+                                )}
+                              >
                                 <input
                                   className="sr-only"
                                   type="file"
@@ -846,7 +899,7 @@ export default function Heatmap() {
                                     e.target.value = "";
                                   }}
                                 />
-                                <Upload className="h-3.5 w-3.5 text-gray-400" />
+                                <Upload className="h-3.5 w-3.5 text-muted-foreground" />
                                 <span>{t(uploading ? "common.loading" : "heatmap.upload")}</span>
                               </label>
                             )}

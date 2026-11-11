@@ -120,7 +120,7 @@ function ParamTable({ rows }: { rows: { name: string; req?: boolean; desc: React
                 <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">{row.name}</code>
                 {row.req && (
                   <span className="ml-1.5 text-[10px] font-semibold text-amber-700 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/40 px-1 py-0.5 rounded">
-                    required
+                    {t("docs.table.required", "必填")}
                   </span>
                 )}
               </td>
@@ -409,16 +409,16 @@ export default function DocsPage() {
 
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.introduction.baseUrl.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.introduction.baseUrl.description")}</p>
-            <CodeBlock label="Base URL">https://your-zenstats-instance.com/api</CodeBlock>
+            <CodeBlock label={t("docs.labels.baseUrl", "基础 API 地址")}>https://your-zenstats-instance.com/api</CodeBlock>
 
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.introduction.responseFormat.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.introduction.responseFormat.description")}</p>
-            <CodeBlock label="Success Response">{`{
+            <CodeBlock label={t("docs.labels.successResponse", "成功响应示例")}>{`{
   "code":    200,
   "message": "success",
   "data":    { ... }
 }`}</CodeBlock>
-            <CodeBlock label="Error Response">{`{
+            <CodeBlock label={t("docs.labels.errorResponse", "错误响应示例")}>{`{
   "code":    400,
   "message": "bad request",
   "error":   "site_id is required"
@@ -432,7 +432,7 @@ export default function DocsPage() {
 
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.authentication.apiKey.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.authentication.apiKey.description")}</p>
-            <CodeBlock label="Request">{`curl https://your-instance.com/api/stats/example.com/aggregate \\
+            <CodeBlock label={t("docs.labels.curl", "cURL 请求示例")}>{`curl https://your-instance.com/api/stats/example.com/aggregate \\
   -H "Authorization: Bearer zs_live_abc123..." \\
   -G \\
   -d "period=p30&metrics=visitors,pageviews"`}</CodeBlock>
@@ -446,7 +446,7 @@ export default function DocsPage() {
           <section id="trackingScript" className="mb-16 scroll-mt-8">
             <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.trackingScript")}</h2>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.description")}</p>
-            <CodeBlock label="HTML">{`<script
+            <CodeBlock label={t("docs.labels.html", "HTML 引入示例")}>{`<script
   defer
   data-domain="example.com"
   src="https://your-instance.com/js/script.js"
@@ -463,7 +463,7 @@ export default function DocsPage() {
               { name: "data-heatmap-key", desc: t("sites.install.optional.keyHelp") },
               { name: "data-heatmap-variant", desc: t("sites.install.optional.variantHelp") },
             ]} />
-            <CodeBlock label="Heatmaps + Core Web Vitals">{`<script defer crossorigin="anonymous"
+            <CodeBlock label={t("docs.labels.heatmapsAndVitals", "热力图与性能监控引入")}>{`<script defer crossorigin="anonymous"
   data-domain="example.com"
   src="https://your-instance.com/js/script.heatmap.performance.js"
   data-heatmap="true"
@@ -509,18 +509,18 @@ export default function DocsPage() {
             {/* 方式一：JS API */}
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.js.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.js.description")}</p>
-            <CodeBlock label="JavaScript">{`// Named event
+            <CodeBlock label={t("docs.labels.javascript", "JavaScript 代码示例")}>{`// 1. 触发命名自定义事件
 zenstats('Signup')
 
-// With custom properties
+// 2. 携带自定义属性（键值对）
 zenstats('Purchase', {
   props: { plan: 'pro', amount: 49 }
 })
 
-// Non-interactive: does not affect bounce rate
+// 3. 非交互事件（不影响跳出率计算）
 zenstats('Scroll Depth', { interactive: false })
 
-// Callback: status = HTTP code, ignored = filtered (bot / exclusion)
+// 4. 带回调函数：status 表示 HTTP 状态码，ignored 表示是否被屏蔽规则丢弃
 zenstats('Download', {
   callback: (r) => console.log(r.status, r.ignored)
 })`}</CodeBlock>
@@ -528,16 +528,16 @@ zenstats('Download', {
             {/* 方式二：CSS class 无代码埋点 */}
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.tagged.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.tagged.description")}</p>
-            <CodeBlock label="HTML">{`<!-- Button click -->
-<button class="event-name=Signup">Sign Up</button>
+            <CodeBlock label={t("docs.labels.html", "HTML 属性标记示例")}>{`<!-- 按钮点击上报自定义事件 -->
+<button class="event-name=Signup">立即注册</button>
 
-<!-- Link click ("+" becomes a space: "Pricing Click"); url prop is added automatically -->
-<a href="/pricing" class="event-name=Pricing+Click">View Pricing</a>
+<!-- 链接点击（"+" 号自动转换为空格："Pricing Click"；url 属性自动填充） -->
+<a href="/pricing" class="event-name=Pricing+Click">查看价格</a>
 
-<!-- Extra props via event-<key>=<value> -->
-<button class="event-name=Purchase event-plan=Pro event-amount=99">Buy Pro</button>
+<!-- 通过 event-<键>=<值> 附加额外自定义属性 -->
+<button class="event-name=Purchase event-plan=Pro event-amount=99">购买专业版</button>
 
-<!-- Form submission (otherwise recorded as "Form: Submission") -->
+<!-- 表单提交（未指定名称时默认记录为 "Form: Submission"） -->
 <form class="event-name=Contact+Form">…</form>`}</CodeBlock>
             <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-400 space-y-1 mb-2">
               <li>{t("docs.sections.trackingScript.tagged.rules.plus")}</li>
@@ -549,7 +549,7 @@ zenstats('Download', {
             {/* 自定义属性：如何发、如何查 */}
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.props.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.props.description")}</p>
-            <CodeBlock label="Breakdown by property">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+            <CodeBlock label={t("docs.labels.propBreakdown", "按属性细分查询")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -597,11 +597,11 @@ zenstats('Download', {
               { name: "compare", desc: t("docs.params.compare") },
               { name: "date", desc: t("docs.params.date") },
             ]} />
-            <CodeBlock label="Request">{`curl https://your-instance.com/api/stats/example.com/aggregate \\
+            <CodeBlock label={t("docs.labels.request", "请求示例")}>{`curl https://your-instance.com/api/stats/example.com/aggregate \\
   -H "Authorization: Bearer <token>" \\
   -G \\
   -d "period=p30&metrics=visitors,pageviews,bounce_rate"`}</CodeBlock>
-            <CodeBlock label="Response">{`{
+            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{
   "code": 200,
   "data": {
     "visitors":    { "value": 12840, "change": 5.2 },
@@ -628,11 +628,11 @@ zenstats('Download', {
               { name: "limit", desc: t("docs.params.limit") },
               { name: "page", desc: t("docs.params.page") },
             ]} />
-            <CodeBlock label="Request">{`curl https://your-instance.com/api/stats/example.com/breakdown \\
+            <CodeBlock label={t("docs.labels.request", "请求示例")}>{`curl https://your-instance.com/api/stats/example.com/breakdown \\
   -H "Authorization: Bearer <token>" \\
   -G \\
   -d "period=p30&property=visit:source&metrics=visitors,bounce_rate"`}</CodeBlock>
-            <CodeBlock label="Response">{`{
+            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{
   "code": 200,
   "data": {
     "columns": ["visitors", "bounce_rate"],
@@ -660,7 +660,7 @@ zenstats('Download', {
               { name: "metrics", desc: t("docs.params.metrics") },
               { name: "filters", desc: t("docs.params.filters") },
             ]} />
-            <CodeBlock label="Response">{`{
+            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{
   "code": 200,
   "data": [
     { "date": "2024-01-01", "visitors": 340, "pageviews": 1200 },
@@ -677,7 +677,7 @@ zenstats('Download', {
               <MethodBadge method="GET" />
               <span className="text-slate-700 dark:text-slate-300">/api/stats/:domain/current-visitors</span>
             </div>
-            <CodeBlock label="Response">{`{
+            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{
   "code": 200,
   "data": { "current_visitors": 47 }
 }`}</CodeBlock>
@@ -707,7 +707,7 @@ zenstats('Download', {
               { name: "compare_from / compare_to", desc: t("docs.params.compareCustom") },
               { name: "sample_threshold", desc: t("docs.params.sampleThreshold") },
             ]} />
-            <CodeBlock label="Request (breakdown)">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+            <CodeBlock label={t("docs.labels.request", "细分查询请求")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -719,7 +719,7 @@ zenstats('Download', {
     "limit": 20,
     "offset": 0
   }'`}</CodeBlock>
-            <CodeBlock label="Request (aggregate + comparison)">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+            <CodeBlock label={t("docs.labels.request", "聚合与同比查询请求")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -729,7 +729,7 @@ zenstats('Download', {
   }'`}</CodeBlock>
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.v2Query.multiDim.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.v2Query.multiDim.description")}</p>
-            <CodeBlock label="Request (multi-dimension breakdown)">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+            <CodeBlock label={t("docs.labels.request", "多维交叉细分请求")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -737,9 +737,9 @@ zenstats('Download', {
     "metrics": ["visitors", "total_revenue"],
     "dimensions": ["event:page", "visit:country"]
   }'
-// Each result row carries every dimension column, e.g.
+// 每一行返回结果均包含所选维度的所有列，例如：
 // { "page": "/pricing", "country": "US", "visitors": 421, "total_revenue": 1290.50 }`}</CodeBlock>
-            <CodeBlock label="Response (aggregate)">{`{
+            <CodeBlock label={t("docs.labels.response", "聚合响应数据")}>{`{
   "code": 200,
   "data": {
     "results": {
@@ -750,7 +750,7 @@ zenstats('Download', {
     }
   }
 }`}</CodeBlock>
-            <CodeBlock label="Response (breakdown)">{`{
+            <CodeBlock label={t("docs.labels.response", "细分响应数据")}>{`{
   "code": 200,
   "data": {
     "columns": ["visitors", "pageviews", "bounce_rate"],
@@ -821,7 +821,7 @@ zenstats('Download', {
           <section id="filters" className="mb-16 scroll-mt-8">
             <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.filters")}</h2>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.filters.description")}</p>
-            <CodeBlock label="Filter Structure">{`// Each filter is a tuple: [operator, dimension, [value]]
+            <CodeBlock label={t("docs.labels.filterStructure", "过滤器数据结构")}>{`// 每个过滤器均为元组形式：[操作符, 维度字段, [匹配值数组]]
 [
   ["is",         "visit:country", ["US", "GB"]],
   ["is_not",     "visit:browser", ["IE"]],
@@ -846,10 +846,10 @@ zenstats('Download', {
               { name: "has_done", desc: t("docs.filters.hasDone") },
               { name: "has_not_done", desc: t("docs.filters.hasNotDone") },
             ]} />
-            <CodeBlock label="Behavioral & case-insensitive filters">{`// has_done: visitors who did an event anywhere in the session
+            <CodeBlock label={t("docs.labels.behaviorFilters", "行为与大小写匹配过滤器")}>{`// 1. has_done：匹配在同一次会话生命周期内触发过指定事件的访客
 ["has_done", ["is", "event:name", ["Signup"]]]
 
-// Case-insensitive match (default is case-sensitive) via a 4th modifier element
+// 2. 忽略大小写匹配（默认区分大小写）：传入第 4 个配置项 {"case_sensitive": false}
 ["is", "visit:browser", ["chrome"], {"case_sensitive": false}]`}</CodeBlock>
             <Callout type="info">{t("docs.sections.filters.caseCallout")}</Callout>
           </section>
@@ -877,22 +877,48 @@ zenstats('Download', {
           {/* Heatmap */}
           <section id="heatmap" className="mb-16 scroll-mt-8">
             <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">
-              {t('docs.nav.heatmap')}
+              {t("docs.nav.heatmap", "热力图 (Heatmap)")}
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
-              ZenStats 原生内置高性能点击热力图（Click Heatmaps）系统，基于 ClickHouse 列式存储与相对坐标网格归一化算法，无需引入庞大的第三方重型 SDK（如 Hotjar / CrazyEgg），即可直观还原访客在页面各区域与交互元素上的真实点击密度分布。
+              ZenStats 原生内置高性能点击热力图与滚动深度分析体系。基于 ClickHouse 列式存储引擎与相对坐标网格归一化算法，无需引入庞大的第三方重型 SDK（如 Hotjar 或 CrazyEgg），即可全景还原访客在页面各交互组件与纵深内容上的真实注意力分布。
             </p>
 
             <Callout type="info">
-              热力点击事件通过独立的批处理管道（Batch Ingestion）上报与隔离存储，<strong>绝不污染常规站点的 PV、UV、会话数与业务转化指标</strong>，保障核心统计数据的绝对干净。
+              热力点击与滚动深度事件通过独立的有界批处理管道（Batch Ingestion）上报与隔离存储，<strong>绝不污染站点的常规 PV、UV、会话数与业务转化指标</strong>，保障核心统计数据的纯净性。
             </Callout>
 
+            {/* 双模态分析机制 */}
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
-              {t("heatmap.scroll.title")}
+              双模态分析：点击热力图与滚动深度
             </h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
-              {t("heatmap.scroll.docHelp")}
+              ZenStats 热力图支持两种互补的分析视图，全方位诊断页面转化瓶颈与内容吸睛度：
             </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 space-y-2">
+                <div className="flex items-center gap-2 font-semibold text-sm text-slate-800 dark:text-slate-200">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 font-bold text-xs">
+                    1
+                  </span>
+                  点击热力图 (Click Heatmaps)
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  聚合高频交互触点。直观呈现哪些按钮、卡片、图片或空白区域吸引了最多点击，精准识别“误把非链接当按钮”以及关键转化行动项（CTA）的被忽略问题。
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 space-y-2">
+                <div className="flex items-center gap-2 font-semibold text-sm text-slate-800 dark:text-slate-200">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
+                    2
+                  </span>
+                  滚动深度热力图 (Scroll Depth)
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  量化长页面内容留存。划分 25%、50%、75%、100% 四大触达阶段，标注 800px 首屏黄金折叠线（The Fold），以彩虹色温带呈现用户流失的临界高度。
+                </p>
+              </div>
+            </div>
 
             {/* 核心特性与设备断点 */}
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
@@ -931,9 +957,9 @@ zenstats('Download', {
                 { name: "data-heatmap-variant", desc: "变体标识符（如 \"default\" 或 \"variant-b\"），用于 A/B 测试场景下多实验组点击热力对比" },
               ]}
             />
-            <CodeBlock label="Tracker Embed Example">
+            <CodeBlock label={t("docs.labels.trackerEmbed", "统计脚本嵌入示例")}>
 {`<script defer src="https://your-domain.com/js/script.heatmap.js"
-  data-domain="demo.site"
+  data-domain="example.com"
   data-heatmap="true"
   data-heatmap-key="pricing-page"
   data-heatmap-version="v2.0"
@@ -946,7 +972,7 @@ zenstats('Download', {
               元素语义锚定与隐私屏蔽属性
             </h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
-              为了避免前端发布发版造成 CSS 选择器变动，以及严格遵守隐私合规要求，ZenStats 支持针对 DOM 元素配置专属属性：
+              为了避免前端发版构建产生哈希变动导致 CSS 选择器失效，以及严格遵守隐私合规要求，ZenStats 支持针对 DOM 元素配置专属属性：
             </p>
             <ParamTable
               rows={[
@@ -968,16 +994,16 @@ zenstats('Download', {
                 },
               ]}
             />
-            <CodeBlock label="HTML Markup Example">
-{`<!-- 显式绑定语义 ID 的重要按钮 -->
+            <CodeBlock label={t("docs.labels.htmlMarkup", "HTML 属性标记示例")}>
+{`<!-- 1. 显式绑定语义 ID 的重要按钮 -->
 <button data-zs-id="header.cta_upgrade" class="btn btn-primary">
   立即升级套餐
 </button>
 
-<!-- 包含敏感信息的隐私忽略区域 -->
+<!-- 2. 包含敏感信息的隐私忽略区域（内部任何点击就地丢弃，不上报） -->
 <div data-zs-ignore class="user-sensitive-billing-card">
   <input type="password" placeholder="输入密码" />
-  <p>用户敏感私人账单信息（此处任何点击将被完全忽略）</p>
+  <p>用户敏感私人账单信息</p>
 </div>`}
             </CodeBlock>
 
@@ -1012,10 +1038,22 @@ zenstats('Download', {
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
                   获取点击密度热点散点阵列与元素点击排行榜（Top Elements）。
                 </p>
-                <CodeBlock label="cURL Example">
+                <CodeBlock label={t("docs.labels.curlExample", "cURL 调用示例")}>
 {`curl -X GET "https://your-instance.com/api/sites/example.com/heatmap/data?start=2026-11-01&end=2026-11-10&scope=key&key=pricing-page" \\
   -H "Authorization: Bearer <token>"`}
                 </CodeBlock>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <MethodBadge method="GET" />
+                  <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
+                    /sites/:domain/heatmap/scroll
+                  </code>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                  获取指定页面在选定日期区间内的纵向滚动深度留存曲线与 25%/50%/75%/100% 四阶触达数据。
+                </p>
               </div>
 
               <div>
@@ -1032,17 +1070,118 @@ zenstats('Download', {
             </div>
           </section>
 
+          {/* Core Web Vitals 性能监控 */}
           <section id="performance" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("performance.title")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">{t("performance.description")}</p>
-            <Callout type="info">{t("performance.settingsHelp")}</Callout>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("performance.install")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">{t("performance.installHelp")}</p>
-            <CodeBlock label="Core Web Vitals">{`<script defer src="https://your-instance.com/js/script.performance.js"
+            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">
+              {t("performance.title", "Core Web Vitals 性能分析")}
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
+              真实用户网页体验质量监控。ZenStats 严格遵循 Google Web Vitals 现代规范，针对真实访客前台完整文档导航进行多维采样，精确量化核心体验指标（LCP、INP、CLS）以及辅助网络诊断指标（TTFB、FCP）。
+            </p>
+
+            <Callout type="info">
+              性能采集默认关闭，拥有独立的有界内存队列与 ClickHouse 表结构。采集指标不影响任何 PV、UV、会话及业务事件统计。
+            </Callout>
+
+            {/* 核心指标表 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
+              Core Web Vitals 指标口径与良好阈值标准
+            </h3>
+            <ParamTable
+              rows={[
+                {
+                  name: "LCP (最大内容绘制)",
+                  desc: (
+                    <span>
+                      衡量视口中最大图片或文本块的加载与渲染耗时。<strong className="text-emerald-600 dark:text-emerald-400">良好基准 ≤ 2500 毫秒</strong>；2500~4000 毫秒为待改善；大于 4000 毫秒为较差。
+                    </span>
+                  ),
+                },
+                {
+                  name: "INP (交互到下次绘制)",
+                  desc: (
+                    <span>
+                      衡量用户在页面生命周期中进行点击、按键或轻触时，界面的实际响应延迟。<strong className="text-emerald-600 dark:text-emerald-400">良好基准 ≤ 200 毫秒</strong>；200~500 毫秒为待改善；大于 500 毫秒为较差。无交互时不补零。
+                    </span>
+                  ),
+                },
+                {
+                  name: "CLS (累积布局偏移)",
+                  desc: (
+                    <span>
+                      衡量页面渲染过程中的非预期布局突变幅度，防止误触。<strong className="text-emerald-600 dark:text-emerald-400">良好基准 ≤ 0.1</strong>；0.1~0.25 为待改善；大于 0.25 为较差。
+                    </span>
+                  ),
+                },
+                {
+                  name: "TTFB (首字节时间)",
+                  desc: (
+                    <span>
+                      辅助指标。衡量浏览器发起页面请求到接收到服务器首个响应字节的时间。<strong className="text-emerald-600 dark:text-emerald-400">良好基准 ≤ 800 毫秒</strong>；超过 1800 毫秒需优化服务端渲染或 CDN 缓存。
+                    </span>
+                  ),
+                },
+                {
+                  name: "FCP (首次内容绘制)",
+                  desc: (
+                    <span>
+                      辅助指标。衡量浏览器渲染出首个 DOM 内容（文本、图片或 Canvas）的时刻。<strong className="text-emerald-600 dark:text-emerald-400">良好基准 ≤ 1800 毫秒</strong>。
+                    </span>
+                  ),
+                },
+              ]}
+            />
+
+            {/* 采样机制与数据质量保障 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
+              采样机制与防失真质量保障
+            </h3>
+            <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-400 space-y-1.5 mb-4">
+              <li>
+                <strong>P75 黄金判定准则：</strong>所有达标评估与每日趋势均以整体样本分布的第 75 百分位数（P75）为准，而非受极端网络波动影响的算术平均值。
+              </li>
+              <li>
+                <strong>前台导航隔离：</strong>在后台静默打开的标签页（Background Tab）会被打标隔离，不计入有效指标，避免睡眠标签页虚高拉低指标。
+              </li>
+              <li>
+                <strong>延迟初始化剔除：</strong>如果因页面过重导致统计脚本在页面载入 2 秒后才初始化，将记录质量告警，防止捕获被延迟截断的失真样本。
+              </li>
+              <li>
+                <strong>完整文档导航：</strong>指标严格绑定真实网页完整生命周期，单页应用 (SPA) 内部路由切换不产生伪 CWV 导航，符合国际标准。
+              </li>
+            </ul>
+
+            {/* 脚本引入 */}
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
+              Tracker 性能监控代码引入
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
+              在站点管理后台开启性能采集后，通过引入包含性能监控模块的 Tracker 脚本即可：
+            </p>
+            <CodeBlock label={t("docs.labels.coreWebVitals", "Core Web Vitals 引入示例")}>{`<script defer
+  src="https://your-instance.com/js/script.performance.js"
   data-domain="example.com"
   data-performance="true"
   data-performance-version="release-1"></script>`}</CodeBlock>
-            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">{t("performance.interpretation")}</p>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
+              性能数据查询 API
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
+              <MethodBadge method="GET" />
+              <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
+                /sites/:domain/performance/data
+              </code>
+            </p>
+            <ParamTable
+              rows={[
+                { name: "start", req: true, desc: "查询起始日期 (YYYY-MM-DD)" },
+                { name: "end", req: true, desc: "查询结束日期 (YYYY-MM-DD)" },
+                { name: "metric", desc: "主分析指标 (LCP, INP, CLS, TTFB, FCP，默认 LCP)" },
+                { name: "device", desc: "设备过滤 (desktop, mobile, tablet)" },
+                { name: "path", desc: "页面路径过滤，支持单段通配符（如 /pricing 或 /blog/*）" },
+              ]}
+            />
           </section>
 
           {/* User Flows */}
@@ -1061,9 +1200,9 @@ zenstats('Download', {
               { name: "steps", desc: "流转深度步数（2 ~ 4 步，默认 3）" },
               { name: "limit", desc: "每步热门路径保留数量（3 ~ 12，默认 6），长尾页面归入 (other)" },
             ]} />
-            <CodeBlock label="cURL">{`curl -X GET "https://your-instance.com/api/stats/example.com/user-flows?period=p30&steps=3&limit=6" \\
+            <CodeBlock label={t("docs.labels.userFlowCurl", "用户流向查询请求")}>{`curl -X GET "https://your-instance.com/api/stats/example.com/user-flows?period=p30&steps=3&limit=6" \\
   -H "Authorization: Bearer <token>"`}</CodeBlock>
-            <CodeBlock label="Example Response">{`{
+            <CodeBlock label={t("docs.labels.userFlowResponse", "用户流向响应数据")}>{`{
   "code": 0,
   "data": {
     "nodes": [
@@ -1095,7 +1234,7 @@ zenstats('Download', {
             ]} />
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.goals.breakdown.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.goals.breakdown.description")}</p>
-            <CodeBlock label="Goal breakdown">{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+            <CodeBlock label={t("docs.labels.goalBreakdown", "目标转化细分查询")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1126,7 +1265,7 @@ zenstats('Download', {
               { name: "PUT /segments/:id", desc: t("docs.sections.segments.management.update") },
               { name: "DELETE /segments/:id", desc: t("docs.sections.segments.management.delete") },
             ]} />
-            <CodeBlock label="Create Segment">{`curl -X POST https://your-instance.com/api/sites/example.com/segments \\
+            <CodeBlock label={t("docs.labels.createSegment", "创建受众分群")}>{`curl -X POST https://your-instance.com/api/sites/example.com/segments \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1145,11 +1284,11 @@ zenstats('Download', {
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.sharedLinks.description")}</p>
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.sharedLinks.create.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.sharedLinks.create.description")}</p>
-            <CodeBlock label="Create Shared Link">{`curl -X POST https://your-instance.com/api/sites/example.com/shared-links \\
+            <CodeBlock label={t("docs.labels.createSharedLink", "创建分享链接")}>{`curl -X POST https://your-instance.com/api/sites/example.com/shared-links \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{ "name": "Public Dashboard" }'`}</CodeBlock>
-            <CodeBlock label="Response">{`{
+            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{
   "code": 200,
   "data": {
     "id":   42,
@@ -1172,8 +1311,8 @@ zenstats('Download', {
 
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.shields.hostname.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.shields.hostname.description")}</p>
-            <CodeBlock label="Example">{`*.example.com   → matches app.example.com, www.example.com
-example.com     → exact match only`}</CodeBlock>
+            <CodeBlock label={t("docs.labels.wildcardExample", "域名通配符示例")}>{`*.example.com   → 匹配 app.example.com、www.example.com 等二级子域名
+example.com     → 仅精确匹配该根域名`}</CodeBlock>
 
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.shields.country.heading")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.shields.country.description")}</p>
@@ -1241,11 +1380,11 @@ example.com     → exact match only`}</CodeBlock>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.deployment.description")}</p>
 
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.deployment.quickStart.heading")}</h3>
-            <CodeBlock label="1. Clone">{`git clone https://github.com/zenstats/zenstats-deploy
+            <CodeBlock label={t("docs.labels.cloneStep", "第一步：克隆部署仓库")}>{`git clone https://github.com/zenstats/zenstats-deploy
 cd zenstats-deploy`}</CodeBlock>
-            <CodeBlock label="2. Configure">{`cp .env.example .env
-# Edit .env — set ZENSTATS_SECRET_KEY and ZENSTATS_DOMAIN at minimum`}</CodeBlock>
-            <CodeBlock label="3. Deploy">{`docker compose up -d`}</CodeBlock>
+            <CodeBlock label={t("docs.labels.configStep", "第二步：配置环境变量")}>{`cp .env.example .env
+# 编辑 .env 文件 — 至少配置 ZENSTATS_SECRET_KEY 与 ZENSTATS_DOMAIN 域名`}</CodeBlock>
+            <CodeBlock label={t("docs.labels.deployStep", "第三步：启动容器服务")}>{`docker compose up -d`}</CodeBlock>
 
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.deployment.envVars.heading")}</h3>
             <ParamTable rows={[
@@ -1278,7 +1417,7 @@ cd zenstats-deploy`}</CodeBlock>
               <MethodBadge method="GET" />
               <span className="text-slate-700 dark:text-slate-300">/health/ready</span>
             </div>
-            <CodeBlock label="Response">{`{ "status": "ok" }`}</CodeBlock>
+            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{ "status": "ok" }`}</CodeBlock>
           </section>
 
           {/* Footer */}

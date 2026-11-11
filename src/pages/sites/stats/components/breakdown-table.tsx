@@ -5,7 +5,7 @@ import type { StatsRequest, BreakdownResponse } from "@/pages/sites/types/interf
 import { Skeleton } from "@components/ui/skeleton";
 import BreakdownDetailDialog from "./breakdown-detail";
 import { useTranslation } from "react-i18next";
-import { Flame } from "lucide-react";
+import { Flame, Gauge } from "lucide-react";
 
 interface BreakdownTableProps {
   title: string;
@@ -171,17 +171,30 @@ export default function BreakdownTable({
                         {keyValue}
                       </button>
                       {query.property === "event:page" && domain && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/sites/${domain}/heatmap?scope=url&path=${encodeURIComponent(keyValue)}`);
-                          }}
-                          title={t("heatmap.title", "点击热力图")}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 text-gray-400 hover:text-orange-500 transition-opacity rounded hover:bg-gray-100 dark:hover:bg-gray-800"
-                        >
-                          <Flame className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/sites/${domain}/heatmap?scope=url&path=${encodeURIComponent(keyValue)}`);
+                            }}
+                            title={t("heatmap.actionTooltip", "查看该页面点击与滚动热力图")}
+                            className="p-1 text-gray-400 hover:text-orange-500 transition-colors rounded hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                          >
+                            <Flame className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/sites/${domain}/performance?path=${encodeURIComponent(keyValue)}`);
+                            }}
+                            title={t("performance.actionTooltip", "查看该页面 Web Vitals 性能分析")}
+                            className="p-1 text-gray-400 hover:text-emerald-500 transition-colors rounded hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                          >
+                            <Gauge className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>

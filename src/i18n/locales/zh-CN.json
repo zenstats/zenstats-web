@@ -547,6 +547,9 @@
     }
   },
   "stats": {
+    "tabs": {
+      "analytics": "流量统计"
+    },
     "loading": "正在检查访问权限...",
     "cancel": "取消",
     "confirm": "确定",
@@ -1609,7 +1612,36 @@
       "parameter": "参数",
       "description": "说明",
       "queryParameters": "查询参数",
-      "requestBody": "请求体"
+      "requestBody": "请求体",
+      "required": "必填",
+      "optional": "可选"
+    },
+    "labels": {
+      "baseUrl": "基础 API 地址",
+      "successResponse": "成功响应示例",
+      "errorResponse": "错误响应示例",
+      "request": "请求示例",
+      "response": "响应示例",
+      "curl": "cURL 请求示例",
+      "html": "HTML 引入示例",
+      "javascript": "JavaScript 代码示例",
+      "heatmapsAndVitals": "热力图与性能监控引入",
+      "propBreakdown": "按属性细分查询",
+      "filterStructure": "过滤器数据结构",
+      "behaviorFilters": "行为与大小写匹配过滤器",
+      "trackerEmbed": "统计脚本嵌入示例",
+      "htmlMarkup": "HTML 属性标记示例",
+      "curlExample": "cURL 调用示例",
+      "coreWebVitals": "Core Web Vitals 引入示例",
+      "userFlowCurl": "用户流向查询请求",
+      "userFlowResponse": "用户流向响应数据",
+      "createSegment": "创建受众分群",
+      "createSharedLink": "创建分享链接",
+      "cloneStep": "第一步：克隆部署仓库",
+      "configStep": "第二步：配置环境变量",
+      "deployStep": "第三步：启动容器服务",
+      "wildcardExample": "域名通配符示例",
+      "goalBreakdown": "目标转化细分查询"
     },
     "params": {
       "period": "时间范围，参见",

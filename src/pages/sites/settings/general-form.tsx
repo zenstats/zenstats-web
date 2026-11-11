@@ -7,11 +7,19 @@ import { useTranslation } from 'react-i18next';
 import { Button } from "@components/ui/button";
 import {
   Form,
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   Card,
@@ -257,20 +265,20 @@ export function SettingsGeneralForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('settings.general.reportTimezone')}</FormLabel>
-                    <select
-                      value={field.value}
-                      onChange={field.onChange}
-                      className="w-full rounded-md border border-input bg-background text-foreground px-3 py-2"
-                    >
-                      <option value="" disabled>
-                        {t('settings.general.selectTimezone')}
-                      </option>
-                      {timeZones.map((timeZone) => (
-                        <option key={timeZone.value} value={timeZone.value}>
-                          {timeZone.label}
-                        </option>
-                      ))}
-                    </select>
+                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder={t('settings.general.selectTimezone')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-72">
+                        {timeZones.map((timeZone) => (
+                          <SelectItem key={timeZone.value} value={timeZone.value}>
+                            {timeZone.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -325,21 +333,22 @@ export function SettingsGeneralForm() {
                           }
                         />
                       )}
-                      <select
+                      <Select
                         value={rateLimitForm.watch("rateLimitUnit")}
-                        onChange={(e) =>
-                          rateLimitForm.setValue(
-                            "rateLimitUnit",
-                            e.target.value,
-                          )
+                        onValueChange={(val) =>
+                          rateLimitForm.setValue("rateLimitUnit", val)
                         }
-                        className="w-[150px] rounded-md border border-input bg-background text-foreground px-3 py-2"
                       >
-                        <option value="unlimited">{t('settings.general.unlimited')}</option>
-                        <option value="second">{t('settings.general.perSecond')}</option>
-                        <option value="minute">{t('settings.general.perMinute')}</option>
-                        <option value="hour">{t('settings.general.perHour')}</option>
-                      </select>
+                        <SelectTrigger className="w-[150px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unlimited">{t('settings.general.unlimited')}</SelectItem>
+                          <SelectItem value="second">{t('settings.general.perSecond')}</SelectItem>
+                          <SelectItem value="minute">{t('settings.general.perMinute')}</SelectItem>
+                          <SelectItem value="hour">{t('settings.general.perHour')}</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <FormMessage />
                   </FormItem>

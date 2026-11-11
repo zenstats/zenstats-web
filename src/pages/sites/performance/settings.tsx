@@ -4,6 +4,9 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import axios, { type BaseResponse } from "@utils/axios";
 import { isSubAccount } from "@utils/auth";
 import type { PerformanceConfig } from "./types";
@@ -93,16 +96,18 @@ export default function PerformanceSettings() {
             disabled={readOnly || saving}
             className="space-y-4 disabled:opacity-70"
           >
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
+            <div className="flex items-center justify-between rounded-lg border p-3 shadow-2xs">
+              <Label htmlFor="perf-enabled" className="text-sm font-medium">
+                {t("performance.enable")}
+              </Label>
+              <Switch
+                id="perf-enabled"
                 checked={config.enabled}
-                onChange={(e) =>
-                  setConfig({ ...config, enabled: e.target.checked })
+                onCheckedChange={(checked) =>
+                  setConfig({ ...config, enabled: checked })
                 }
               />
-              {t("performance.enable")}
-            </label>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-sm">
                 {t("heatmap.sample")}
@@ -134,14 +139,17 @@ export default function PerformanceSettings() {
                 />
               </label>
             </div>
-            <label className="block text-sm">
-              {t("heatmap.paths")}
-              <textarea
-                className="mt-2 block min-h-28 w-full rounded border bg-background p-2 font-mono"
+            <div className="space-y-1.5">
+              <Label htmlFor="perf-paths" className="text-sm font-normal">
+                {t("heatmap.paths")}
+              </Label>
+              <Textarea
+                id="perf-paths"
+                className="min-h-28 font-mono text-xs"
                 value={paths}
                 onChange={(e) => setPaths(e.target.value)}
               />
-            </label>
+            </div>
             <p className="text-xs text-muted-foreground">
               {t("heatmap.rulesHelp")}
             </p>

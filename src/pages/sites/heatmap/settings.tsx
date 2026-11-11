@@ -4,6 +4,15 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import axios, { type BaseResponse } from "@utils/axios";
 import { isSubAccount } from "@utils/auth";
 import type { HeatmapConfig } from "./types";
@@ -16,7 +25,6 @@ import {
   type HeatmapDraft,
 } from "./configurations";
 
-const field = "rounded-md border bg-background px-3 py-2 text-sm";
 const emptyDraft: HeatmapDraft = {
   type: "url",
   path: "",
@@ -382,22 +390,28 @@ export default function HeatmapSettings() {
                 disabled={readOnly || saving}
                 className="space-y-4 disabled:opacity-70"
               >
-                <label className="block text-sm">
-                  {t("heatmap.viewBy")}
-                  <select
-                    className={`${field} mt-1 block w-full`}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-normal">
+                    {t("heatmap.viewBy")}
+                  </Label>
+                  <Select
                     value={draft.type}
-                    onChange={(e) =>
+                    onValueChange={(val) =>
                       setDraft({
                         ...draft,
-                        type: e.target.value as "key" | "url",
+                        type: val as "key" | "url",
                       })
                     }
                   >
-                    <option value="url">{t("heatmap.byURL")}</option>
-                    <option value="key">{t("heatmap.byKey")}</option>
-                  </select>
-                </label>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t("heatmap.viewBy")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="url">{t("heatmap.byURL")}</SelectItem>
+                      <SelectItem value="key">{t("heatmap.byKey")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <label className="block text-sm">
                   {t("heatmap.rulePath")}
                   <Input
@@ -490,44 +504,60 @@ export default function HeatmapSettings() {
                 disabled={readOnly || saving}
                 className="space-y-4 disabled:opacity-70"
               >
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-2xs">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="heatmap-enabled" className="text-sm font-medium">
+                      {t("heatmap.enable")}
+                    </Label>
+                    {collection.paths.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {t("heatmap.noConfigured")}
+                      </p>
+                    )}
+                  </div>
+                  <Switch
+                    id="heatmap-enabled"
                     checked={collection.enabled}
                     disabled={collection.paths.length === 0}
-                    onChange={(e) =>
+                    onCheckedChange={(checked) =>
                       setCollection({
                         ...collection,
-                        enabled: e.target.checked,
+                        enabled: checked,
                       })
                     }
                   />
-                  {t("heatmap.enable")}
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-2xs">
+                  <Label htmlFor="clicks-enabled" className="text-sm font-medium">
+                    {t("heatmap.scroll.enableClicks")}
+                  </Label>
+                  <Switch
+                    id="clicks-enabled"
                     checked={collection.clicks_enabled !== false}
-                    onChange={e => setCollection({ ...collection, clicks_enabled: e.target.checked })}
+                    onCheckedChange={(checked) =>
+                      setCollection({ ...collection, clicks_enabled: checked })
+                    }
                   />
-                  {t("heatmap.scroll.enableClicks")}
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-2xs">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="scroll-enabled" className="text-sm font-medium">
+                      {t("heatmap.scroll.enableScroll")}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {t("heatmap.scroll.help", { days: Math.min(collection.raw_days, 7) })}
+                    </p>
+                  </div>
+                  <Switch
+                    id="scroll-enabled"
                     checked={collection.scroll_enabled === true}
-                    onChange={e => setCollection({ ...collection, scroll_enabled: e.target.checked })}
+                    onCheckedChange={(checked) =>
+                      setCollection({ ...collection, scroll_enabled: checked })
+                    }
                   />
-                  {t("heatmap.scroll.enableScroll")}
-                </label>
-                <p className="text-xs text-muted-foreground">
-                  {t("heatmap.scroll.help", { days: Math.min(collection.raw_days, 7) })}
-                </p>
-                {collection.paths.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    {t("heatmap.noConfigured")}
-                  </p>
-                )}
+                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="text-sm">
                     {t("heatmap.sample")}
