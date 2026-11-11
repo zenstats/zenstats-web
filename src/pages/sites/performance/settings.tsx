@@ -39,7 +39,7 @@ export default function PerformanceSettings() {
     return () => controller.abort();
   }, [base, revision]);
   const trackerOrigin = window.location.origin;
-  const snippet = `<script defer src="${trackerOrigin}/js/script.js"\n  data-domain="${domain}"\n  data-performance="true"\n  data-performance-version="release-1"></script>`;
+  const snippet = `<script defer src="${trackerOrigin}/js/script.performance.js"\n  data-domain="${domain}"\n  data-performance="true"\n  data-performance-version="release-1"></script>`;
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">

@@ -11,7 +11,7 @@ WORKDIR /build/tracker
 COPY tracker/package.json tracker/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 
-COPY tracker/compile.js .
+COPY tracker/compile.js tracker/variants.json ./
 COPY tracker/src ./src
 
 RUN npm run deploy

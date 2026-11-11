@@ -465,7 +465,7 @@ export default function DocsPage() {
             ]} />
             <CodeBlock label="Heatmaps + Core Web Vitals">{`<script defer crossorigin="anonymous"
   data-domain="example.com"
-  src="https://your-instance.com/js/script.js"
+  src="https://your-instance.com/js/script.heatmap.performance.js"
   data-heatmap="true"
   data-heatmap-version="release-1"
   data-heatmap-variant="default"
@@ -932,7 +932,7 @@ zenstats('Download', {
               ]}
             />
             <CodeBlock label="Tracker Embed Example">
-{`<script defer src="https://your-domain.com/js/script.js"
+{`<script defer src="https://your-domain.com/js/script.heatmap.js"
   data-domain="demo.site"
   data-heatmap="true"
   data-heatmap-key="pricing-page"
@@ -1038,7 +1038,7 @@ zenstats('Download', {
             <Callout type="info">{t("performance.settingsHelp")}</Callout>
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("performance.install")}</h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">{t("performance.installHelp")}</p>
-            <CodeBlock label="Core Web Vitals">{`<script defer src="https://your-instance.com/js/script.js"
+            <CodeBlock label="Core Web Vitals">{`<script defer src="https://your-instance.com/js/script.performance.js"
   data-domain="example.com"
   data-performance="true"
   data-performance-version="release-1"></script>`}</CodeBlock>

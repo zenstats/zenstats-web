@@ -15,6 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { aliases } from "../../../tracker/variants.json";
 
 // ---------------------------------------------------------------------------
 // Feature flag definitions — must match tracker/compile.js exactly
@@ -37,34 +38,15 @@ const escapeAttribute = (value: string) => value.replace(/[&"<>']/g, char => ({
 
 // ---------------------------------------------------------------------------
 // Canonical file name — must match tracker/compile.js exactly
-// Abbreviated feature IDs: ex, fd, ha, ma, ol, te
-// Backward-compat: all features → script.js / script.hash.js
-// Collision disambiguation: script.ha → script.ha.bare.js (since script.hash.js already exists)
+// Base IDs plus hm (heatmaps) and pf (performance). Alias names are shared with
+// the compiler so installer URLs always correspond to generated artifacts.
 // ---------------------------------------------------------------------------
-const BACKWARD_COMPAT_TARGETS = new Set(['script', 'script.hash'])
-
-function getScriptFileName(enabled: FeatureId[]): string {
-  if (enabled.length === 0) return 'script.bare.js'
-
-  const allIds = FEATURES.map(f => f.id)
-  // All features except hash → backward-compat "script.js"
-  if (enabled.every(id => id !== 'ha') && allIds.filter(id => id !== 'ha').every(id => enabled.includes(id))) {
-    return 'script.js'
-  }
-  // All features including hash → backward-compat "script.hash.js"
-  if (allIds.every(id => enabled.includes(id))) {
-    return 'script.hash.js'
-  }
-
-  const sorted = [...enabled].sort()
-  const name = `script.${sorted.join('.')}`
-
-  // Disambiguation: script.ha collides with backward-compat script.hash
-  if (BACKWARD_COMPAT_TARGETS.has(name)) {
-    return name + '.bare.js'
-  }
-
-  return name + '.js'
+function getScriptFileName(enabled: FeatureId[], heatmap: boolean, performance: boolean): string {
+  const ids: string[] = [...enabled];
+  if (heatmap) ids.push('hm');
+  if (performance) ids.push('pf');
+  const name = ids.length ? `script.${ids.sort().join('.')}` : 'script.bare';
+  return ((aliases as Record<string, string>)[name] || name) + '.js';
 }
 
 // ---------------------------------------------------------------------------
@@ -108,7 +90,7 @@ export default function SiteInstallPage({ embedded = false }: { embedded?: boole
     )
   }
 
-  const fileName = useMemo(() => getScriptFileName(enabledFeatures), [enabledFeatures])
+  const fileName = useMemo(() => getScriptFileName(enabledFeatures, heatmap, performance), [enabledFeatures, heatmap, performance])
 
   const scriptSnippet = useMemo(
     () => {

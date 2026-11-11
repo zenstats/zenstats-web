@@ -1,0 +1,22 @@
+{
+  "features": [
+    { "id": "ex", "flag": "COMPILE_EXCLUSIONS" },
+    { "id": "fd", "flag": "COMPILE_FILE_DOWNLOADS" },
+    { "id": "ha", "flag": "COMPILE_HASH" },
+    { "id": "hm", "flag": "COMPILE_HEATMAP" },
+    { "id": "ma", "flag": "COMPILE_MANUAL" },
+    { "id": "ol", "flag": "COMPILE_OUTBOUND_LINKS" },
+    { "id": "pf", "flag": "COMPILE_PERFORMANCE" },
+    { "id": "te", "flag": "COMPILE_TAGGED_EVENTS" }
+  ],
+  "aliases": {
+    "script.ex.fd.ma.ol.te": "script",
+    "script.ex.fd.ha.ma.ol.te": "script.hash",
+    "script.ex.fd.hm.ma.ol.te": "script.heatmap",
+    "script.ex.fd.ma.ol.pf.te": "script.performance",
+    "script.ex.fd.hm.ma.ol.pf.te": "script.heatmap.performance",
+    "script.ex.fd.ha.hm.ma.ol.te": "script.hash.heatmap",
+    "script.ex.fd.ha.ma.ol.pf.te": "script.hash.performance",
+    "script.ex.fd.ha.hm.ma.ol.pf.te": "script.hash.heatmap.performance"
+  }
+}

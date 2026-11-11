@@ -6,7 +6,7 @@
 
 ## 已实现与验收
 
-1. 站点设置 → 热力图 → 采集设置，打开总开关及“采集滚动深度”；“采集点击”可独立关闭。原有白名单、聚合标识、采样率和脚本 `data-heatmap="true"` 继续生效。升级后必须同步发布新的 `heatmap.js`。
+1. 站点设置 → 热力图 → 采集设置，打开总开关及“采集滚动深度”；“采集点击”可独立关闭。原有白名单、聚合标识与采样率继续生效；安装页选择热力图构建项，替换为匹配变体并保留 `data-heatmap="true"`。升级后必须同步发布新的 `heatmap.js`。
 2. 查看热力图，切换“滚动深度”；模式写入 `mode=scroll`，采用独立滚动页面列表，无点击的浏览也可选。选择页面／聚合标识、版本和设备后查看80段色带与触达卡；没有匹配截图时仍可查看统计、质量标记和深度滑块。
 3. 首版日期限定最近 `min(raw_days, 7)` 个自然日，遵循首次启用时固定的站点时区。平均首屏线是初始视口的平均几何位置；卡片显示实际采样浏览，不是独立访客或阅读完成率。
 4. 文档高度增长超过25%、报告超限或不支持的浏览不计入有效分母，延迟初始化单独标记；不同采样率混合时提示结果仅代表实际样本。
@@ -18,13 +18,13 @@
 
 - **入口**：Stats 标签栏的 `Core Web Vitals`，或站点设置 → 性能监控设置 → 查看性能监控。页面路由 `/sites/:domain/performance`，设置路由 `/sites/:domain/settings/performance`。
 - 首版采集 LCP、INP、CLS、TTFB、FCP，显示每指标P75、分级数量和占比、有效样本与覆盖率、每日趋势及前50个慢页面。支持日期、主机、路径／通配符、发布版本、UA设备组、浏览器、国家代码及导航类型筛选。
-- 默认关闭，与热力图开关独立；现有脚本加入 `data-performance="true"`、`data-performance-version`，根据配置与页面采样结果加载自托管 `vitals.js`。无需增加Tracker变体；需同时发布API和Tracker资产。
+- 默认关闭，与热力图开关独立；安装页选择性能构建项，使用 `script.performance.js` 或匹配的自定义／Hash变体，并添加 `data-performance="true"`、`data-performance-version`，根据配置与页面采样结果加载自托管 `vitals.js`。性能与热力图分别使用 `pf`、`hm` 可选构建项；默认脚本不含加载器，需同时发布API和Tracker资产。
 - 官方标准库锁定 `web-vitals@6.2.3`，默认不启用attribution、reportAllChanges或soft navigation。文档内注册一次，BFCache使用新生命周期；SPA与Hash路由保留文档初始路径归属，NavigationTiming省略Hash时不会丢弃指标。
 - context不伪造数值；未上报INP保留空值。TTFB依赖NavigationTiming，与PerformanceObserver支持独立；背景初始化的导航保留质量信息但不计入有效指标分母。初始化延迟超过2秒单独标记，仍保留样本。
 - 每个指标实例最多32个revision，最终超限快照标记并排除；最多16个文档／BFCache生命周期。队列200报告、单批20条／16KiB、最多3次发送尝试，重试保持ID和body不变。
 - 最近仅支持配置内1～7个自然日。按导航开始时间统一分桶，P75从去重后的样本直接计算，不平均每日P75。各核心指标少于100个有效样本时整体显示数据不足，这是产品展示门槛。
 - 管理员采集质量页新增性能报告计数。202与sendBeacon成功仅代表排队；不承诺端到端零丢失。性能不增加普通PV／UV／Session或业务事件。
-- 本地Node22构建测量：`script.js` raw8562／gzip3384／Brotli2970B；`heatmap.js` raw8988／gzip3435／Brotli3035B；`vitals.js` raw13000／gzip5092／Brotli4610B。体积包含适配与传输代码，并随构建变化。许可证随资产发布。
+- 本地Node22构建测量：`script.js` raw6220／gzip2620／Brotli2316B；`script.heatmap.performance.js` raw8562／gzip3384／Brotli2970B；`heatmap.js` raw8988／gzip3435／Brotli3035B；`vitals.js` raw13000／gzip5092／Brotli4610B。体积包含适配与传输代码，并随构建变化。许可证随资产发布。
 
 ## 1. 实施顺序
 

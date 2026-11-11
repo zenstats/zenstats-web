@@ -14,7 +14,7 @@ async function install(page, options={}) {
   if(url.pathname==='/api/event')return route.fulfill({status:202,body:''})
   if(url.pathname==='/js/vitals.js')return route.fulfill(options.real?{contentType:'application/javascript',path:realAsset}:{contentType:'application/javascript',body:adapter})
   if(url.pathname.startsWith('/js/'))return route.fulfill({contentType:'application/javascript',path:path.join(__dirname,'../dist',path.basename(url.pathname))})
-  return route.fulfill({contentType:'text/html',body:`<html><head><title>Vitals test</title></head><body><h1>Paint candidate</h1><button id="interaction">Interact</button><script>window.__zenstats=true</script><script defer src="/js/${options.hash ? "script.hash.js" : "script.js"}" data-domain="vitals.test" ${options.optOut?'':'data-performance="true"'} data-performance-version="v1"></script></body></html>`})
+  return route.fulfill({contentType:'text/html',body:`<html><head><title>Vitals test</title></head><body><h1>Paint candidate</h1><button id="interaction">Interact</button><script>window.__zenstats=true</script><script defer src="/js/${options.hash ? "script.hash.performance.js" : "script.performance.js"}" data-domain="vitals.test" ${options.optOut?'':'data-performance="true"'} data-performance-version="v1"></script></body></html>`})
  })
  await page.goto('https://vitals.test/?private=secret'+(options.hash?'#/home':''))
  if(!options.optOut&&options.enabled!==false)await expect.poll(()=>resources.includes('/js/vitals.js')).toBe(true)
@@ -25,7 +25,7 @@ async function emit(page,name,value,extra={}) {
  await page.evaluate(({name,value,extra})=>window.__vitalsObservers[name]({name,value,id:'v6-'+name,navigationType:'navigate',navigationStartTime:0,navigationURL:'https://vitals.test/?secret=private',...extra}),{name,value,extra})
 }
 test('performance stays unloaded without both opt-ins',async({page})=>{
- const state=await install(page,{optOut:true});expect(state.resources.some(p=>p.includes('performance')||p.includes('vitals.js'))).toBe(false)
+ const state=await install(page,{optOut:true});expect(state.resources.some(p=>p.startsWith('/api/performance/')||p==='/js/vitals.js')).toBe(false)
  const other=await install(page,{enabled:false});expect(other.resources.includes('/js/vitals.js')).toBe(false);expect(other.reports).toEqual([])
 })
 test('adapter freezes document path, registers once and keeps retries immutable',async({page})=>{

@@ -608,7 +608,7 @@ export default function HeatmapSettings() {
                 {t("heatmap.retentionHelp")}
               </p>
               <p className="text-sm">{t("heatmap.installHelp")}</p>
-              <pre className="overflow-x-auto rounded bg-muted p-3 text-xs">{`<script defer data-domain="${domain}" src="${window.location.origin}/js/script.js"\n  data-heatmap="true" data-heatmap-version="release-2026-11"\n  data-heatmap-variant="default"></script>\n<button data-zs-id="pricing.signup">Sign up</button>\n<div data-zs-ignore>Private content</div>`}</pre>
+              <pre className="overflow-x-auto rounded bg-muted p-3 text-xs">{`<script defer data-domain="${domain}" src="${window.location.origin}/js/script.heatmap.js"\n  data-heatmap="true" data-heatmap-version="release-2026-11"\n  data-heatmap-variant="default"></script>\n<button data-zs-id="pricing.signup">Sign up</button>\n<div data-zs-ignore>Private content</div>`}</pre>
               <p className="text-xs text-muted-foreground">
                 {t("heatmap.privacyHelp")}
               </p>

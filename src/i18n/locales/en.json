@@ -498,15 +498,15 @@
       "pageTitle": "Install tracking code",
       "optional": {
         "title": "Optional analytics modules",
-        "help": "Both options are unchecked by default. These controls only generate script attributes; they do not change site collection settings. Enable the corresponding site setting and configure its page allowlist and sampling rate.",
+        "help": "Both options are unchecked by default. Selecting one changes the script variant and generates its attributes; these controls do not change site collection settings. Enable the corresponding site setting and configure its page allowlist and sampling rate.",
         "heatmap": {
           "label": "Click / scroll heatmaps",
-          "desc": "Adds data-heatmap=\"true\" for the click and scroll module. Enable clicks and scroll depth independently under Heatmap settings → Collection settings. No separate scroll attribute is needed.",
+          "desc": "Selects a script with the heatmap loader and adds data-heatmap=\"true\". Enable clicks and scroll depth independently in Heatmap settings → Collection settings. No extra scroll attribute is needed.",
           "settings": "Configure heatmap collection"
         },
         "performance": {
           "label": "Core Web Vitals performance monitoring",
-          "desc": "Adds data-performance=\"true\" to collect LCP, INP, CLS and supporting TTFB/FCP. Site collection is off by default, with an initial sampling rate of 10%.",
+          "desc": "Selects a script with the performance loader and adds data-performance=\"true\" for LCP, INP, CLS and supporting TTFB/FCP. Site collection defaults off, with an initial sampling rate of 10%.",
           "settings": "Configure performance collection"
         },
         "release": "Release version",
@@ -516,8 +516,8 @@
         "variant": "Heatmap variant",
         "variantHelp": "Defaults to default; use a value such as variant-b for A/B experiments.",
         "invalid": "Release and variant are required. Release, aggregation key and variant accept up to 120 characters using only letters, numbers and _.:/@-.",
-        "deployHelp": "Install one Tracker tag. Keep the selected base features and Hash routing mode. Deploy current Tracker assets: heatmaps need heatmap.js; performance needs vitals.js and web-vitals.LICENSE.txt.",
-        "docsHelp": "Use Site settings → Install tracking code to select base script features and optional analytics modules and generate a complete snippet. Heatmaps and performance use attributes without adding script variants. Scroll uses data-heatmap and is controlled by site settings.",
+        "deployHelp": "Install one Tracker tag with the required base features and Hash routing mode. Deploy the matching script variant and modules: heatmaps need heatmap.js; performance needs vitals.js and web-vitals.LICENSE.txt.",
+        "docsHelp": "Use Site settings → Install tracking code to select base features and optional modules. It generates a matching precompiled script URL and attributes. Default script.js and script.hash.js exclude both loaders; attributes alone cannot enable them. Scroll uses the heatmap build option and is controlled by site settings.",
         "proxyHelp": "When proxying or self-hosting scripts, serve the required modules and license file too. data-api is the full ordinary event endpoint; optional APIs are derived from it (/api/event → /api/heatmap and /api/performance). Custom forwarding paths require explicit data-heatmap-api or data-performance-api settings."
       }
     },
@@ -2040,7 +2040,7 @@
     "retention": "Raw retention (1–7 days)",
     "configStatus": "Configuration {{version}} · frozen timezone {{timezone}}",
     "install": "Tracker installation",
-    "installHelp": "Add data-performance=\"true\" and data-performance-version to your existing Tracker tag. Keep your current script variant, data-api and hash routing options. Update both API and Tracker assets, including self-hosted vitals.js. Replace release-1 after each release. This feature measures full document navigations; SPA soft navigation is not enabled.",
+    "installHelp": "Use Install tracking code to select your base features, Hash routing and performance monitoring and generate the matching script URL and data-performance attributes. Default script.js excludes the performance loader; attributes alone have no effect. Deploy the API, script variant, vitals.js and license together and update the release version. Measurement uses full document navigations.",
     "qualityTitle": "Performance collection quality",
     "qualityScope": "Counters for reports on this instance since startup, including retries. Navigation and metric samples are deduplicated separately by lifecycle and revision. These counters reset on restart; 202 only acknowledges memory admission, and a failed write may have partially committed.",
     "ratings": {
@@ -2095,7 +2095,7 @@
     "saved": "Settings saved",
     "timezone": "Heatmap timezone: {{timezone}}. Fixed on first save so a later site timezone change cannot shift historical hour buckets.",
     "retentionHelp": "Retention changes apply to new clicks. Defaults: 7 days raw, 90 days aggregate. Disabling takes about 10–30 seconds. The queue uses memory; 202 means queued. Administrators can inspect collection quality for write results.",
-    "installHelp": "Add data-heatmap=\"true\" and a release version to your existing Tracker tag. Update the version with every layout release. Keep script.hash.js for hash routes. Both site settings and the script option must be enabled.",
+    "installHelp": "Use Install tracking code to select your base features, Hash routing and heatmaps and generate the matching script URL and data-heatmap attributes. Default script.js excludes the heatmap loader; attributes alone have no effect. Update the release with layout changes. Both the script option and site configuration must be enabled.",
     "privacyHelp": "No text, form values, IP, UA or visitor identifiers are collected. data-zs-ignore excludes clicks. Use template names for aggregation keys, never user IDs or personal data.",
     "explore": "Explore heatmaps",
     "today": "Today",
@@ -2153,7 +2153,7 @@
     "captureReady": "Screenshot service is configured. Generate backgrounds from the heatmap viewer.",
     "sourceURL": "Background source",
     "documentation": "Heatmap documentation",
-    "docOverview": "Heatmaps are off by default. Site settings → Heatmap settings opens the list. Choose New heatmap to configure one path rule or aggregation key, or select an entry to inspect and edit its details. Sampling, retention and the collection switch are managed separately in Collection settings. Add data-heatmap=\"true\" to the Tracker. Normal traffic collection is independent.",
+    "docOverview": "Heatmaps default off. Site settings → Heatmap settings opens the list. Choose New heatmap to configure a path or aggregation key, or open an entry to inspect and edit it. Collection settings controls sampling, retention and the master switch. Select the heatmap build option in the installer, use the matching script variant and add data-heatmap=\"true\". Default scripts exclude the loader; ordinary tracking is independent.",
     "docGroups": "Map /soft/*.html to software-detail and provide an example URL to view similar pages by key. A script can also set data-heatmap-key. The first matching path rule takes precedence. Original URLs remain available and new rules only affect future clicks.",
     "docLayout": "Separate hostname, version, variant and device class: mobile width <768, tablet 768–1023, desktop ≥1024 CSS pixels, based on window width rather than UA. Clicks use x/document width and y/document height in a 40×80 grid, projected by percentage onto the background. Different sizes and lengths combine for approximate regions, so content and responsive changes may shift hotspots. Fixed, sticky and nested-scroll clicks count but are not projected.",
     "docScreenshot": "Select dates and a device, then capture a specific or example URL. Standard viewports are 390×844 mobile, 768×1024 tablet and 1440×900 desktop. Version, variant and device must match; document length can differ. Existing backgrounds match by device. Public HTTP(S) pages without login state only. Private destinations are blocked by default. Manual upload is available without a worker.",

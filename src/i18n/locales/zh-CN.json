@@ -498,15 +498,15 @@
       "pageTitle": "安装统计代码",
       "optional": {
         "title": "可选分析模块",
-        "help": "两项默认不勾选。这里仅生成脚本接入代码，不会修改站点的采集开关；需要同时在对应设置中开启，并满足页面白名单和采样条件。",
+        "help": "两项默认不勾选。选择后会切换为包含相应功能的脚本变体并生成属性，不会修改站点采集开关；仍需在对应设置中开启，并满足页面白名单和采样条件。",
         "heatmap": {
           "label": "点击／滚动热力图",
-          "desc": "添加 data-heatmap=\"true\"，接入点击与滚动模块。点击和滚动深度分别在热力图的「采集设置」中开启，不需要额外的滚动脚本属性。",
+          "desc": "选择包含热力图加载器的脚本，并添加 data-heatmap=\"true\"。点击和滚动深度分别在热力图「采集设置」中开启，不需要额外的滚动属性。",
           "settings": "配置热力图采集"
         },
         "performance": {
           "label": "Core Web Vitals 性能监控",
-          "desc": "添加 data-performance=\"true\"，采集 LCP、INP、CLS 及辅助 TTFB、FCP。站点默认关闭，初始采样率为 10%。",
+          "desc": "选择包含性能加载器的脚本，并添加 data-performance=\"true\"，采集 LCP、INP、CLS 及辅助 TTFB、FCP。站点默认关闭，初始采样率为 10%。",
           "settings": "配置性能采集"
         },
         "release": "发布版本",
@@ -516,8 +516,8 @@
         "variant": "热力图变体",
         "variantHelp": "默认 default；A/B 实验可填写 variant-b。",
         "invalid": "发布版本和变体不能为空；版本、聚合标识和变体最长 120 个字符，仅支持英文字母、数字及 _.:/@-。",
-        "deployHelp": "只需安装一个 Tracker 标签。保留所选基础功能与 Hash 路由模式，并部署最新 Tracker 资源：热力图需要 heatmap.js，性能监控需要 vitals.js 和 web-vitals.LICENSE.txt。",
-        "docsHelp": "在「站点设置 → 安装统计代码」选择基础脚本功能和可选分析模块，可生成完整代码。热力图与性能监控使用属性启用，不会增加脚本变体；滚动沿用 data-heatmap，由站点设置控制。",
+        "deployHelp": "只安装一个 Tracker 标签，保留所需基础功能与 Hash 路由模式。部署匹配的脚本变体及模块：热力图需要 heatmap.js，性能需要 vitals.js 和 web-vitals.LICENSE.txt。",
+        "docsHelp": "在「站点设置 → 安装统计代码」选择基础功能和可选分析模块，会生成匹配的预编译脚本地址及属性。默认 script.js、script.hash.js 不含热力图和性能加载器，仅添加属性无法启用；滚动沿用热力图构建项，由站点设置控制。",
         "proxyHelp": "代理或自托管脚本时，请同时提供所需模块和许可证文件。data-api 是普通事件的完整端点；可选接口默认由它推导（/api/event → /api/heatmap 与 /api/performance）。自定义转发路径需显式配置对应的 data-heatmap-api 或 data-performance-api。"
       }
     },
@@ -2040,7 +2040,7 @@
     "retention": "原始数据保留天数（1～7）",
     "configStatus": "配置版本{{version}} · 固定时区{{timezone}}",
     "install": "Tracker接入",
-    "installHelp": "在现有Tracker标签加入data-performance=\"true\"和data-performance-version，保留原有脚本变体、data-api和Hash路由选项。同步更新API及Tracker资产（包括自托管vitals.js）；每次发布更新release-1。首版按完整文档导航测量，不启用SPA软导航指标。",
+    "installHelp": "通过「安装统计代码」选择原有基础功能、Hash 模式及性能监控，生成对应脚本地址和 data-performance 属性。默认 script.js 不含性能加载器，仅添加属性不会生效。同步发布 API、对应脚本变体、vitals.js 和许可证文件，并随发布更新版本；首版按完整文档导航测量。",
     "qualityTitle": "性能采集质量",
     "qualityScope": "当前实例启动后的报告累计计数，包含重试。导航和指标样本按生命周期与revision另行去重；计数重启清零。202仅表示进入内存队列，写入失败也可能已部分提交。",
     "ratings": {
@@ -2095,7 +2095,7 @@
     "saved": "设置已保存",
     "timezone": "热力图时区：{{timezone}}。首次保存后固定，避免历史小时桶因站点时区变化而错位。",
     "retentionHelp": "保留期修改只影响新点击；默认原始数据 7 天、聚合 90 天。关闭配置约 10～30 秒生效。队列使用内存，202 表示接收排队，写入结果请查看管理员采集质量。",
-    "installHelp": "在现有 Tracker 标签加入 data-heatmap=\"true\" 和发布版本，每次页面布局发布更新版本。Hash 站点沿用 script.hash.js。仅站点配置与脚本同时启用才采集。",
+    "installHelp": "通过「安装统计代码」选择原有基础功能、Hash 模式及热力图，生成对应脚本地址和 data-heatmap 属性。默认 script.js 不含热力图加载器，仅添加属性不会生效。每次布局发布更新版本，仅脚本与站点配置同时启用才采集。",
     "privacyHelp": "不采集文本、表单值、IP、UA 或用户标识。data-zs-ignore 区域不采集点击；聚合标识仅使用模板名称，不放用户 ID 或其他个人信息。",
     "explore": "查看热力图",
     "today": "今天",
@@ -2153,7 +2153,7 @@
     "captureReady": "自动截图服务已配置，可在热力图查看页生成底图。",
     "sourceURL": "底图来源",
     "documentation": "查看热力图文档",
-    "docOverview": "热力图默认关闭。站点设置 → 热力图设置默认显示列表，点击「新增热力图」配置单个页面规则或聚合标识，点击条目查看详情并编辑。采样率、保留周期和总开关在「采集设置」中统一管理。Tracker 需添加 data-heatmap=\"true\"；普通流量采集不受影响。",
+    "docOverview": "热力图默认关闭。站点设置 → 热力图设置默认显示列表，点击「新增热力图」配置单个页面规则或聚合标识，点击条目查看详情并编辑。采样率、保留周期和总开关在「采集设置」统一管理。安装页需选择热力图构建项，使用匹配的脚本变体并添加 data-heatmap=\"true\"；默认脚本不含加载器。普通流量采集独立。",
     "docGroups": "将 /soft/*.html 映射到 software-detail，并填入一个范例 URL，即可按标识查看同类页面。也可在脚本上使用 data-heatmap-key。首条路径规则优先，原始 URL 仍保留供单页查询。规则只作用于后续点击。",
     "docLayout": "按主机、版本、变体和设备组区分：手机宽＜768、平板768–1023、桌面≥1024（CSS像素，按窗口宽度而非UA判断）。点击按x/文档宽、y/文档高归入40×80网格，再按百分比叠加到底图。不同尺寸和长度合并，展示大致区域，页面内容或布局变化可能产生偏移。固定/粘性/嵌套滚动元素仍只计数不投影。",
     "docScreenshot": "选择日期和设备，输入具体URL或范例URL生成全页底图。手机、平板、桌面的标准视口分别为390×844、768×1024、1440×900；版本、变体、设备必须一致，文档长度可以不同。已有底图按设备兼容。仅支持无登录态的公开HTTP(S)页面，默认阻止私网；没有截图服务时可手动上传。",

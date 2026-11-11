@@ -3,6 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const Handlebars = require("handlebars");
 const g = require('generatorics');
+const { features: FEATURES, aliases: BACKWARD_COMPAT_MAP } = require('./variants.json');
 const { tracker_script_version } = require("./package.json");
 
 if (process.env.NODE_ENV === 'dev') {
@@ -24,14 +25,6 @@ function relPath(segment) {
 // The `id` is used for file naming, and the `flag` is the Handlebars / UglifyJS
 // compile-time global used in zenstats.js for dead-code elimination.
 // ---------------------------------------------------------------------------
-const FEATURES = [
-  { id: 'ex', flag: 'COMPILE_EXCLUSIONS' },
-  { id: 'fd', flag: 'COMPILE_FILE_DOWNLOADS' },
-  { id: 'ha', flag: 'COMPILE_HASH' },
-  { id: 'ma', flag: 'COMPILE_MANUAL' },
-  { id: 'ol', flag: 'COMPILE_OUTBOUND_LINKS' },
-  { id: 'te', flag: 'COMPILE_TAGGED_EVENTS' },
-]
 
 // These flags are always enabled for every variant.
 const BASELINE_FLAGS = {
@@ -52,12 +45,8 @@ function canonicalName(featureIds) {
 // Certain feature combinations MUST keep their original file names so that
 // existing embedded snippets continue to work.
 // ---------------------------------------------------------------------------
-const BACKWARD_COMPAT_MAP = {
-  // script.js  = all base (everything except hash)
-  'script.ex.fd.ma.ol.te': 'script',
-  // script.hash.js = all features including hash
-  'script.ex.fd.ha.ma.ol.te': 'script.hash',
-}
+// variants.json is also consumed by the installer. Default aliases exclude
+// optional heatmap/performance loaders; explicit variants add hm and/or pf.
 
 // ---------------------------------------------------------------------------
 // Generate all variants via power set of FEATURES.

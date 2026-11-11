@@ -10,7 +10,7 @@ async function install(page, options = {}) {
     <div id="scroll"><div><button data-zs-id="nested">Nested</button></div></div>
     <button id="normal" data-zs-id="signup"><span>Private text</span></button>
     <div data-zs-ignore><button id="ignore">Secret</button></div><form><button id="form" type="button">Submit</button></form><button id="safe" style="position:absolute;top:350px">Safe</button>
-    <script>window.__zenstats=true</script><script defer data-domain="example.com" ${options.optOut ? '' : 'data-heatmap="true"'} data-heatmap-version="v1" data-heatmap-key="${options.key||''}" src="/js/${options.hash ? 'script.hash.js' : 'script.js'}"></script></body></html>`
+    <script>window.__zenstats=true</script><script defer data-domain="example.com" ${options.optOut ? '' : 'data-heatmap="true"'} data-heatmap-version="v1" data-heatmap-key="${options.key||''}" src="/js/${options.hash ? 'script.hash.heatmap.js' : 'script.heatmap.js'}"></script></body></html>`
   page.on('pageerror', error => errors.push(error.message))
   await page.route('https://example.com/**', async route => {
     const req = route.request(), url = new URL(req.url())
@@ -45,7 +45,7 @@ async function flush(page) { await page.clock.runFor(2100) }
 test('heatmap stays unloaded without explicit opt-in', async ({ page }) => {
   const state = await install(page, { optOut: true })
   await page.locator('#safe').click(); await flush(page)
-  expect(state.resources.some(p => p.includes('heatmap'))).toBe(false)
+  expect(state.resources.some(p => p === '/js/heatmap.js' || p.startsWith('/api/heatmap/'))).toBe(false)
   expect(state.events.filter(e => e.n === 'pageview')).toHaveLength(1)
   expect(state.errors).toEqual([])
 })

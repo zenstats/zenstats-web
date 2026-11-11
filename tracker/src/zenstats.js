@@ -11,9 +11,11 @@
 
   var endpoint = scriptEl.getAttribute && scriptEl.getAttribute('data-api') || defaultEndpoint()
   var dataDomain = scriptEl.getAttribute && scriptEl.getAttribute('data-domain')
+  {{#if COMPILE_PERFORMANCE}}
   var performanceChecked = false
   var performanceInitialURL = location.href
   var performanceBackgroundInit = document.visibilityState === 'hidden' && !document.prerendering
+  {{/if}}
 
   function defaultEndpoint() {
     // document.currentScript can be null (module/async/inline bundling); never throw in the host page.
@@ -29,8 +31,8 @@
     options && options.callback && options.callback({ status: 0, ignored: true })
     if (eventName === 'pageview') {
       currentEngagementIgnored = true
-      if (!performanceChecked) performanceChecked = true
-      if (window.__zenstatsHeatmap) window.__zenstatsHeatmap.page(location.href, true)
+      {{#if COMPILE_PERFORMANCE}}if (!performanceChecked) performanceChecked = true{{/if}}
+      {{#if COMPILE_HEATMAP}}if (window.__zenstatsHeatmap) window.__zenstatsHeatmap.page(location.href, true){{/if}}
     }
   }
 
@@ -329,10 +331,10 @@
     {{/if}}
 
     if (isPageview) {
-      startPerformance()
+      {{#if COMPILE_PERFORMANCE}}startPerformance(){{/if}}
       currentEngagementIgnored = false
       currentEngagementURL = payload.u
-      if (window.__zenstatsHeatmap) window.__zenstatsHeatmap.page(payload.u, false)
+      {{#if COMPILE_HEATMAP}}if (window.__zenstatsHeatmap) window.__zenstatsHeatmap.page(payload.u, false){{/if}}
       currentEngagementProps = payload.p
       currentEngagementMaxScrollDepth = -1
       currentEngagementTime = 0
@@ -410,6 +412,7 @@
   window.zenstats = trigger
   window.zenstats.l = true
 
+  {{#if COMPILE_PERFORMANCE}}
   // Performance is an independent opt-in asset. Fetch capability first so
   // disabled and unselected documents never load the official observer library.
   function startPerformance() {
@@ -447,6 +450,9 @@
     } catch(e) {}
   }
 
+  {{/if}}
+
+  {{#if COMPILE_HEATMAP}}
   // Heatmaps are opt-in and loaded separately so ordinary tracking stays small.
   if (scriptEl.getAttribute && scriptEl.getAttribute('data-heatmap') === 'true' && !window.__zenstatsHeatmapLoading) {
     window.__zenstatsHeatmapLoading = true
@@ -469,6 +475,7 @@
       document.head.appendChild(heatmapScript)
     } catch (e) { window.__zenstatsHeatmapLoading = false }
   }
+  {{/if}}
   for (var i = 0; i < queue.length; i++) trigger.apply(this, queue[i])
 
   // SPA pageview tracking
