@@ -454,12 +454,12 @@
       "instruction": "将下面的 ZenStats 统计代码添加到",
       "instructionSuffix": "的每个页面中，建议放在 <head> 内。",
       "trackingCode": "统计代码",
-      "featureLabel": "脚本功能选择",
+      "featureLabel": "基础脚本功能",
       "features": {
-        "none": "无（仅基础页面浏览追踪）",
-        "all": "全部功能（推荐）",
-        "recommended": "✓ 完整版 — 已启用全部功能",
-        "selectedScript": "自定义：{name}",
+        "none": "基础页面浏览与参与度",
+        "all": "全部基础功能",
+        "recommended": "✓ 已启用全部基础功能",
+        "selectedScript": "自定义：{{name}}",
         "taggedEvents": {
           "label": "自定义事件",
           "desc": "追踪带有 CSS 类名 event-name=... 的元素点击"
@@ -494,7 +494,32 @@
       "step2": "部署你的网站。",
       "step3": "访问一次你的网站，然后回到 ZenStats 查看实时统计。",
       "backToSites": "返回站点列表",
-      "viewStats": "查看统计面板"
+      "viewStats": "查看统计面板",
+      "pageTitle": "安装统计代码",
+      "optional": {
+        "title": "可选分析模块",
+        "help": "两项默认不勾选。这里仅生成脚本接入代码，不会修改站点的采集开关；需要同时在对应设置中开启，并满足页面白名单和采样条件。",
+        "heatmap": {
+          "label": "点击／滚动热力图",
+          "desc": "添加 data-heatmap=\"true\"，接入点击与滚动模块。点击和滚动深度分别在热力图的「采集设置」中开启，不需要额外的滚动脚本属性。",
+          "settings": "配置热力图采集"
+        },
+        "performance": {
+          "label": "Core Web Vitals 性能监控",
+          "desc": "添加 data-performance=\"true\"，采集 LCP、INP、CLS 及辅助 TTFB、FCP。站点默认关闭，初始采样率为 10%。",
+          "settings": "配置性能采集"
+        },
+        "release": "发布版本",
+        "releaseHelp": "本次生成代码中的热力图与性能监控共用此版本值。每次发布更新版本，便于对比布局和性能变化。",
+        "key": "热力图聚合标识（可选）",
+        "keyHelp": "只用于布局相同的一类页面，例如 product-detail。全站公共模板建议留空，优先在热力图设置中按路径配置规则；首条匹配规则优先于脚本标识。",
+        "variant": "热力图变体",
+        "variantHelp": "默认 default；A/B 实验可填写 variant-b。",
+        "invalid": "发布版本和变体不能为空；版本、聚合标识和变体最长 120 个字符，仅支持英文字母、数字及 _.:/@-。",
+        "deployHelp": "只需安装一个 Tracker 标签。保留所选基础功能与 Hash 路由模式，并部署最新 Tracker 资源：热力图需要 heatmap.js，性能监控需要 vitals.js 和 web-vitals.LICENSE.txt。",
+        "docsHelp": "在「站点设置 → 安装统计代码」选择基础脚本功能和可选分析模块，可生成完整代码。热力图与性能监控使用属性启用，不会增加脚本变体；滚动沿用 data-heatmap，由站点设置控制。",
+        "proxyHelp": "代理或自托管脚本时，请同时提供所需模块和许可证文件。data-api 是普通事件的完整端点；可选接口默认由它推导（/api/event → /api/heatmap 与 /api/performance）。自定义转发路径需显式配置对应的 data-heatmap-api 或 data-performance-api。"
+      }
     },
     "verify": {
       "title": "验证站点所有权",

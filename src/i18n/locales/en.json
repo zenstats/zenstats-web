@@ -454,12 +454,12 @@
       "instruction": "Add the ZenStats tracking code to every page of",
       "instructionSuffix": "Recommended placement inside the <head> tag.",
       "trackingCode": "Tracking Code",
-      "featureLabel": "Script Features",
+      "featureLabel": "Base script features",
       "features": {
-        "none": "None (basic pageview tracking only)",
-        "all": "All features (recommended)",
-        "recommended": "✓ Full version — all features enabled",
-        "selectedScript": "Custom: {name}",
+        "none": "Basic pageviews and engagement",
+        "all": "All base features",
+        "recommended": "✓ All base features enabled",
+        "selectedScript": "Custom: {{name}}",
         "taggedEvents": {
           "label": "Tagged Events",
           "desc": "Track clicks on elements with CSS class event-name=..."
@@ -494,7 +494,32 @@
       "step2": "Deploy your website.",
       "step3": "Visit your website once, then return to ZenStats to view real-time statistics.",
       "backToSites": "Back to Sites",
-      "viewStats": "View Stats Dashboard"
+      "viewStats": "View Stats Dashboard",
+      "pageTitle": "Install tracking code",
+      "optional": {
+        "title": "Optional analytics modules",
+        "help": "Both options are unchecked by default. These controls only generate script attributes; they do not change site collection settings. Enable the corresponding site setting and configure its page allowlist and sampling rate.",
+        "heatmap": {
+          "label": "Click / scroll heatmaps",
+          "desc": "Adds data-heatmap=\"true\" for the click and scroll module. Enable clicks and scroll depth independently under Heatmap settings → Collection settings. No separate scroll attribute is needed.",
+          "settings": "Configure heatmap collection"
+        },
+        "performance": {
+          "label": "Core Web Vitals performance monitoring",
+          "desc": "Adds data-performance=\"true\" to collect LCP, INP, CLS and supporting TTFB/FCP. Site collection is off by default, with an initial sampling rate of 10%.",
+          "settings": "Configure performance collection"
+        },
+        "release": "Release version",
+        "releaseHelp": "Heatmaps and performance share this release value in the generated snippet. Update it with each release to compare layout and performance changes.",
+        "key": "Heatmap aggregation key (optional)",
+        "keyHelp": "Use only for pages with the same layout, such as product-detail. Leave empty in a site-wide template and prefer path grouping rules in Heatmap settings. The first matching rule overrides the script key.",
+        "variant": "Heatmap variant",
+        "variantHelp": "Defaults to default; use a value such as variant-b for A/B experiments.",
+        "invalid": "Release and variant are required. Release, aggregation key and variant accept up to 120 characters using only letters, numbers and _.:/@-.",
+        "deployHelp": "Install one Tracker tag. Keep the selected base features and Hash routing mode. Deploy current Tracker assets: heatmaps need heatmap.js; performance needs vitals.js and web-vitals.LICENSE.txt.",
+        "docsHelp": "Use Site settings → Install tracking code to select base script features and optional analytics modules and generate a complete snippet. Heatmaps and performance use attributes without adding script variants. Scroll uses data-heatmap and is controlled by site settings.",
+        "proxyHelp": "When proxying or self-hosting scripts, serve the required modules and license file too. data-api is the full ordinary event endpoint; optional APIs are derived from it (/api/event → /api/heatmap and /api/performance). Custom forwarding paths require explicit data-heatmap-api or data-performance-api settings."
+      }
     },
     "verify": {
       "title": "Verify Site Ownership",

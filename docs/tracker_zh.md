@@ -1,10 +1,14 @@
 # ZenStats 追踪脚本
 
-ZenStats 追踪脚本是一个轻量级（根据所选功能约 4–6 KB 压缩前、约 2.5 KB gzip 后）JavaScript 代码片段，可追踪页面浏览、停留时间、滚动深度、自定义事件、站外链接、文件下载和表单提交。支持 React、Vue、Angular 和纯 HTML 等所有框架。
+ZenStats 追踪脚本是一个按功能构建的 JavaScript 代码片段（默认 script.js 约 8.6 KB，gzip 约 3.4 KB），可追踪页面浏览、停留时间、滚动深度、自定义事件、站外链接、文件下载和表单提交。支持 React、Vue、Angular 和纯 HTML 等所有框架。
 
 ## 目录
 
 - [安装](#安装)
+- [可选分析模块接入](#可选分析模块接入)
+- [点击热力图](#点击热力图)
+- [可选滚动深度热力图](#可选滚动深度热力图)
+- [Core Web Vitals](#core-web-vitals)
 - [脚本版本（功能选择）](#脚本版本功能选择)
 - [脚本标签属性](#脚本标签属性)
 - [自动追踪](#自动追踪)
@@ -37,6 +41,30 @@ ZenStats 追踪脚本是一个轻量级（根据所选功能约 4–6 KB 压缩�
 
 ---
 
+## 可选分析模块接入
+
+进入 **站点设置 → 安装统计代码**，先选择基础脚本功能，再按需勾选 **点击／滚动热力图** 和 **Core Web Vitals 性能监控**。两项默认不勾选，支持分别开启或组合接入。填写发布版本后，生成代码会自动加入对应属性；基础功能和 Hash 路由仍由所选脚本变体决定。
+
+**勾选安装选项只生成代码，不保存站点采集开关。** 还需在热力图「采集设置」或「性能监控设置」开启服务端采集，并配置各自的路径白名单和采样率。两类采集默认关闭，初始采样率均为10%。滚动深度在热力图设置中单独开启，沿用 `data-heatmap="true"`，没有 `data-scroll` 属性。
+
+```html
+<script defer crossorigin="anonymous"
+  data-domain="example.com"
+  src="https://your-zenstats-domain.com/js/script.js"
+  data-heatmap="true"
+  data-heatmap-version="release-1"
+  data-heatmap-variant="default"
+  data-performance="true"
+  data-performance-version="release-1"></script>
+```
+
+- 只安装一个 Tracker 标签，在原标签增加属性，避免重复引入脚本。Hash 站点保留 `script.hash.js` 或对应 Hash 变体；自定义 `data-api`、页面排除等配置继续保留。
+- 更新 API 和 Tracker 资源。热力图模块为 `heatmap.js`；性能模块为 `vitals.js`，同时提供 `web-vitals.LICENSE.txt`。模块默认从基础脚本的同目录加载，自托管或代理时需要一并提供。
+- 每次发布更新 `release-1`。安装页面为两种模块生成相同的初始版本值，但两个属性独立，可以手动设置不同版本。
+- 热力图聚合标识可选，仅为布局相同的页面设置。全站公共模板建议留空，并在热力图设置中用路径规则分组，避免把不相关页面混在一起；首条匹配规则优先于 `data-heatmap-key`。
+- 发布版本、聚合标识和变体最长120字符，支持英文字母、数字及 `_.:/@-`；请勿填入用户身份或敏感信息。
+- 可选分析不增加普通PV、UV、Session和业务事件数。服务器返回202仅表示进入内存队列，需通过管理员的「采集质量」核对持久化、待写、重试和丢弃。
+
 ## 脚本版本（功能选择）
 
 ZenStats 根据你选择的功能编译优化的脚本变体。与传统分析脚本打包所有功能不同，ZenStats 只包含你实际需要的代码——保持网站加载速度。
@@ -55,7 +83,9 @@ ZenStats 根据你选择的功能编译优化的脚本变体。与传统分析�
 ### 脚本文件命名
 
 ```
-script.js                            ← 全部功能（向后兼容别名）
+script.js                            ← 全部基础功能，不含 Hash（向后兼容别名）
+script.hash.js                       ← 全部基础功能，含 Hash
+script.bare.js                       ← 基础页面浏览与参与度
 script.{ex}.{fd}.{ha}.{ma}.{ol}.{te}.js   ← 任意组合，按字母排序
 ```
 
@@ -63,11 +93,15 @@ script.{ex}.{fd}.{ha}.{ma}.{ol}.{te}.js   ← 任意组合，按字母排序
 
 ### 文件体积
 
-| 变体 | 典型大小 |
-|------|---------|
-| 裸版（仅页面浏览） | ~4.1 KB |
-| 单一功能 | ~4.5–5.2 KB |
-| 全部 6 个功能 | ~6.0 KB |
+以下为2026-11-10构建的近似大小，实际以构建输出为准。可选模块不包含在基础脚本体积中；热力图需显式添加属性才加载模块，性能模块还需通过服务端配置、路径和采样检查。
+
+| 资源 | 压缩前 | gzip |
+|------|--------|------|
+| `script.bare.js` | 6.8 KB | 2.6 KB |
+| `script.js` | 8.6 KB | 3.4 KB |
+| `script.hash.js` | 8.5 KB | 3.4 KB |
+| `heatmap.js`（点击与滚动共用） | 9.0 KB | 3.4 KB |
+| `vitals.js`（含官方标准库） | 13.0 KB | 5.1 KB |
 
 ---
 
@@ -80,8 +114,21 @@ script.{ex}.{fd}.{ha}.{ma}.{ol}.{te}.js   ← 任意组合，按字母排序
 | `data-include` | 否 | 页面排除规则 | 逗号分隔的路径模式。设置后 **仅** 匹配页面被追踪。支持 `*`（单段）和 `**`（多段）。 |
 | `data-exclude` | 否 | 页面排除规则 | 逗号分隔的路径模式。匹配页面 **排除** 追踪。支持 `*` 和 `**`。 |
 | `data-file-types` | 否 | 文件下载 | 逗号分隔的文件扩展名（默认：`pdf,xlsx,docx,…`）。 |
+| `data-heatmap` | 否 | 热力图 | 默认关闭，设为 `true` 接入点击／滚动模块；服务端采集仍需开启。 |
+| `data-heatmap-version` | 否 | 热力图 | 页面布局发布版本，默认 `unknown`；建议显式设置并随发布更新。 |
+| `data-heatmap-key` | 否 | 热力图 | 同类页面聚合标识；首条匹配路径规则优先，未配置时按具体页面查看。 |
+| `data-heatmap-variant` | 否 | 热力图 | 变体标识，默认 `default`。 |
+| `data-heatmap-api` | 否 | 热力图 | 可选API根路径，不带 `/config`、`/clicks` 或 `/scroll`；默认由 `data-api` 推导。 |
+| `data-heatmap-src` | 否 | 热力图 | 模块地址，默认基础脚本同目录的 `heatmap.js`。 |
+| `data-performance` | 否 | 性能监控 | 默认关闭，设为 `true` 接入Core Web Vitals；还需服务端开启、路径匹配及采样命中。 |
+| `data-performance-version` | 否 | 性能监控 | 性能发布版本，默认 `unknown`。 |
+| `data-performance-api` | 否 | 性能监控 | 可选API根路径，不带 `/config` 或 `/reports`；默认由 `data-api` 推导。 |
+| `data-performance-src` | 否 | 性能监控 | 模块地址，默认基础脚本同目录的 `vitals.js`。 |
 
 > **注意：** 旧文档中的 `data-outbound-links` 和 `data-file-downloads` 属性不再存在——这些功能通过安装页面的勾选框启用，由脚本文件名决定包含哪些代码。
+
+
+可选模块默认把事件端点末尾 `/event` 替换为 `/heatmap` 或 `/performance`，例如 `/collect/event` 对应 `/collect/heatmap` 与 `/collect/performance`。如果事件路径不以 `/event` 结尾，则默认使用该源的 `/api/heatmap` 和 `/api/performance`。使用自定义转发路径时应显式填写对应 `*-api` 属性，并代理这些配置和上报路由；只代理 `/js/` 并不能转发采集请求。
 
 ### 页面排除规则示例
 
@@ -397,6 +444,14 @@ window.__zenstats = true  // 测试时绕过机器人过滤
 
 ---
 
+### 可选分析没有数据
+
+- 确认仅安装一个标签，并包含 `data-domain` 与所需的 `data-heatmap="true"` / `data-performance="true"`。安装页勾选不会自动保存站点开关。
+- 检查对应服务端开关、页面白名单、允许的来源和采样率；热力图与性能白名单独立，`*` 只匹配一个路径段。验收时可临时把测试站点的采样率调为100%。
+- 检查 `heatmap.js` / `vitals.js`、配置及上报请求是否成功，代理路径是否完整；检查是否设置了 `localStorage.zenstats_ignore`。
+- 检查版本／聚合标识／变体是否合法；性能指标需等待浏览器回调或页面隐藏，无交互时INP可以缺失，CLS为0有效。
+- 管理员通过点击、滚动及性能各自的采集质量卡检查持久化与丢弃，不要把202或 `sendBeacon=true` 当作落库成功。
+
 ## API 参考
 
 ### `window.zenstats(eventName, options?)`
@@ -476,6 +531,12 @@ window.__zenstats = true  // 测试时绕过机器人过滤
 | `Form: Submission` | 表单提交自动追踪 |
 | `batch` | 多个排队事件合并发送 |
 
+
+## 点击热力图
+
+在 **站点设置 → 热力图设置** 新增热力图，可选择具体路径或聚合标识，并配置范例URL截图。在「采集设置」开启总开关、点击采集，设置路径白名单、采样率和保留周期。Tracker需添加 `data-heatmap="true"`；点击默认子开关不代表热力图总开关已开启。
+
+点击位置使用40×80比例网格，按设备组、主机、发布版本及变体聚合，旨在观察大致区域。聚合页需有相近布局，截图版本和设备组应与数据相符。为关键元素设置 `data-zs-id="signup.submit"` 可稳定语义标识；用 `data-zs-ignore` 排除敏感区域点击。滚动深度复用同一个模块，接入方式见下文。
 
 ## 可选滚动深度热力图
 

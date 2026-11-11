@@ -1,10 +1,14 @@
 # ZenStats Tracking Script
 
-The ZenStats tracking script is a lightweight (~4–6 KB minified, ~2.5 KB gzipped depending on features selected) JavaScript snippet that tracks pageviews, engagement time, scroll depth, custom events, outbound links, file downloads, and form submissions. It supports any framework including React, Vue, Angular, and plain HTML.
+The ZenStats tracking script is a JavaScript snippet built for your selected features (the default script.js is about 8.6 KB minified and 3.4 KB gzipped) that tracks pageviews, engagement time, scroll depth, custom events, outbound links, file downloads, and form submissions. It supports any framework including React, Vue, Angular, and plain HTML.
 
 ## Table of Contents
 
 - [Installation](#installation)
+- [Optional analytics setup](#optional-analytics-setup)
+- [Click heatmaps](#click-heatmaps)
+- [Optional scroll depth heatmaps](#optional-scroll-depth-heatmaps)
+- [Core Web Vitals](#core-web-vitals)
 - [Script Variants (Feature Selection)](#script-variants-feature-selection)
 - [Script Tag Attributes](#script-tag-attributes)
 - [Automatic Tracking](#automatic-tracking)
@@ -37,6 +41,30 @@ Replace `yourdomain.com` with the domain registered in ZenStats, and `your-zenst
 
 ---
 
+## Optional analytics setup
+
+Open **Site settings → Install tracking code**, select base script features, then optionally select **Click / scroll heatmaps** and **Core Web Vitals performance monitoring**. Both are unchecked by default and can be used independently or together. Enter a release version to generate the corresponding attributes. Base features and Hash routing still determine the script variant.
+
+**Selecting an install option only generates code; it does not save site collection settings.** Enable collection under Heatmap settings → Collection settings or Performance settings, then configure each module's page allowlist and sampling rate. Both collections default to off, with an initial sampling rate of 10%. Enable scroll separately in Heatmap settings; it reuses `data-heatmap="true"` and has no `data-scroll` attribute.
+
+```html
+<script defer crossorigin="anonymous"
+  data-domain="example.com"
+  src="https://your-zenstats-domain.com/js/script.js"
+  data-heatmap="true"
+  data-heatmap-version="release-1"
+  data-heatmap-variant="default"
+  data-performance="true"
+  data-performance-version="release-1"></script>
+```
+
+- Install one Tracker tag and add attributes to it. Keep `script.hash.js` or your selected Hash variant, custom `data-api`, and page exclusion settings.
+- Deploy the API and current Tracker assets together. Heatmaps need `heatmap.js`; performance needs `vitals.js` and `web-vitals.LICENSE.txt`. Modules load from the base script's directory by default, so proxies and self-hosted copies must serve them too.
+- Update `release-1` with each release. The install page generates the same initial release value for both modules; the two attributes remain independent and can be edited separately.
+- Aggregation keys are optional and apply to pages with similar layouts. Leave the key empty in a site-wide template and prefer path grouping rules in Heatmap settings. The first matching rule overrides `data-heatmap-key`.
+- Releases, aggregation keys and variants accept up to 120 characters using letters, numbers and `_.:/@-`. Do not include user identities or sensitive data.
+- Optional analytics do not increment ordinary PV, UV, sessions or business events. HTTP202 acknowledges memory admission only; administrators can inspect Collection quality for persisted, pending, retried and discarded reports.
+
 ## Script Variants (Feature Selection)
 
 ZenStats compiles optimized script variants based on your selected features. Unlike traditional analytics scripts that bundle everything, ZenStats only includes the code you actually need — keeping your site fast.
@@ -55,19 +83,25 @@ In the **Install Tracking Code** page, toggle the checkboxes to enable or disabl
 ### Script file naming
 
 ```
-script.js                          ← all features (backward‑compatible alias)
+script.js                          ← all base features except Hash (backward-compatible alias)
+script.hash.js                     ← all base features including Hash
+script.bare.js                     ← basic pageviews and engagement
 script.{ex}.{fd}.{ha}.{ma}.{ol}.{te}.js   ← any combination, sorted alphabetically
 ```
 
 **Abbreviation key:** `ex` = exclusions, `fd` = file downloads, `ha` = hash routing, `ma` = manual URL, `ol` = outbound links, `te` = tagged events.
 
-### File sizes (minified; ~2.5 KB gzipped)
+### File sizes
 
-| Variant | Minified |
-|---------|---------|
-| Bare (pageviews only) | ~4.1 KB |
-| Single feature | ~4.5–5.2 KB |
-| All 6 features | ~6.0 KB |
+Approximate sizes from the 2026-11-10 build; use actual build output for current figures. Optional assets are separate from the base script. Heatmaps require an explicit script attribute to load; performance also checks site configuration, path matching and sampling before loading.
+
+| Asset | Minified | gzip |
+|-------|----------|------|
+| `script.bare.js` | 6.8 KB | 2.6 KB |
+| `script.js` | 8.6 KB | 3.4 KB |
+| `script.hash.js` | 8.5 KB | 3.4 KB |
+| `heatmap.js` (clicks and scroll) | 9.0 KB | 3.4 KB |
+| `vitals.js` (including the official standard library) | 13.0 KB | 5.1 KB |
 
 ---
 
@@ -80,8 +114,21 @@ script.{ex}.{fd}.{ha}.{ma}.{ol}.{te}.js   ← any combination, sorted alphabetic
 | `data-include` | No | Page Exclusions | Comma‑separated path patterns. If set, **only** matching pages are tracked. Supports `*` (segment) and `**` (multi‑segment). |
 | `data-exclude` | No | Page Exclusions | Comma‑separated path patterns. Matching pages are **excluded** from tracking. Supports `*` and `**`. |
 | `data-file-types` | No | File Downloads | Comma‑separated file extensions (default: `pdf,xlsx,docx,…`). |
+| `data-heatmap` | No | Heatmaps | Defaults off. Set to `true` to integrate clicks/scroll; enable site collection separately. |
+| `data-heatmap-version` | No | Heatmaps | Layout release, defaults to `unknown`; update with layout releases. |
+| `data-heatmap-key` | No | Heatmaps | Optional aggregation key for similar pages. The first matching path rule overrides it; exact page views remain available. |
+| `data-heatmap-variant` | No | Heatmaps | Variant, defaults to `default`. |
+| `data-heatmap-api` | No | Heatmaps | API base without `/config`, `/clicks` or `/scroll`; derived from `data-api` by default. |
+| `data-heatmap-src` | No | Heatmaps | Asset URL, defaults to `heatmap.js` in the base script's directory. |
+| `data-performance` | No | Performance | Defaults off. Set to `true`; collection still requires site configuration, path matching and sampling. |
+| `data-performance-version` | No | Performance | Release version, defaults to `unknown`. |
+| `data-performance-api` | No | Performance | API base without `/config` or `/reports`; derived from `data-api` by default. |
+| `data-performance-src` | No | Performance | Asset URL, defaults to `vitals.js` in the base script's directory. |
 
 > **Note:** `data-outbound-links` and `data-file-downloads` HTML attributes no longer exist — enable these features via the checkbox UI on the Install page instead. The script variant filename determines which code is included.
+
+
+Optional APIs replace a trailing `/event` in the ordinary event endpoint with `/heatmap` or `/performance`: `/collect/event` maps to `/collect/heatmap` and `/collect/performance`. If the event path does not end in `/event`, they default to `/api/heatmap` and `/api/performance` on the same origin. For custom forwarding paths, set the corresponding `*-api` attributes explicitly and proxy their configuration and report routes. Proxying `/js/` alone does not forward collection requests.
 
 ### Page Exclusions examples
 
@@ -397,6 +444,14 @@ window.__zenstats = true  // bypass bot filtering during tests
 
 ---
 
+### Optional analytics has no data
+
+- Confirm there is one Tracker tag with `data-domain` and the required `data-heatmap="true"` / `data-performance="true"`. Selecting install options does not save site switches.
+- Check site switches, page allowlists, allowed origins and sampling. Heatmap and performance allowlists are independent; `*` matches one path segment. A test site's sampling rate can temporarily be set to 100% for acceptance testing.
+- Inspect module loads, configuration and report requests, including proxy paths; check for `localStorage.zenstats_ignore`.
+- Verify release/key/variant syntax. Performance metrics wait for browser callbacks or a hidden page; INP can be missing without interaction and CLS=0 is valid.
+- Administrators can inspect separate click, scroll and performance collection quality cards. Neither HTTP202 nor `sendBeacon=true` confirms persistence.
+
 ## API Reference
 
 ### `window.zenstats(eventName, options?)`
@@ -479,6 +534,12 @@ Notes:
 | `Form: Submission` | Auto‑tracked form submissions |
 | `batch` | Multiple queued events sent together |
 
+
+## Click heatmaps
+
+Use **Site settings → Heatmap settings → New heatmap** to configure a page path or aggregation key and capture an example URL as the background. Under Collection settings, enable the master switch and click collection, then set the allowlist, sampling and retention. The Tracker needs `data-heatmap="true"`; the default click sub-switch does not enable the heatmap master switch.
+
+Clicks use a 40×80 proportional grid, grouped by device class, hostname, release and variant, for approximate region analysis. Group pages with similar layouts and match screenshot versions and device classes to the data. Use `data-zs-id="signup.submit"` for stable element identity and `data-zs-ignore` to exclude sensitive areas from click collection. Scroll uses the same optional module, as described below.
 
 ## Optional scroll depth heatmaps
 

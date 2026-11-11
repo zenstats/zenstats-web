@@ -449,9 +449,30 @@ export default function DocsPage() {
             <CodeBlock label="HTML">{`<script
   defer
   data-domain="example.com"
-  src="https://your-instance.com/js/zenstats.js"
+  src="https://your-instance.com/js/script.js"
 ></script>`}</CodeBlock>
             <p className="text-sm text-slate-600 dark:text-slate-400">{t("docs.sections.trackingScript.note")}</p>
+
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("sites.install.optional.title")}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{t("sites.install.optional.docsHelp")}</p>
+            <Callout type="info">{t("sites.install.optional.help")}</Callout>
+            <ParamTable rows={[
+              { name: "data-heatmap", desc: t("sites.install.optional.heatmap.desc") },
+              { name: "data-performance", desc: t("sites.install.optional.performance.desc") },
+              { name: "data-heatmap-version / data-performance-version", desc: t("sites.install.optional.releaseHelp") },
+              { name: "data-heatmap-key", desc: t("sites.install.optional.keyHelp") },
+              { name: "data-heatmap-variant", desc: t("sites.install.optional.variantHelp") },
+            ]} />
+            <CodeBlock label="Heatmaps + Core Web Vitals">{`<script defer crossorigin="anonymous"
+  data-domain="example.com"
+  src="https://your-instance.com/js/script.js"
+  data-heatmap="true"
+  data-heatmap-version="release-1"
+  data-heatmap-variant="default"
+  data-performance="true"
+  data-performance-version="release-1"></script>`}</CodeBlock>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{t("sites.install.optional.deployHelp")}</p>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{t("sites.install.optional.proxyHelp")}</p>
 
             {/* 埋点总览：事件 = 事件名 + 属性；四种采集方式 */}
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.instrumentation.heading")}</h3>
@@ -911,8 +932,8 @@ zenstats('Download', {
               ]}
             />
             <CodeBlock label="Tracker Embed Example">
-{`<script defer src="https://your-domain.com/tracker.js"
-  data-site-id="demo.site"
+{`<script defer src="https://your-domain.com/js/script.js"
+  data-domain="demo.site"
   data-heatmap="true"
   data-heatmap-key="pricing-page"
   data-heatmap-version="v2.0"
