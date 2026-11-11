@@ -2,20 +2,24 @@ const { test, expect } = require('@playwright/test')
 const path = require('path')
 
 async function install(page, options = {}) {
-  const batches = [], events = [], errors = [], resources = []
-  let config = { groups:options.groups||[], enabled: true, protocol_version: 1, paths: ['/*', '/#/*'], sample_rate: 1, max_clicks: 100 }
+  const batches = [], events = [], errors = [], resources = [], scrolls = []
+  let config = { scroll_enabled: !!options.scroll, scroll_protocol_version: 1, clicks_enabled: options.clicks !== false, groups:options.groups||[], enabled: true, protocol_version: 1, paths: ['/*', '/#/*'], sample_rate: 1, max_clicks: 100 }
   if (options.legacy) delete config.groups
   const html = `<html><head><style>body{margin:0;height:2400px}button{width:120px;height:60px}#normal{position:absolute;left:200px;top:1100px}#fixed{position:fixed;right:0;top:0}#sticky{position:sticky;top:0;left:0}#scroll{position:absolute;top:100px;left:400px;height:100px;width:160px;overflow:auto}#scroll div{height:400px}</style></head><body>
     <button id="fixed" data-zs-id="fixed">Fixed</button><button id="sticky" data-zs-id="sticky">Sticky</button>
     <div id="scroll"><div><button data-zs-id="nested">Nested</button></div></div>
     <button id="normal" data-zs-id="signup"><span>Private text</span></button>
     <div data-zs-ignore><button id="ignore">Secret</button></div><form><button id="form" type="button">Submit</button></form><button id="safe" style="position:absolute;top:350px">Safe</button>
-    <script>window.__zenstats=true</script><script defer data-domain="example.com" ${options.optOut ? '' : 'data-heatmap="true"'} data-heatmap-version="v1" data-heatmap-key="${options.key||''}" src="/js/${options.hash ? 'script.hash.js' : 'script.js'}"></script></body></html>`
+    <script>window.__zenstats=true</script><script defer data-domain="example.com" ${options.optOut ? '' : 'data-heatmap="true"'} data-heatmap-version="v1" data-heatmap-key="${options.key||''}" src="/js/${options.hash ? 'script.hash.heatmap.js' : 'script.heatmap.js'}"></script></body></html>`
   page.on('pageerror', error => errors.push(error.message))
   await page.route('https://example.com/**', async route => {
     const req = route.request(), url = new URL(req.url())
     resources.push(url.pathname)
     if (url.pathname === '/api/heatmap/config') return route.fulfill({ json: config })
+    if (url.pathname === '/api/heatmap/scroll') {
+      scrolls.push({ body: req.postData(), payload: req.postDataJSON() })
+      return route.fulfill({ status: options.failFirstScroll && scrolls.length === 1 ? 503 : 202, headers: { 'Retry-After': '1' }, body: '' })
+    }
     if (url.pathname === '/api/heatmap/clicks') {
       batches.push({ body: req.postData(), payload: req.postDataJSON() })
       return route.fulfill({ status: options.failFirst && batches.length === 1 ? 503 : 202, headers: { 'Retry-After': '1' }, body: '' })
@@ -34,14 +38,14 @@ async function install(page, options = {}) {
     await expect.poll(() => resources.filter(p => p === '/api/heatmap/config').length).toBe(1)
     await page.evaluate(() => Promise.resolve())
   }
-  return { batches, events, errors, resources, setConfig: patch => { config = { ...config, ...patch } } }
+  return { batches, events, errors, resources, scrolls, setConfig: patch => { config = { ...config, ...patch } } }
 }
 async function flush(page) { await page.clock.runFor(2100) }
 
 test('heatmap stays unloaded without explicit opt-in', async ({ page }) => {
   const state = await install(page, { optOut: true })
   await page.locator('#safe').click(); await flush(page)
-  expect(state.resources.some(p => p.includes('heatmap'))).toBe(false)
+  expect(state.resources.some(p => p === '/js/heatmap.js' || p.startsWith('/api/heatmap/'))).toBe(false)
   expect(state.events.filter(e => e.n === 'pageview')).toHaveLength(1)
   expect(state.errors).toEqual([])
 })
@@ -131,5 +135,86 @@ test('new tracker omits aggregation fields when an older API lacks the capabilit
   await page.locator('#safe').click();await flush(page)
   await expect.poll(()=>state.batches.length).toBe(1)
   expect(state.batches[0].payload.clicks[0].page).not.toHaveProperty('aggregation_key')
+  expect(state.errors).toEqual([])
+})
+
+
+test('scroll includes a page without clicks and reports deeper boundaries without ordinary events', async ({ page }) => {
+  const state = await install(page, { scroll: true, clicks: false })
+  await flush(page)
+  await expect.poll(() => state.scrolls.length).toBe(1)
+  const baseline = state.scrolls[0].payload.reports[0]
+  expect(baseline.revision).toBe(1)
+  expect(baseline.max_bottom).toBeGreaterThan(0)
+  expect(baseline.max_height).toBe(2400)
+  await page.evaluate(() => scrollTo(0, 1500))
+  await page.clock.runFor(10100); await flush(page)
+  const reports = state.scrolls.flatMap(b => b.payload.reports)
+  expect(reports.length).toBeGreaterThan(1)
+  expect(reports.at(-1).page_view_id).toBe(baseline.page_view_id)
+  expect(reports.at(-1).max_bottom).toBeGreaterThan(baseline.max_bottom)
+  expect(reports.at(-1).revision).toBeGreaterThan(1)
+  await page.locator('#safe').click(); await flush(page)
+  expect(state.batches).toHaveLength(0)
+  expect(state.events.filter(e => !['pageview', 'engagement'].includes(e.n))).toEqual([])
+  expect(state.scrolls[0].body).not.toMatch(/secret|private|Private|user_id|session_id|user_agent/)
+  expect(state.errors).toEqual([])
+})
+
+test('scroll snapshots retain IDs through retry and get a new identity on SPA navigation', async ({ page }) => {
+  const state = await install(page, { scroll: true, failFirstScroll: true })
+  await flush(page); await expect.poll(() => state.scrolls.length).toBe(1)
+  await page.clock.runFor(1100); await expect.poll(() => state.scrolls.length).toBe(2)
+  expect(state.scrolls[1].body).toBe(state.scrolls[0].body)
+  await page.evaluate(() => history.pushState(null, '', '/pricing?token=secret'))
+  await flush(page)
+  await expect.poll(() => state.scrolls.some(b => b.payload.reports.some(r => r.page.path === '/pricing'))).toBe(true)
+  const reports = state.scrolls.flatMap(b => b.payload.reports)
+  const first = reports[0], next = reports.find(r => r.page.path === '/pricing')
+  expect(next).toBeTruthy()
+  expect(next.page_view_id).not.toBe(first.page_view_id)
+  expect(next.revision).toBe(1)
+  expect(state.errors).toEqual([])
+})
+
+test('scroll is off by default and short pages start at full depth when enabled', async ({ page }) => {
+  const state = await install(page)
+  await flush(page); expect(state.scrolls).toHaveLength(0)
+  await page.evaluate(() => { document.body.style.height = '100px'; document.querySelector('#normal').remove(); document.querySelector('#scroll').remove() })
+  state.setConfig({ scroll_enabled: true })
+  await page.clock.runFor(30100); await flush(page)
+  await expect.poll(() => state.scrolls.length).toBe(1)
+  const r = state.scrolls[0].payload.reports[0]
+  expect(r.max_bottom).toBe(r.max_height)
+  expect(state.errors).toEqual([])
+})
+
+test('scroll reports freeze the page layout while tracking document growth', async ({ page }) => {
+  const state = await install(page, { scroll: true })
+  await flush(page); await expect.poll(() => state.scrolls.length).toBe(1)
+  const first = state.scrolls[0].payload.reports[0]
+  await page.evaluate(() => { document.body.style.height = '4000px'; scrollTo(0, 2000) })
+  await page.clock.runFor(10100); await flush(page)
+  await expect.poll(() => state.scrolls.flatMap(b => b.payload.reports).at(-1).max_height).toBe(4000)
+  const next = state.scrolls.flatMap(b => b.payload.reports).at(-1)
+  expect(next.page_view_id).toBe(first.page_view_id)
+  expect(next.page).toEqual(first.page)
+  expect(next.max_bottom).toBeGreaterThan(first.max_bottom)
+  expect(state.errors).toEqual([])
+})
+
+test('BFCache restoration creates a fresh scroll view and stops the previous lifecycle', async ({ page }) => {
+  const state = await install(page, { scroll: true })
+  await flush(page); await expect.poll(() => state.scrolls.length).toBe(1)
+  const first = state.scrolls[0].payload.reports[0]
+  await page.evaluate(() => {
+    window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }))
+    window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))
+  })
+  await flush(page)
+  await expect.poll(() => new Set(state.scrolls.flatMap(b => b.payload.reports).map(r => r.page_view_id)).size).toBe(2)
+  const next = state.scrolls.flatMap(b => b.payload.reports).find(r => r.page_view_id !== first.page_view_id)
+  expect(next.revision).toBe(1)
+  expect(next.started_at).not.toBe(first.started_at)
   expect(state.errors).toEqual([])
 })

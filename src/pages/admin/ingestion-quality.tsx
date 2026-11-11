@@ -169,6 +169,8 @@ export default function IngestionQuality() {
       </>}
       <GeoIPQuality status={snapshot?.geoip} />
       <HeatmapQuality />
+      <HeatmapQuality scroll />
+      <HeatmapQuality performance />
     </div>
   )
 }

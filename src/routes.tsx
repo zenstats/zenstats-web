@@ -16,6 +16,8 @@ import { preloadStats } from '@/lib/route-preload';
 // 而绝大多数会话只会访问其中 0-1 个。懒加载后首屏只包含 login/sites 两条路径的代码。
 // 导出 preload* 供列表页在空闲时预取下一步最可能进入的页面（见 sites.tsx）。
 const StatsPage = lazy(preloadStats);
+const PerformancePage = lazy(() => import("@/pages/sites/performance/performance"));
+const PerformanceSettings = lazy(() => import("@/pages/sites/performance/settings"));
 const HeatmapSettings = lazy(() => import("@/pages/sites/heatmap/settings"));
 const HeatmapPage = lazy(() => import("@/pages/sites/heatmap/heatmap"));
 const FunnelAnalysisPage = lazy(() => import("@/pages/sites/funnel-analysis/funnel-analysis"));
@@ -144,6 +146,10 @@ const routes: RouteObject[] = [
             element: <StatsPage />
           },
           {
+            path: ":domain/performance",
+            element: <PerformancePage />
+          },
+          {
             path: ":domain/heatmap",
             element: <HeatmapPage />
           },
@@ -179,6 +185,10 @@ const routes: RouteObject[] = [
                 element: <SettingsLayout>
                   <SettingsGeneralForm />
                 </SettingsLayout>,
+              },
+              {
+                path: "performance",
+                element: <SettingsLayout><PerformanceSettings /></SettingsLayout>,
               },
               {
                 path: "heatmap",

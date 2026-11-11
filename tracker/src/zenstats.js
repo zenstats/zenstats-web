@@ -11,6 +11,11 @@
 
   var endpoint = scriptEl.getAttribute && scriptEl.getAttribute('data-api') || defaultEndpoint()
   var dataDomain = scriptEl.getAttribute && scriptEl.getAttribute('data-domain')
+  {{#if COMPILE_PERFORMANCE}}
+  var performanceChecked = false
+  var performanceInitialURL = location.href
+  var performanceBackgroundInit = document.visibilityState === 'hidden' && !document.prerendering
+  {{/if}}
 
   function defaultEndpoint() {
     // document.currentScript can be null (module/async/inline bundling); never throw in the host page.
@@ -26,7 +31,8 @@
     options && options.callback && options.callback({ status: 0, ignored: true })
     if (eventName === 'pageview') {
       currentEngagementIgnored = true
-      if (window.__zenstatsHeatmap) window.__zenstatsHeatmap.page(location.href, true)
+      {{#if COMPILE_PERFORMANCE}}if (!performanceChecked) performanceChecked = true{{/if}}
+      {{#if COMPILE_HEATMAP}}if (window.__zenstatsHeatmap) window.__zenstatsHeatmap.page(location.href, true){{/if}}
     }
   }
 
@@ -325,9 +331,10 @@
     {{/if}}
 
     if (isPageview) {
+      {{#if COMPILE_PERFORMANCE}}startPerformance(){{/if}}
       currentEngagementIgnored = false
       currentEngagementURL = payload.u
-      if (window.__zenstatsHeatmap) window.__zenstatsHeatmap.page(payload.u, false)
+      {{#if COMPILE_HEATMAP}}if (window.__zenstatsHeatmap) window.__zenstatsHeatmap.page(payload.u, false){{/if}}
       currentEngagementProps = payload.p
       currentEngagementMaxScrollDepth = -1
       currentEngagementTime = 0
@@ -405,6 +412,47 @@
   window.zenstats = trigger
   window.zenstats.l = true
 
+  {{#if COMPILE_PERFORMANCE}}
+  // Performance is an independent opt-in asset. Fetch capability first so
+  // disabled and unselected documents never load the official observer library.
+  function startPerformance() {
+    if (performanceChecked) return
+    performanceChecked = true
+    if (!scriptEl.getAttribute || scriptEl.getAttribute('data-performance') !== 'true' || !dataDomain || !window.fetch || window.__zenstatsVitalsLoading) return
+    try {
+      var performanceURL = new URL(endpoint, location.href)
+      performanceURL.pathname = /\/event$/.test(performanceURL.pathname) ? performanceURL.pathname.replace(/\/event$/, '/performance') : '/api/performance'
+      performanceURL.search = ''; performanceURL.hash = ''
+      var performanceAPI = scriptEl.getAttribute('data-performance-api') || performanceURL.href
+      fetch(performanceAPI.replace(/\/$/, '') + '/config?domain=' + encodeURIComponent(dataDomain), { credentials: 'omit', cache: 'no-cache' })
+        .then(function(r) { if (!r.ok) throw new Error('Performance config unavailable'); return r.json() })
+        .then(function(cfg) {
+          if (!cfg.enabled || cfg.protocol_version !== 1 || !Array.isArray(cfg.paths)) return
+          var url = new URL(performanceInitialURL), path = url.pathname
+          {{#if COMPILE_HASH}}path += url.hash.split('?')[0]{{/if}}
+          var allowed = cfg.paths.some(function(rule) {
+            try { return new RegExp('^' + rule.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*') + '$').test(path) } catch(e) { return false }
+          })
+          if (!allowed || typeof cfg.sample_rate !== 'number' || cfg.sample_rate <= 0 || cfg.sample_rate > 1 || !cfg.config_version) return
+          var draw = Math.random()
+          if (window.crypto && window.crypto.getRandomValues) { var random = new Uint32Array(1); window.crypto.getRandomValues(random); draw = random[0] / 4294967296 }
+          if (draw >= cfg.sample_rate || window.__zenstatsVitalsLoading) return
+          window.__zenstatsVitalsLoading = true
+          var asset = document.createElement('script')
+          asset.src = scriptEl.getAttribute('data-performance-src') || new URL('vitals.js', scriptEl.src).href
+          asset.async = true
+          asset.onload = function() {
+            if (window.__zenstatsVitals) window.__zenstatsVitals.start({ script: scriptEl, domain: dataDomain, api: performanceAPI.replace(/\/$/, ''), config: cfg,
+              url: performanceInitialURL, backgroundInit: performanceBackgroundInit, hash: {{#if COMPILE_HASH}}true{{else}}false{{/if}} })
+          }
+          document.head.appendChild(asset)
+        }).catch(function() {})
+    } catch(e) {}
+  }
+
+  {{/if}}
+
+  {{#if COMPILE_HEATMAP}}
   // Heatmaps are opt-in and loaded separately so ordinary tracking stays small.
   if (scriptEl.getAttribute && scriptEl.getAttribute('data-heatmap') === 'true' && !window.__zenstatsHeatmapLoading) {
     window.__zenstatsHeatmapLoading = true
@@ -427,6 +475,7 @@
       document.head.appendChild(heatmapScript)
     } catch (e) { window.__zenstatsHeatmapLoading = false }
   }
+  {{/if}}
   for (var i = 0; i < queue.length; i++) trigger.apply(this, queue[i])
 
   // SPA pageview tracking

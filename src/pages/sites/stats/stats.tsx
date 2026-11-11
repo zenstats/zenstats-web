@@ -42,6 +42,7 @@ import {
   Filter,
   Flame,
   GitMerge,
+  Gauge,
 } from "lucide-react";
 import i18n from '@/i18n';
 import axios, { type BaseResponse } from "@utils/axios";
@@ -903,6 +904,20 @@ export default function StatsPage() {
                     <Code2 className="h-4 w-4" />
                     {t('stats.installTrackingCode')}
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate(`/sites/${domain}/heatmap`)}
+                    className="flex items-center gap-2"
+                  >
+                    <Flame className="h-4 w-4 text-orange-500" />
+                    {t('heatmap.title', '热力图分析')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate(`/sites/${domain}/performance`)}
+                    className="flex items-center gap-2"
+                  >
+                    <Gauge className="h-4 w-4 text-emerald-500" />
+                    {t('performance.title', 'Core Web Vitals')}
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
               )}
@@ -925,26 +940,14 @@ export default function StatsPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Right side controls */}
-          <div className="flex flex-wrap items-center gap-2">
+        {/* Right side controls */}
+        <div className="flex flex-wrap items-center gap-2">
             {/* Current visitors */}
             <CurrentVisitorsComponent
               domain={domain!}
               query={{ period: "realtime" }}
               api={api.getCurrentVisitors}
             />
-
-            {/* Click Heatmap Quick Access */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/sites/${domain}/heatmap`)}
-              className="h-9 gap-1.5 text-xs text-gray-700 dark:text-gray-300"
-              title={t('heatmap.title', '点击热力图')}
-            >
-              <Flame className="h-4 w-4 text-orange-500" />
-              <span className="hidden sm:inline">{t('heatmap.title', '点击热力图')}</span>
-            </Button>
 
             {/* Date picker dialog */}
             <Dialog open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
@@ -1300,14 +1303,6 @@ export default function StatsPage() {
               {tab.label}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={() => navigate(`/sites/${domain}/heatmap`)}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-white/50 dark:hover:bg-gray-900/50"
-          >
-            <Flame className="h-3.5 w-3.5 text-orange-500" />
-            {t("heatmap.title", "点击热力图")}
-          </button>
         </div>
 
         {/* Panel content */}
@@ -1439,6 +1434,46 @@ export default function StatsPage() {
 
         {/* 自定义看板：固定面板墙（可拖拽/缩放），置于页面底部 */}
         <PinnedPanels domain={domain!} query={query} queryV2Api={api.queryV2} />
+
+        {/* 网站体验与行为深度分析快捷入口条 */}
+        <div className="rounded-xl border bg-gradient-to-r from-card via-card to-muted/20 p-4 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
+                <Gauge className="h-5 w-5" />
+              </span>
+              <div>
+                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <span>用户体验与交互行为深度洞察</span>
+                </h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  结合 Core Web Vitals 性能分析与点击/滚动热力图，全景诊断网站真实运行态势
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-xs shadow-xs"
+                onClick={() => navigate(`/sites/${domain}/performance`)}
+              >
+                <Gauge className="h-3.5 w-3.5 text-emerald-500" />
+                <span>Web Vitals 性能分析</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-xs shadow-xs"
+                onClick={() => navigate(`/sites/${domain}/heatmap`)}
+              >
+                <Flame className="h-3.5 w-3.5 text-orange-500" />
+                <span>热力图分析</span>
+              </Button>
+            </div>
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="text-center py-6">

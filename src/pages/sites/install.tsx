@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { Check, Clipboard, Code2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { aliases } from "../../../tracker/variants.json";
 
 // ---------------------------------------------------------------------------
 // Feature flag definitions — must match tracker/compile.js exactly
@@ -29,36 +31,22 @@ const FEATURES = [
 
 type FeatureId = (typeof FEATURES)[number]['id'];
 
+const validLabel = (value: string) => /^[a-zA-Z0-9_.:/@-]{1,120}$/.test(value);
+const escapeAttribute = (value: string) => value.replace(/[&"<>']/g, char => ({
+  '&': '&amp;', '"': '&quot;', '<': '&lt;', '>': '&gt;', "'": '&#39;',
+})[char]!);
+
 // ---------------------------------------------------------------------------
 // Canonical file name — must match tracker/compile.js exactly
-// Abbreviated feature IDs: ex, fd, ha, ma, ol, te
-// Backward-compat: all features → script.js / script.hash.js
-// Collision disambiguation: script.ha → script.ha.bare.js (since script.hash.js already exists)
+// Base IDs plus hm (heatmaps) and pf (performance). Alias names are shared with
+// the compiler so installer URLs always correspond to generated artifacts.
 // ---------------------------------------------------------------------------
-const BACKWARD_COMPAT_TARGETS = new Set(['script', 'script.hash'])
-
-function getScriptFileName(enabled: FeatureId[]): string {
-  if (enabled.length === 0) return 'script.bare.js'
-
-  const allIds = FEATURES.map(f => f.id)
-  // All features except hash → backward-compat "script.js"
-  if (enabled.every(id => id !== 'ha') && allIds.filter(id => id !== 'ha').every(id => enabled.includes(id))) {
-    return 'script.js'
-  }
-  // All features including hash → backward-compat "script.hash.js"
-  if (allIds.every(id => enabled.includes(id))) {
-    return 'script.hash.js'
-  }
-
-  const sorted = [...enabled].sort()
-  const name = `script.${sorted.join('.')}`
-
-  // Disambiguation: script.ha collides with backward-compat script.hash
-  if (BACKWARD_COMPAT_TARGETS.has(name)) {
-    return name + '.bare.js'
-  }
-
-  return name + '.js'
+function getScriptFileName(enabled: FeatureId[], heatmap: boolean, performance: boolean): string {
+  const ids: string[] = [...enabled];
+  if (heatmap) ids.push('hm');
+  if (performance) ids.push('pf');
+  const name = ids.length ? `script.${ids.sort().join('.')}` : 'script.bare';
+  return ((aliases as Record<string, string>)[name] || name) + '.js';
 }
 
 // ---------------------------------------------------------------------------
@@ -80,6 +68,13 @@ export default function SiteInstallPage({ embedded = false }: { embedded?: boole
   const { t } = useTranslation();
   const { domain = "" } = useParams<{ domain: string }>();
   const [copied, setCopied] = useState(false);
+  const [heatmap, setHeatmap] = useState(false);
+  const [performance, setPerformance] = useState(false);
+  const [release, setRelease] = useState('release-1');
+  const [aggregationKey, setAggregationKey] = useState('');
+  const [variant, setVariant] = useState('default');
+  const optionalValid = (!(heatmap || performance) || validLabel(release.trim())) &&
+    (!heatmap || (validLabel(variant.trim()) && (!aggregationKey.trim() || validLabel(aggregationKey.trim()))));
 
   // All features except hash enabled by default
   // Hash mode is off by default — modern SPAs use pushState, not #/ routes
@@ -95,19 +90,28 @@ export default function SiteInstallPage({ embedded = false }: { embedded?: boole
     )
   }
 
-  const fileName = useMemo(() => getScriptFileName(enabledFeatures), [enabledFeatures])
+  const fileName = useMemo(() => getScriptFileName(enabledFeatures, heatmap, performance), [enabledFeatures, heatmap, performance])
 
   const scriptSnippet = useMemo(
     () => {
       const scriptUrl = `${window.location.origin}/js/${fileName}`;
-      return `<script defer crossorigin="anonymous" data-domain="${domain}" src="${scriptUrl}"></script>`;
+      const attributes = [`data-domain="${escapeAttribute(domain)}"`, `src="${escapeAttribute(scriptUrl)}"`];
+      if (heatmap) {
+        attributes.push('data-heatmap="true"', `data-heatmap-version="${escapeAttribute(release.trim())}"`);
+        if (aggregationKey.trim()) attributes.push(`data-heatmap-key="${escapeAttribute(aggregationKey.trim())}"`);
+        attributes.push(`data-heatmap-variant="${escapeAttribute(variant.trim())}"`);
+      }
+      if (performance) attributes.push('data-performance="true"', `data-performance-version="${escapeAttribute(release.trim())}"`);
+      const separator = heatmap || performance ? '\n  ' : ' ';
+      return `<script defer crossorigin="anonymous"${separator}${attributes.join(separator)}></script>`;
     },
-    [domain, fileName],
+    [domain, fileName, heatmap, performance, release, aggregationKey, variant],
   );
 
   const isFullVersion = enabledFeatures.length === FEATURES.length
 
   const copySnippet = async () => {
+    if (!optionalValid) return;
     try {
       await navigator.clipboard.writeText(scriptSnippet);
       setCopied(true);
@@ -129,7 +133,7 @@ export default function SiteInstallPage({ embedded = false }: { embedded?: boole
           )}
           <CardTitle className={embedded ? "text-xl flex items-center gap-2" : "text-2xl"}>
             {embedded && <Code2 className="h-5 w-5" />}
-            {t('sites.install.title')}
+            {t(embedded ? 'sites.install.pageTitle' : 'sites.install.title')}
           </CardTitle>
           <CardDescription className={embedded ? "" : "text-base"}>
             {t('sites.install.instruction')}
@@ -139,7 +143,6 @@ export default function SiteInstallPage({ embedded = false }: { embedded?: boole
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <Button variant="outline" onClick={() => navigate(`/sites/${domain}/heatmap`)}>{t("heatmap.installLink")}</Button>
           {/* Feature checkboxes */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">{t('sites.install.featureLabel')}</Label>
@@ -184,10 +187,64 @@ export default function SiteInstallPage({ embedded = false }: { embedded?: boole
             </div>
           </div>
 
+          <section className="space-y-3" aria-labelledby="install-optional-title">
+            <h3 id="install-optional-title" className="text-sm font-medium">{t('sites.install.optional.title')}</h3>
+            <p className="text-xs text-muted-foreground">{t('sites.install.optional.help')}</p>
+            <div className="rounded-lg border p-4 space-y-5">
+              {([
+                { id: 'heatmap', checked: heatmap, set: setHeatmap, href: 'heatmap' },
+                { id: 'performance', checked: performance, set: setPerformance, href: 'performance' },
+              ] as const).map(option => (
+                <div key={option.id} className="flex items-start gap-3">
+                  <Checkbox id={`install-${option.id}`} checked={option.checked}
+                    onCheckedChange={checked => option.set(checked === true)} className="mt-0.5" />
+                  <div className="space-y-1">
+                    <Label htmlFor={`install-${option.id}`} className="cursor-pointer text-sm font-medium">
+                      {t(`sites.install.optional.${option.id}.label`)}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">{t(`sites.install.optional.${option.id}.desc`)}</p>
+                    <Link className="inline-block text-xs text-primary hover:underline" to={`/sites/${domain}/settings/${option.href}`}>
+                      {t(`sites.install.optional.${option.id}.settings`)}
+                    </Link>
+                  </div>
+                </div>
+              ))}
+              {(heatmap || performance) && (
+                <div className="space-y-4 border-t pt-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="install-release">{t('sites.install.optional.release')}</Label>
+                    <Input id="install-release" value={release} maxLength={120}
+                      onChange={event => setRelease(event.target.value)} aria-invalid={!validLabel(release.trim())} />
+                    <p className="text-xs text-muted-foreground">{t('sites.install.optional.releaseHelp')}</p>
+                  </div>
+                  {heatmap && (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="install-key">{t('sites.install.optional.key')}</Label>
+                        <Input id="install-key" value={aggregationKey} maxLength={120} placeholder="product-detail"
+                          onChange={event => setAggregationKey(event.target.value)}
+                          aria-invalid={!!aggregationKey.trim() && !validLabel(aggregationKey.trim())} />
+                        <p className="text-xs text-muted-foreground">{t('sites.install.optional.keyHelp')}</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="install-variant">{t('sites.install.optional.variant')}</Label>
+                        <Input id="install-variant" value={variant} maxLength={120}
+                          onChange={event => setVariant(event.target.value)} aria-invalid={!validLabel(variant.trim())} />
+                        <p className="text-xs text-muted-foreground">{t('sites.install.optional.variantHelp')}</p>
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">{t('sites.install.optional.deployHelp')}</p>
+                </div>
+              )}
+            </div>
+            {!optionalValid && <p role="alert" className="text-sm text-destructive">{t('sites.install.optional.invalid')}</p>}
+          </section>
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium">{t('sites.install.trackingCode')}</h3>
-              <Button variant="outline" size="sm" onClick={copySnippet}>
+              <Button variant="outline" size="sm" onClick={copySnippet} disabled={!optionalValid}>
                 {copied ? <Check className="mr-2 h-4 w-4" /> : <Clipboard className="mr-2 h-4 w-4" />}
                 {copied ? t('sites.install.copied') : t('sites.install.copyCode')}
               </Button>

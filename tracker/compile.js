@@ -3,6 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const Handlebars = require("handlebars");
 const g = require('generatorics');
+const { features: FEATURES, aliases: BACKWARD_COMPAT_MAP } = require('./variants.json');
 const { tracker_script_version } = require("./package.json");
 
 if (process.env.NODE_ENV === 'dev') {
@@ -24,14 +25,6 @@ function relPath(segment) {
 // The `id` is used for file naming, and the `flag` is the Handlebars / UglifyJS
 // compile-time global used in zenstats.js for dead-code elimination.
 // ---------------------------------------------------------------------------
-const FEATURES = [
-  { id: 'ex', flag: 'COMPILE_EXCLUSIONS' },
-  { id: 'fd', flag: 'COMPILE_FILE_DOWNLOADS' },
-  { id: 'ha', flag: 'COMPILE_HASH' },
-  { id: 'ma', flag: 'COMPILE_MANUAL' },
-  { id: 'ol', flag: 'COMPILE_OUTBOUND_LINKS' },
-  { id: 'te', flag: 'COMPILE_TAGGED_EVENTS' },
-]
 
 // These flags are always enabled for every variant.
 const BASELINE_FLAGS = {
@@ -52,12 +45,8 @@ function canonicalName(featureIds) {
 // Certain feature combinations MUST keep their original file names so that
 // existing embedded snippets continue to work.
 // ---------------------------------------------------------------------------
-const BACKWARD_COMPAT_MAP = {
-  // script.js  = all base (everything except hash)
-  'script.ex.fd.ma.ol.te': 'script',
-  // script.hash.js = all features including hash
-  'script.ex.fd.ha.ma.ol.te': 'script.hash',
-}
+// variants.json is also consumed by the installer. Default aliases exclude
+// optional heatmap/performance loaders; explicit variants add hm and/or pf.
 
 // ---------------------------------------------------------------------------
 // Generate all variants via power set of FEATURES.
@@ -171,3 +160,13 @@ const heatmapResult = uglify.minify(fs.readFileSync(relPath('src/heatmap.js'), '
 if (heatmapResult.error) throw heatmapResult.error
 fs.writeFileSync(path.join(outputDir, 'heatmap.js'), heatmapResult.code)
 console.log(`  heatmap.js (${(heatmapResult.code.length / 1024).toFixed(1)}KB, opt-in)`)
+
+// Bundle the pinned official standard library into a self-hosted optional asset.
+const esbuild = require('esbuild')
+esbuild.buildSync({ entryPoints: [relPath('src/vitals.js')], outfile: path.join(outputDir, 'vitals.js'), bundle: true, minify: true, format: 'iife', target: ['es2020'], legalComments: 'eof', banner: { js: '/*! web-vitals 6.2.3, Copyright Google LLC, Apache-2.0; see web-vitals.LICENSE.txt */' } })
+fs.copyFileSync(path.join(path.dirname(require.resolve('web-vitals')), '../LICENSE'), path.join(outputDir, 'web-vitals.LICENSE.txt'))
+const zlib = require('zlib')
+for (const file of ['script.js','heatmap.js','vitals.js']) {
+  const bytes = fs.readFileSync(path.join(outputDir, file))
+  console.log(`  ${file}: raw=${bytes.length} gzip=${zlib.gzipSync(bytes).length} brotli=${zlib.brotliCompressSync(bytes).length} bytes`)
+}

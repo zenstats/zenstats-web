@@ -4,6 +4,15 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import axios, { type BaseResponse } from "@utils/axios";
 import { isSubAccount } from "@utils/auth";
 import type { HeatmapConfig } from "./types";
@@ -16,7 +25,6 @@ import {
   type HeatmapDraft,
 } from "./configurations";
 
-const field = "rounded-md border bg-background px-3 py-2 text-sm";
 const emptyDraft: HeatmapDraft = {
   type: "url",
   path: "",
@@ -148,6 +156,12 @@ export default function HeatmapSettings() {
     }
   }
 
+  const collectionStatus = config
+    ? t("heatmap.scroll.collectionStatus", {
+        clicks: t(config.enabled && config.clicks_enabled !== false ? "heatmap.enabled" : "heatmap.disabled"),
+        scroll: t(config.enabled && config.scroll_enabled ? "heatmap.enabled" : "heatmap.disabled"),
+      })
+    : "";
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -200,7 +214,7 @@ export default function HeatmapSettings() {
                   {t("heatmap.configuredList")} ({entries.length})
                 </h4>
                 <span className="text-sm text-muted-foreground">
-                  {t(config.enabled ? "heatmap.enabled" : "heatmap.disabled")}
+                  {collectionStatus}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -340,7 +354,7 @@ export default function HeatmapSettings() {
                   raw: config.raw_days,
                   aggregate: config.aggregate_days,
                 })}{" "}
-                · {t(config.enabled ? "heatmap.enabled" : "heatmap.disabled")}
+                · {collectionStatus}
               </p>
               {!readOnly && (
                 <div className="flex flex-wrap gap-2">
@@ -376,22 +390,28 @@ export default function HeatmapSettings() {
                 disabled={readOnly || saving}
                 className="space-y-4 disabled:opacity-70"
               >
-                <label className="block text-sm">
-                  {t("heatmap.viewBy")}
-                  <select
-                    className={`${field} mt-1 block w-full`}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-normal">
+                    {t("heatmap.viewBy")}
+                  </Label>
+                  <Select
                     value={draft.type}
-                    onChange={(e) =>
+                    onValueChange={(val) =>
                       setDraft({
                         ...draft,
-                        type: e.target.value as "key" | "url",
+                        type: val as "key" | "url",
                       })
                     }
                   >
-                    <option value="url">{t("heatmap.byURL")}</option>
-                    <option value="key">{t("heatmap.byKey")}</option>
-                  </select>
-                </label>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t("heatmap.viewBy")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="url">{t("heatmap.byURL")}</SelectItem>
+                      <SelectItem value="key">{t("heatmap.byKey")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <label className="block text-sm">
                   {t("heatmap.rulePath")}
                   <Input
@@ -484,25 +504,60 @@ export default function HeatmapSettings() {
                 disabled={readOnly || saving}
                 className="space-y-4 disabled:opacity-70"
               >
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-2xs">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="heatmap-enabled" className="text-sm font-medium">
+                      {t("heatmap.enable")}
+                    </Label>
+                    {collection.paths.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {t("heatmap.noConfigured")}
+                      </p>
+                    )}
+                  </div>
+                  <Switch
+                    id="heatmap-enabled"
                     checked={collection.enabled}
                     disabled={collection.paths.length === 0}
-                    onChange={(e) =>
+                    onCheckedChange={(checked) =>
                       setCollection({
                         ...collection,
-                        enabled: e.target.checked,
+                        enabled: checked,
                       })
                     }
                   />
-                  {t("heatmap.enable")}
-                </label>
-                {collection.paths.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    {t("heatmap.noConfigured")}
-                  </p>
-                )}
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-2xs">
+                  <Label htmlFor="clicks-enabled" className="text-sm font-medium">
+                    {t("heatmap.scroll.enableClicks")}
+                  </Label>
+                  <Switch
+                    id="clicks-enabled"
+                    checked={collection.clicks_enabled !== false}
+                    onCheckedChange={(checked) =>
+                      setCollection({ ...collection, clicks_enabled: checked })
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-2xs">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="scroll-enabled" className="text-sm font-medium">
+                      {t("heatmap.scroll.enableScroll")}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {t("heatmap.scroll.help", { days: Math.min(collection.raw_days, 7) })}
+                    </p>
+                  </div>
+                  <Switch
+                    id="scroll-enabled"
+                    checked={collection.scroll_enabled === true}
+                    onCheckedChange={(checked) =>
+                      setCollection({ ...collection, scroll_enabled: checked })
+                    }
+                  />
+                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="text-sm">
                     {t("heatmap.sample")}
@@ -583,7 +638,7 @@ export default function HeatmapSettings() {
                 {t("heatmap.retentionHelp")}
               </p>
               <p className="text-sm">{t("heatmap.installHelp")}</p>
-              <pre className="overflow-x-auto rounded bg-muted p-3 text-xs">{`<script defer data-domain="${domain}" src="${window.location.origin}/js/script.js"\n  data-heatmap="true" data-heatmap-version="release-2026-11"\n  data-heatmap-variant="default"></script>\n<button data-zs-id="pricing.signup">Sign up</button>\n<div data-zs-ignore>Private content</div>`}</pre>
+              <pre className="overflow-x-auto rounded bg-muted p-3 text-xs">{`<script defer data-domain="${domain}" src="${window.location.origin}/js/script.heatmap.js"\n  data-heatmap="true" data-heatmap-version="release-2026-11"\n  data-heatmap-variant="default"></script>\n<button data-zs-id="pricing.signup">Sign up</button>\n<div data-zs-ignore>Private content</div>`}</pre>
               <p className="text-xs text-muted-foreground">
                 {t("heatmap.privacyHelp")}
               </p>

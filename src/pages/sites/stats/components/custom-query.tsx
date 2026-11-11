@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Select,
@@ -614,16 +615,17 @@ export default function CustomQuery({ query: baseQuery, domain, queryV2Api }: Cu
                 onChange={(e) => setPanelDescription(e.target.value)}
               />
             </div>
-            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-              <input
-                type="checkbox"
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="pin-to-home"
                 checked={panelPinned}
-                onChange={(e) => setPanelPinned(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300"
+                onCheckedChange={(checked) => setPanelPinned(checked === true)}
               />
-              <Pin className="h-3.5 w-3.5 text-violet-500" />
-              {t('stats.panels.pinToHome')}
-            </label>
+              <Label htmlFor="pin-to-home" className="flex items-center gap-1.5 text-sm font-normal cursor-pointer">
+                <Pin className="h-3.5 w-3.5 text-violet-500" />
+                {t('stats.panels.pinToHome')}
+              </Label>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>

@@ -1,13 +1,18 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ChevronDown } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { Button } from "@components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Form,
   FormControl,
@@ -18,7 +23,6 @@ import {
   FormMessage,
 } from "@components/ui/form"
 import { RadioGroup, RadioGroupItem } from "@components/ui/radio-group"
-import { buttonVariants } from "@components/ui/variants/button-variants"
 import { useTranslation } from 'react-i18next'
 
 // This can come from your database or API.
@@ -68,22 +72,18 @@ export function AppearanceForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>{t('settings.appearance.fontLabel')}</FormLabel>
-              <div className="relative w-max">
+              <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                 <FormControl>
-                  <select
-                    className={cn(
-                      buttonVariants({ variant: "outline" }),
-                      "w-[200px] appearance-none font-normal"
-                    )}
-                    {...field}
-                  >
-                    <option value="inter">Inter</option>
-                    <option value="manrope">Manrope</option>
-                    <option value="system">System</option>
-                  </select>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select font" />
+                  </SelectTrigger>
                 </FormControl>
-                <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 opacity-50" />
-              </div>
+                <SelectContent>
+                  <SelectItem value="inter">Inter</SelectItem>
+                  <SelectItem value="manrope">Manrope</SelectItem>
+                  <SelectItem value="system">System</SelectItem>
+                </SelectContent>
+              </Select>
               <FormDescription>
                 {t('settings.appearance.fontDescription')}
               </FormDescription>

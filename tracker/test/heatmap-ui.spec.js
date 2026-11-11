@@ -39,6 +39,70 @@ test.describe('heatmap management', () => {
     return { layout, writes }
   }
 
+  async function installScroll(page, subAccount = false, background = true) {
+    const fixture = await install(page, subAccount, { clicks_enabled: false, scroll_enabled: true })
+    const requests = []
+    const scrollData = {
+      sampled_views: 40, valid_views: 30, dynamic_views: 5, clipped_views: 2,
+      unsupported_views: 3, late_init_views: 4, average_max_depth: 65,
+      average_fold: 37.5, mixed_sampling: false, raw_days: 7,
+      regions: Array.from({ length: 80 }, (_, i) => ({ depth: (i + 1) * 1.25, views: i < 40 ? 30 : 15, rate: i < 40 ? 100 : 50 })),
+    }
+    await page.route('**/heatmap/scroll/**', route => {
+      const url = new URL(route.request().url()); requests.push(url)
+      const data = url.pathname.endsWith('/pages')
+        ? [{ ...fixture.layout, path: url.searchParams.get('scope') === 'key' ? '/' : '/pricing', sampled_views: 40 }]
+        : scrollData
+      return route.fulfill({ json: { code: 200, data } })
+    })
+    if (!background) await page.route('**/heatmap/snapshots', route => route.fulfill({ json: { code: 200, data: [] } }))
+    await page.getByRole('button', { name: 'Scroll depth', exact: true }).click()
+    await expect(page.getByText('Valid sampled page views', { exact: true })).toBeVisible()
+    return { ...fixture, requests }
+  }
+
+  test('scroll uses independent page views, eighty bands and aggregation backgrounds', async ({ page }) => {
+    const { requests } = await installScroll(page)
+    await expect(page.getByTestId('scroll-band')).toHaveCount(80)
+    await expect(page.getByRole('button', { name: 'Reached 50% depth' })).toContainText('100.0%')
+    await expect(page.getByRole('button', { name: 'Reached 100% depth' })).toContainText('50.0%')
+    await expect(page.getByText('Average initial fold 37.5%', { exact: true })).toBeVisible()
+    await expect(page.getByRole('combobox', { name: 'Page / version / device' })).toContainText('40 sampled page views')
+    await page.getByRole('slider', { name: 'Depth to inspect' }).fill('79')
+    await expect(page.getByText('Depth 100.00%: 15 / 30 valid sampled views (50.0%).', { exact: true })).toBeVisible()
+    await page.getByRole('combobox', { name: 'View by' }).selectOption('key')
+    await expect.poll(() => requests.some(u => u.pathname.endsWith('/data') && u.searchParams.get('scope') === 'key')).toBe(true)
+    await expect(page.getByTestId('scroll-band')).toHaveCount(80)
+    await expect(page.getByRole('textbox', { name: 'Example URL' })).toHaveValue('https://example.test/pricing')
+    await expect(page).toHaveURL(/mode=scroll/)
+    await page.screenshot({ path: '/tmp/zenstats-scroll-ui.png', fullPage: true })
+  })
+
+  test('scroll remains inspectable without a screenshot and respects read-only access', async ({ page }) => {
+    const { writes } = await installScroll(page, true, false)
+    await expect(page.getByText('Sampled page views', { exact: true })).toBeVisible()
+    await expect(page.getByText('No matching background.', { exact: false })).toBeVisible()
+    await expect(page.getByRole('slider', { name: 'Depth to inspect' })).toBeVisible()
+    await expect(page.getByTestId('scroll-band')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Capture screenshot', exact: true })).toHaveCount(0)
+    expect(writes).toEqual([])
+  })
+
+  test('click and scroll collection switches are saved independently', async ({ page }) => {
+    const { writes } = await install(page)
+    await page.getByRole('link', { name: 'Heatmap settings', exact: true }).click()
+    await page.getByRole('button', { name: 'Collection settings', exact: true }).click()
+    await expect(page.getByRole('checkbox', { name: 'Collect clicks', exact: true })).toBeChecked()
+    await expect(page.getByRole('checkbox', { name: 'Collect scroll depth', exact: true })).not.toBeChecked()
+    await page.getByRole('checkbox', { name: 'Collect clicks', exact: true }).uncheck()
+    await page.getByRole('checkbox', { name: 'Collect scroll depth', exact: true }).check()
+    await page.getByRole('button', { name: 'Save settings', exact: true }).click()
+    await expect.poll(() => writes.length).toBe(1)
+    expect(writes[0].body.clicks_enabled).toBe(false)
+    expect(writes[0].body.scroll_enabled).toBe(true)
+    await expect(page.getByText('Click collection: Disabled · Scroll collection: Enabled', { exact: true })).toBeVisible()
+  })
+
   test('renders percentage regions on a different sized background, saves settings, and separates versions', async ({ page }) => {
     const { writes } = await install(page)
     await expect(page.locator('canvas')).toHaveCount(1)
@@ -105,7 +169,7 @@ test.describe('heatmap management', () => {
     await expect(page.getByRole('button',{name:'Delete heatmap',exact:true})).toHaveCount(0)
     await page.getByRole('button',{name:'Back to list',exact:true}).click()
     await page.getByRole('button',{name:'Collection settings',exact:true}).click()
-    await expect(page.getByRole('checkbox', { name: 'Enable click collection' })).toBeDisabled()
+    await expect(page.getByRole('checkbox', { name: 'Enable heatmap collection' })).toBeDisabled()
     await expect(page.getByRole('button', { name: 'Save settings', exact: true })).toHaveCount(0)
     await expect(page.locator('input[type=file]')).toHaveCount(0)
   })
@@ -188,7 +252,7 @@ test.describe('heatmap management', () => {
     expect(writes[0].body.groups).toEqual([{path:'/soft/*.html',key:'software-detail',example_url:'https://example.test/soft/a.html'}])
     await page.getByRole('button',{name:'Back to list',exact:true}).click()
     await page.getByRole('button',{name:'Collection settings',exact:true}).click()
-    await page.getByRole('checkbox',{name:'Enable click collection'}).check()
+    await page.getByRole('checkbox',{name:'Enable heatmap collection'}).check()
     await page.getByRole('button',{name:'Save settings',exact:true}).click()
     await expect(page.getByRole('table')).toBeVisible()
     expect(writes[1].body.enabled).toBe(true)
