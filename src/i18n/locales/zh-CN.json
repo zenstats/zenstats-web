@@ -1060,6 +1060,7 @@
       "propKeyHint": "从已有键中选择，或输入新键后按回车。",
       "discoveredTitle": "在您的站点上发现了 {{count}} 个未配置的事件。点击即可添加为目标。",
       "discovering": "正在扫描未配置的事件...",
+      "discoveryFailed": "暂时无法加载历史事件，您仍可手动输入事件名称并创建目标。",
       "showAll": "展开全部 (+{{remaining}})",
       "showLess": "收起",
       "deleteTitle": "删除目标",

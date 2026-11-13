@@ -49,12 +49,15 @@ export default function GoalsSettings() {
   const [cachedPropKeys, setCachedPropKeys] = useState<{ value: string; label: string }[]>([]);
   const [propKeysLoading, setPropKeysLoading] = useState(false);
 
-  // Auto-discovered event names (not yet configured as goals)
-  const [discoveredEvents, setDiscoveredEvents] = useState<string[]>([]);
+  // Reuse one historical event query for discovery and input suggestions.
+  const [eventNames, setEventNames] = useState<string[]>([]);
   const [discoveringEvents, setDiscoveringEvents] = useState(false);
+  const [eventDiscoveryFailed, setEventDiscoveryFailed] = useState(false);
   const [showAllDiscovered, setShowAllDiscovered] = useState(false);
   const [dismissedDiscovery, setDismissedDiscovery] = useState(false);
   const DISCOVERED_PREVIEW_COUNT = 8;
+  const existingGoalNames = new Set(goals.map((goal) => goal.event_name));
+  const discoveredEvents = eventNames.filter((name) => !existingGoalNames.has(name));
 
   const fetchGoals = useCallback(async () => {
     if (!domain) return;
@@ -90,26 +93,36 @@ export default function GoalsSettings() {
   // Auto-discover existing events when dialog opens
   useEffect(() => {
     if (!dialogOpen || !domain) return;
+    let active = true;
+    setEventNames([]);
+    setEventDiscoveryFailed(false);
     setDiscoveringEvents(true);
     axios.get<BaseResponse<{ columns: string[]; data: Record<string, unknown>[] }>>(
       `/stats/${domain}/breakdown`,
       { params: { property: "event:name", period: "p30", limit: "50", metrics: "events" } }
     )
       .then((res) => {
+        if (!active) return;
         const rows = res.data?.data?.data || [];
-        const existingGoalNames = new Set(goals.map((g) => g.event_name));
-        const names: string[] = [];
-        for (const row of rows) {
-          const name = String(row.name || "").trim();
-          if (name && name !== "pageview" && !existingGoalNames.has(name)) {
-            names.push(name);
-          }
-        }
-        setDiscoveredEvents(names);
+        setEventNames([...new Set(rows
+          .map((row) => String(row.name || "").trim())
+          .filter((name) => name && name !== "pageview"))]);
       })
-      .catch(() => setDiscoveredEvents([]))
-      .finally(() => setDiscoveringEvents(false));
-  }, [dialogOpen, domain]); // eslint-disable-line react-hooks/exhaustive-deps
+      .catch(() => {
+        if (active) setEventDiscoveryFailed(true);
+      })
+      .finally(() => {
+        if (active) setDiscoveringEvents(false);
+      });
+    return () => { active = false; };
+  }, [dialogOpen, domain]);
+
+  const fetchEventSuggestions = useCallback(async (query: string) => {
+    const search = query.toLowerCase();
+    return eventNames
+      .filter((name) => name.toLowerCase().includes(search))
+      .map((name) => ({ value: name, label: name }));
+  }, [eventNames]);
 
   const handleQuickAddEvent = (name: string) => {
     setDisplayName(name);
@@ -189,7 +202,8 @@ export default function GoalsSettings() {
     setPagePath("");
     setDisplayName("");
     setCustomProps({});
-    setDiscoveredEvents([]);
+    setEventNames([]);
+    setEventDiscoveryFailed(false);
     setShowAllDiscovered(false);
     setDismissedDiscovery(false);
   };
@@ -325,6 +339,10 @@ export default function GoalsSettings() {
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
                   {t('settings.goals.discovering')}
                 </div>
+              ) : eventDiscoveryFailed ? (
+                <p role="status" className="text-sm text-muted-foreground py-2">
+                  {t('settings.goals.discoveryFailed')}
+                </p>
               ) : !dismissedDiscovery && discoveredEvents.length > 0 && (
                 <div className="border rounded-lg p-3 bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800">
                   <div className="flex items-center justify-between">
@@ -404,19 +422,8 @@ export default function GoalsSettings() {
                     value={eventName}
                     onChange={setEventName}
                     placeholder={t('settings.goals.eventNamePlaceholder')}
-                    fetchSuggestions={async (q) => {
-                      if (!domain) return [];
-                      try {
-                        const res = await axios.get<BaseResponse<{ columns: string[]; data: Record<string, unknown>[] }>>(
-                          `/stats/${domain}/breakdown`,
-                          { params: { property: "event:name", period: "p30", limit: "20", metrics: "events" } }
-                        );
-                        const rows = res.data?.data?.data || [];
-                        return rows
-                          .map((r) => ({ value: String(r.name || ""), label: String(r.name || "") }))
-                          .filter((s) => s.value && s.value !== "pageview" && (!q || s.value.toLowerCase().includes(q.toLowerCase())));
-                      } catch { return []; }
-                    }}
+                    liveSync
+                    fetchSuggestions={fetchEventSuggestions}
                   />
                   <p className="text-xs text-muted-foreground">
                     {t('settings.goals.eventNameHint')}

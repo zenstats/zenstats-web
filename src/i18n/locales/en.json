@@ -1060,6 +1060,7 @@
       "propVal": "Value",
       "discoveredTitle": "Found {{count}} untracked event(s) on your site. Click to add as a goal.",
       "discovering": "Scanning for untracked events...",
+      "discoveryFailed": "Historical events could not be loaded. You can still type an event name and create the goal.",
       "showAll": "Show all (+{{remaining}} more)",
       "showLess": "Show less",
       "deleteTitle": "Delete Goal",
