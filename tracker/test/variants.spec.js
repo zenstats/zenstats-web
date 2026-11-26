@@ -40,9 +40,10 @@ for (const variant of ['script.js', 'script.hash.js', 'script.bare.js', 'script.
     await page.goto('https://variants.test/')
     // Ordinary pageviews must still work when optional capabilities are absent.
     await expect.poll(() => events.some(event => event.n === 'pageview')).toBe(true)
-    expect(resources.includes('/js/heatmap.js')).toBe(variant.includes('heatmap'))
-    expect(resources.includes('/api/performance/config')).toBe(variant.includes('performance'))
-    expect(resources.includes('/js/vitals.js')).toBe(variant.includes('performance'))
+    // Pageviews now send immediately, independently of the async optional loaders.
+    await expect.poll(() => resources.includes('/js/heatmap.js')).toBe(variant.includes('heatmap'))
+    await expect.poll(() => resources.includes('/api/performance/config')).toBe(variant.includes('performance'))
+    await expect.poll(() => resources.includes('/js/vitals.js')).toBe(variant.includes('performance'))
     expect(errors).toEqual([])
   })
 }

@@ -11,6 +11,7 @@
 
 	# Tracker JS - 允许跨域访问，用于三方网站引用
 	@trackerJs path /js/*
+	header @trackerJs Cache-Control "public, max-age=86400, stale-while-revalidate=604800"
 	handle @trackerJs {
 		@jsOptions method OPTIONS
 		header @jsOptions Access-Control-Allow-Origin "*"
@@ -56,6 +57,19 @@
 		}
 	}
 
+	handle /api/performance/* {
+		@performanceOptions method OPTIONS
+		header @performanceOptions Access-Control-Allow-Origin "*"
+		header @performanceOptions Access-Control-Allow-Methods "GET, POST, OPTIONS"
+		header @performanceOptions Access-Control-Allow-Headers "Content-Type, X-Requested-With"
+		header @performanceOptions Access-Control-Allow-Private-Network "true"
+		header @performanceOptions Access-Control-Max-Age "86400"
+		respond @performanceOptions 204
+		reverse_proxy zenstats:8080 {
+			# Gin backend already emits CORS headers. Avoid duplicated values.
+		}
+	}
+
 	# API 请求代理到后端（包括事件上报端点 /api/event）
 	# 注意：必须使用 handle 而非 handle_path
 	# Go 后端路由注册为 /api/* 组（参见 cmd/server.go: api := r.Group("/api")）
@@ -76,9 +90,10 @@
 	header @notLocalhost {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 	}
+	@notShare not path /share/*
+	header @notShare X-Frame-Options "DENY"
 	header {
 		X-Content-Type-Options "nosniff"
-		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
 	}
 
@@ -93,7 +108,5 @@
 	}
 
 	# 压缩
-	encode gzip
-
-
+	encode zstd gzip
 }

@@ -11,6 +11,9 @@
 
   var endpoint = scriptEl.getAttribute && scriptEl.getAttribute('data-api') || defaultEndpoint()
   var dataDomain = scriptEl.getAttribute && scriptEl.getAttribute('data-domain')
+  {{#if COMPILE_EXCLUSIONS}}
+  var exclusionRegexCache = {}
+  {{/if}}
   {{#if COMPILE_PERFORMANCE}}
   var performanceChecked = false
   var performanceInitialURL = location.href
@@ -48,6 +51,7 @@
   var MAX_BATCH_SIZE = 10
   var eventQueue = []
   var batchTimer = null
+  var pageHiding = false
 
   function getDocumentHeight() {
     var body = document.body || {}
@@ -74,29 +78,36 @@
   var maxScrollDepthPx = getCurrentScrollDepthPx()
   var scrollTicking = false
 
+  function updateDocumentMetrics() {
+    currentDocumentHeight = getDocumentHeight()
+    var d = getCurrentScrollDepthPx()
+    if (d > maxScrollDepthPx) maxScrollDepthPx = d
+  }
+
   function onScroll() {
     if (!scrollTicking) {
       window.requestAnimationFrame(function() {
-        currentDocumentHeight = getDocumentHeight()
-        var d = getCurrentScrollDepthPx()
-        if (d > maxScrollDepthPx) maxScrollDepthPx = d
+        updateDocumentMetrics()
         scrollTicking = false
       })
       scrollTicking = true
     }
   }
 
-  window.addEventListener('load', function () {
-    currentDocumentHeight = getDocumentHeight()
-    var c = 0
-    var iv = setInterval(function () {
-      currentDocumentHeight = getDocumentHeight()
-      if (++c === 15) clearInterval(iv)
-    }, 200)
-  })
-  document.addEventListener('scroll', onScroll)
+  function observeDocumentHeight() {
+    updateDocumentMetrics()
+    if (window.ResizeObserver && document.body) {
+      new window.ResizeObserver(updateDocumentMetrics).observe(document.body)
+    }
+  }
+  if (document.readyState === 'complete') observeDocumentHeight()
+  else window.addEventListener('load', observeDocumentHeight, { once: true })
+  document.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onScroll)
 
   function triggerEngagement() {
+    // Include pending scroll frames and layout changes even without ResizeObserver.
+    if (!currentEngagementIgnored) updateDocumentMetrics()
     var et = getEngagementTime()
     if (!currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || et > 0)) {
       currentEngagementMaxScrollDepth = maxScrollDepthPx
@@ -155,11 +166,13 @@
 
   {{#if COMPILE_FILE_DOWNLOADS}}
   var DEFAULT_FILE_TYPES = 'pdf,xlsx,docx,txt,rtf,csv,exe,key,pps,ppt,pptx,7z,pkg,rar,gz,zip,avi,mov,mp4,mpeg,wmv,midi,mp3,wav,wma,dmg'
-  var fileTypes = (scriptEl.getAttribute && scriptEl.getAttribute('data-file-types') || DEFAULT_FILE_TYPES).split(',')
+  var fileTypes = (scriptEl.getAttribute && scriptEl.getAttribute('data-file-types') || DEFAULT_FILE_TYPES).split(',').map(function(type) { return type.trim().toLowerCase() })
 
   function isDownloadToTrack(url) {
     if (!url) return false
-    var ext = url.split('.').pop()
+    var filename = url.split('/').pop()
+    if (filename.indexOf('.') === -1) return false
+    var ext = filename.split('.').pop().toLowerCase()
     for (var i = 0; i < fileTypes.length; i++) {
       if (fileTypes[i] === ext) return true
     }
@@ -273,7 +286,6 @@
     } catch (e) {}
 
     {{#if COMPILE_EXCLUSIONS}}
-    var exclusionRegexCache = {}
     function pathMatches(wildcardPath) {
       var actualPath = location.pathname
       {{#if COMPILE_HASH}}
@@ -318,6 +330,7 @@
     }
     if (options && options.meta) payload.m = JSON.stringify(options.meta)
     if (options && options.props) payload.p = options.props
+    if (options && options.revenue) payload.revenue = options.revenue
     if (options && options.interactive === false) payload.i = false
 
     {{#if COMPILE_PAGEVIEW_PROPS}}
@@ -354,7 +367,7 @@
 
   function addToQueue(payload, options) {
     eventQueue.push({ payload: payload, options: options })
-    if (eventQueue.length >= MAX_BATCH_SIZE) flushQueue()
+    if (payload.n === 'pageview' || eventQueue.length >= MAX_BATCH_SIZE) flushQueue()
     else if (!batchTimer) batchTimer = setTimeout(flushQueue, BATCH_INTERVAL)
   }
 
@@ -378,6 +391,7 @@
 
   // pagehide also covers mobile navigation and BFCache without disabling it.
   window.addEventListener('pagehide', function() {
+    pageHiding = true
     currentEngagementTime = getEngagementTime()
     runningEngagementStart = null
     triggerEngagement()
@@ -385,10 +399,16 @@
   })
 
   function sendRequest(endpoint, payload, options) {
+    var body = JSON.stringify(payload)
+    if ((pageHiding || document.visibilityState === 'hidden') && !(options && options.callback) && window.navigator.sendBeacon) {
+      try {
+        if (window.navigator.sendBeacon(endpoint, body)) return
+      } catch (e) {} // A refused beacon still gets a keepalive fetch attempt.
+    }
     if (window.fetch) {
       fetch(endpoint, {
         method: 'POST', headers: { 'Content-Type': 'text/plain' },
-        keepalive: true, body: JSON.stringify(payload)
+        keepalive: true, body: body
       }).then(function(r) { options && options.callback && options.callback({ status: r.status }) })
         .catch(function(e) { options && options.callback && options.callback({ status: 0, error: e }) })
     } else if (window.XMLHttpRequest) {
@@ -400,7 +420,7 @@
           if (xhr.readyState === 4) options && options.callback && options.callback({ status: xhr.status })
         }
         xhr.onerror = function() { options && options.callback && options.callback({ status: 0, error: 'Network error' }) }
-        xhr.send(JSON.stringify(payload))
+        xhr.send(body)
       } catch(e) { options && options.callback && options.callback({ status: 0, error: e }) }
     } else {
       options && options.callback && options.callback({ status: 0, error: 'No transport available' })
@@ -512,5 +532,5 @@
   } else {
     page()
   }
-  window.addEventListener('pageshow', function(e) { if (e.persisted) page() })
+  window.addEventListener('pageshow', function(e) { pageHiding = false; if (e.persisted) page() })
 })();

@@ -170,3 +170,13 @@ for (const file of ['script.js','heatmap.js','vitals.js']) {
   const bytes = fs.readFileSync(path.join(outputDir, file))
   console.log(`  ${file}: raw=${bytes.length} gzip=${zlib.gzipSync(bytes).length} brotli=${zlib.brotliCompressSync(bytes).length} bytes`)
 }
+
+// Keep local frontend builds in sync with the same assets used by Docker.
+const publicDir = relPath('../public/js')
+fs.mkdirSync(publicDir, { recursive: true })
+if (fs.realpathSync(publicDir) !== fs.realpathSync(outputDir)) {
+  for (const file of fs.readdirSync(outputDir)) {
+    fs.copyFileSync(path.join(outputDir, file), path.join(publicDir, file))
+  }
+}
+console.log('\n  ⇢ tracker/dist assets synced to public/js')

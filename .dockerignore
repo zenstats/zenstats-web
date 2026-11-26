@@ -5,6 +5,10 @@ node_modules
 # Build output
 dist
 
+# Host-only symlinks; tracker assets are copied from tracker-builder
+public/heatmap-demo
+public/js
+
 # Git
 .git
 .gitignore

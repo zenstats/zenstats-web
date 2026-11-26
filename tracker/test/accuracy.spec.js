@@ -77,6 +77,7 @@ test('hash pageviews and engagement carry the routing flag and ignore query-only
   await page.clock.runFor(1000)
   await leave(page)
   await expect.poll(() => events.filter(e => e.n === 'pageview').length).toBe(2)
+  await expect.poll(() => events.filter(e => e.n === 'engagement').length).toBe(2)
   expect(events.every(e => e.h === 1)).toBe(true)
   expect(events.filter(e => e.n === 'engagement').map(e => new URL(e.u).hash)).toEqual(['#/home?tab=one', '#/pricing'])
 })
@@ -102,7 +103,7 @@ test('BFCache restore starts a fresh view and does not include time away', async
   await page.clock.runFor(1000)
   await leave(page)
   await expect.poll(() => events.filter(e => e.n === 'pageview').length).toBe(2)
-  expect(events.filter(e => e.n === 'engagement').reduce((sum, e) => sum + e.e, 0)).toBe(2000)
+  await expect.poll(() => events.filter(e => e.n === 'engagement').reduce((sum, e) => sum + e.e, 0)).toBe(2000)
 })
 
 test('loading the tracker twice keeps one set of counters', async ({ page }) => {
