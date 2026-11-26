@@ -1563,7 +1563,8 @@
     "passwordPrompt": "该看板已设置访问密码，请输入密码后继续。",
     "passwordPlaceholder": "密码",
     "passwordSubmit": "查看看板",
-    "passwordWrong": "密码不正确。"
+    "passwordWrong": "密码不正确。",
+    "passwordRateLimited": "密码尝试次数过多，请稍后重试。"
   },
   "docs": {
     "hero": {

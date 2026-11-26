@@ -1563,7 +1563,8 @@
     "passwordPrompt": "This dashboard is password protected. Enter the password to continue.",
     "passwordPlaceholder": "Password",
     "passwordSubmit": "View dashboard",
-    "passwordWrong": "Incorrect password."
+    "passwordWrong": "Incorrect password.",
+    "passwordRateLimited": "Too many password attempts. Please try again later."
   },
   "docs": {
     "hero": {

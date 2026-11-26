@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Lock } from "lucide-react";
@@ -25,12 +26,17 @@ export default function ShareView() {
   const { t } = useTranslation();
   const [state, setState] = useState<State>({ status: "loading" });
 
-  // 密码保护流程：info.password_protected 为真时先要求输入并校验密码，
-  // 校验通过后把密码传给 ShareStatsPage，随每个统计请求发送。
+  // 密码仅用于换取短期只读 Token，统计请求不携带明文密码。
   const [password, setPassword] = useState("");
-  const [verifiedPassword, setVerifiedPassword] = useState<string | null>(null);
-  const [pwError, setPwError] = useState(false);
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [pwError, setPwError] = useState<"wrong" | "rateLimited" | null>(null);
   const [verifying, setVerifying] = useState(false);
+
+  const handleAuthExpired = useCallback(() => {
+    setShareToken(null);
+    setPassword("");
+    setPwError(null);
+  }, []);
 
   useEffect(() => {
     if (!slug) { setState({ status: "error" }); return; }
@@ -57,25 +63,27 @@ export default function ShareView() {
   }
 
   // 需要密码且尚未验证：显示密码输入
-  if (state.info.password_protected && verifiedPassword === null) {
+  if (state.info.password_protected && shareToken === null) {
     const verify = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!password) return;
       setVerifying(true);
-      setPwError(false);
+      setPwError(null);
       try {
-        // 用一个轻量统计请求校验密码；成功即视为通过
-        const res = await axios.get<{ code: number }>(
-          `/stats/${state.info.domain}/current-visitors`,
-          { params: { slug: state.info.slug, link_password: password } },
+        const res = await axios.post<{ code: number; data?: { token: string } }>(
+          `/share/${state.info.slug}/authenticate`,
+          { password },
         );
-        if (res.data.code === 200) {
-          setVerifiedPassword(password);
+        if (res.data.code === 200 && res.data.data?.token) {
+          setShareToken(res.data.data.token);
+          setPassword("");
         } else {
-          setPwError(true);
+          setPwError(res.data.code === 429 ? "rateLimited" : "wrong");
         }
-      } catch {
-        setPwError(true);
+      } catch (error) {
+        const rateLimited = isAxiosError<{ code?: number }>(error) &&
+          (error.response?.status === 429 || error.response?.data?.code === 429);
+        setPwError(rateLimited ? "rateLimited" : "wrong");
       } finally {
         setVerifying(false);
       }
@@ -101,7 +109,9 @@ export default function ShareView() {
                 placeholder={t("share.passwordPlaceholder")}
               />
               {pwError && (
-                <p className="text-xs text-destructive">{t("share.passwordWrong")}</p>
+                <p className="text-xs text-destructive">
+                  {t(pwError === "rateLimited" ? "share.passwordRateLimited" : "share.passwordWrong")}
+                </p>
               )}
               <Button
                 type="submit"
@@ -122,7 +132,8 @@ export default function ShareView() {
       domain={state.info.domain}
       slug={slug!}
       linkName={state.info.name}
-      password={verifiedPassword ?? undefined}
+      shareToken={shareToken ?? undefined}
+      onAuthExpired={handleAuthExpired}
     />
   );
 }

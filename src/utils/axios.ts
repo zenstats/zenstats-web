@@ -1,4 +1,4 @@
-import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosRequestHeaders, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosHeaders, type AxiosInstance, type AxiosRequestConfig, type AxiosRequestHeaders, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import { toast } from "sonner";
 import qs from 'qs'
 import { getMockResponse } from './mock'
@@ -97,10 +97,16 @@ const api = axios.create({
     <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<BaseResponse<T>>;
 };
 
+// 分享页认证独立于普通登录会话，不能刷新或清除用户的登录 Token。
+const isSharedRequest = (config?: InternalAxiosRequestConfig) =>
+    window.location.pathname.startsWith('/share/') ||
+    /^\/(?:api\/)?share\//.test(config?.url || '') ||
+    AxiosHeaders.from(config?.headers).has('X-Shared-Link-Token');
+
 // request拦截器
 api.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        if (localStorage.getItem('token')) {
+        if (!isSharedRequest(config) && localStorage.getItem('token')) {
             config.headers.Authorization = 'Bearer ' + localStorage.getItem('token') // 让每个请求携带自定义token
         }
 
@@ -154,6 +160,10 @@ api.interceptors.response.use(
 
         const code = data.code;
         const msg = data.message;
+        // 保留业务状态码，由分享页处理密码错误、限流和 Token 过期。
+        if (isSharedRequest(response.config) && [401, 406, 429, 430].includes(code)) {
+            return response;
+        }
         if (ignoreMsgs.indexOf(msg) !== -1) {
             return Promise.reject(msg);
         } else if (code === 430) {
@@ -218,6 +228,10 @@ api.interceptors.response.use(
         return response;
     },
     (error: AxiosError) => {
+        if (isSharedRequest(error.config) &&
+            (error.response?.status === 401 || error.response?.status === 429)) {
+            return Promise.reject(error);
+        }
         // HTTP 层错误（网络断开 / 网关 5xx / 超时）：以前只写入一个无人消费的 store，
         // 用户看到的是永远转圈的骨架屏；现在直接 toast 提示。主动取消的请求不提示。
         if (error.code !== AxiosError.ERR_CANCELED) {
