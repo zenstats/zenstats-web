@@ -1567,6 +1567,19 @@
     "passwordRateLimited": "Too many password attempts. Please try again later."
   },
   "docs": {
+    "badge": "Docs",
+    "backHome": "Back to Home",
+    "backHomeShort": "Home",
+    "headerTitle": "REST API & Documentation",
+    "loginDashboard": "Sign in",
+    "openDashboard": "Open Dashboard",
+    "searchPlaceholder": "Search API or sections...",
+    "searchEmpty": "No matching sections found",
+    "copy": "Copy",
+    "copied": "Copied",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "authJwtNote": "These site-scoped endpoints require a dashboard JWT (Authorization: Bearer <jwt>).",
     "hero": {
       "title": "ZenStats Documentation",
       "description": "ZenStats is a self-hosted, privacy-first web analytics platform. Collect visitor data without third-party involvement, query it through a clean REST API, and stay fully in control of your infrastructure.",
@@ -1611,7 +1624,7 @@
       "trafficAlerts": "Traffic Alerts",
       "subAccounts": "Sub-accounts & Permissions",
       "performance": "Core Web Vitals",
-      "heatmap": "Click heatmaps",
+      "heatmap": "Heatmaps (Click & Scroll)",
       "userFlows": "User Flows"
     },
     "table": {
@@ -1653,12 +1666,15 @@
       "period": "Time period. See",
       "metrics": "Comma-separated metrics. Defaults to visitors,pageviews,bounce_rate,visit_duration. See",
       "filters": "URL-encoded JSON filter array. See",
-      "compare": "Comparison mode for aggregate queries: previous_period or year_over_year. Adds comparison_value/change to each metric.",
-      "date": "Specific date for day period (YYYY-MM-DD).",
+      "compare": "Comparison mode for aggregate queries: previous_period, year_over_year, or custom. Adds comparison_value/change to each metric.",
+      "date": "Specific date for day period (YYYY-MM-DD); defaults to today when omitted for non-custom/realtime periods.",
+      "from": "Custom start date (YYYY-MM-DD), required when period=custom.",
+      "to": "Custom end date (YYYY-MM-DD), required when period=custom.",
+      "interval": "Time bucket granularity: minute, hourly, daily, weekly, monthly (auto-derived from period if omitted).",
       "property": "Dimension to group by. See",
       "limit": "Max results to return (default 100).",
       "page": "Page number for pagination.",
-      "dateRange": "Array of two dates [start, end] in YYYY-MM-DD format.",
+      "dateRange": "String alias for period in v2 POST queries (e.g. day, p7, p30, custom).",
       "metricsV2": "Array of metric names.",
       "dimensionsV2": "Array of dimension keys to group results by.",
       "filtersV2": "Array of filter tuples [operator, dimension, values].",
@@ -1666,7 +1682,7 @@
       "offset": "Number of results to skip (for pagination).",
       "periodV2": "Time period shorthand: day, p7, p14, p30, month, 6mo, 12mo, custom. Use with date for single-day, or from/to for custom ranges.",
       "sampleThreshold": "Sample threshold for high-traffic sites.",
-      "compareCustom": "Explicit comparison range when compare = custom (ISO dates)."
+      "compareCustom": "Explicit comparison range when compare = custom (YYYY-MM-DD)."
     },
     "sections": {
       "introduction": {
@@ -1791,7 +1807,101 @@
         "caseCallout": "Filters are case-sensitive by default. Add a 4th tuple element {\"case_sensitive\": false} for case-insensitive matching."
       },
       "periods": {
-        "description": "Pass the period key as the period query parameter. For custom ranges, use the date_range field in the v2 API."
+        "description": "Pass the period key as the period parameter. For custom ranges in both v1 GET and v2 POST, pass period=custom along with from and to (YYYY-MM-DD); in v2 POST, date_range is an alias for period."
+      },
+      "performance": {
+        "description": "Real-user web performance monitoring (RUM). ZenStats follows Google's Web Vitals specification, sampling real foreground document navigations to measure core metrics (LCP, INP, CLS) alongside network diagnostics (TTFB, FCP).",
+        "callout": "Performance collection is opt-in and runs on an isolated bounded queue and ClickHouse table. Collected vitals never pollute pageviews, visitors, sessions, or event counts.",
+        "metrics": {
+          "heading": "Core Web Vitals Thresholds",
+          "lcpName": "LCP (Largest Contentful Paint)",
+          "lcpDesc": "Measures loading performance of the largest image or text block in the viewport. Good ≤ 2500 ms; Needs improvement 2500–4000 ms; Poor > 4000 ms.",
+          "inpName": "INP (Interaction to Next Paint)",
+          "inpDesc": "Measures responsiveness to clicks, taps, and key presses throughout the page lifecycle. Good ≤ 200 ms; Needs improvement 200–500 ms; Poor > 500 ms (no synthetic zeros when no interaction occurred).",
+          "clsName": "CLS (Cumulative Layout Shift)",
+          "clsDesc": "Measures unexpected visual layout shifts during rendering. Good ≤ 0.1; Needs improvement 0.1–0.25; Poor > 0.25.",
+          "ttfbName": "TTFB (Time to First Byte)",
+          "ttfbDesc": "Diagnostic metric measuring time from navigation start until the first response byte arrives. Good ≤ 800 ms; > 1800 ms indicates server or CDN bottlenecks.",
+          "fcpName": "FCP (First Contentful Paint)",
+          "fcpDesc": "Diagnostic metric measuring when the browser renders the first piece of DOM content. Good ≤ 1800 ms."
+        },
+        "quality": {
+          "heading": "Sampling & Data Quality Guarantees",
+          "p75Title": "P75 evaluation standard:",
+          "p75Desc": "All status badges and daily trendlines use the 75th percentile (P75) rather than arithmetic means skewed by extreme outliers.",
+          "foregroundTitle": "Foreground isolation:",
+          "foregroundDesc": "Pages opened in background tabs are flagged and excluded from core P75 aggregations so sleeping tabs do not distort metrics.",
+          "lateInitTitle": "Late-init detection:",
+          "lateInitDesc": "If the script initializes more than 2 seconds after navigation starts, quality diagnostics flag delayed initialization.",
+          "fullNavTitle": "Full document navigations:",
+          "fullNavDesc": "Metrics bind strictly to full document lifecycles — client-side SPA route transitions do not emit synthetic CWV reports."
+        },
+        "tracker": {
+          "heading": "Tracker Installation for Web Vitals",
+          "description": "Enable performance collection in Site Settings → Performance Settings, then embed the tracker build with performance enabled:"
+        },
+        "api": {
+          "heading": "Performance Config & Data API",
+          "configDesc": "Read or update performance collection toggle, sample rate, raw retention (1–7 days), and path matching rules.",
+          "dataDesc": "Retrieve P75 summary cards, daily trendlines, top path rankings, and device/release/navigation breakdowns for a given metric.",
+          "params": {
+            "start": "Start date (YYYY-MM-DD), within configured raw retention (max 7 calendar days).",
+            "end": "End date (YYYY-MM-DD).",
+            "metric": "Metric to inspect: LCP, INP, CLS, TTFB, or FCP (default LCP).",
+            "device": "Filter by device class: desktop, mobile, or tablet.",
+            "path": "Filter by path or prefix wildcard (e.g. /pricing or /docs/*).",
+            "hostname": "Filter by page hostname.",
+            "release": "Filter by release tag reported via data-performance-version.",
+            "browser": "Filter by browser family.",
+            "country": "Filter by country code.",
+            "navigation": "Filter by navigation type (navigate, reload, back_forward, etc.)."
+          }
+        }
+      },
+      "heatmap": {
+        "description": "ZenStats includes native, zero-bloat click heatmaps and scroll-depth analytics powered by ClickHouse and relative grid normalization — no heavy third-party SDK required.",
+        "callout": "Heatmap clicks and scroll-depth reports flow through an isolated bounded ingestion pipeline and separate ClickHouse tables, keeping standard PV, UV, sessions, and conversion metrics completely clean.",
+        "modes": {
+          "heading": "Dual-Mode Analytics: Clicks & Scroll Depth",
+          "description": "ZenStats heatmaps provide two complementary views for diagnosing page engagement and conversion bottlenecks:",
+          "clickTitle": "Click Heatmaps",
+          "clickDesc": "Aggregates high-frequency click coordinates and DOM selectors to highlight top CTAs, missed clicks on non-interactive elements, and ignored sections.",
+          "scrollTitle": "Scroll Depth Heatmaps",
+          "scrollDesc": "Quantifies vertical content reach across 25%, 50%, 75%, and 100% milestones plus the 800px above-the-fold line with a thermal retention gradient."
+        },
+        "breakpoints": {
+          "heading": "Viewport Breakpoints & Grid Normalization",
+          "description": "Visitors browse on varied screen sizes. ZenStats buckets viewports into three responsive breakpoints and maps clicks onto a 40×80 relative coordinate grid:",
+          "desktopTitle": "Desktop",
+          "desktopDesc": "Viewport width ≥ 1024px (default 1280×800 capture)",
+          "tabletTitle": "Tablet",
+          "tabletDesc": "Viewport width 768px – 1023px (landscape & iPad layouts)",
+          "mobileTitle": "Mobile",
+          "mobileDesc": "Viewport width < 768px (vertical mobile flow)"
+        },
+        "tracker": {
+          "heading": "Tracker Attributes & Grouping",
+          "description": "Add the following HTML data attributes to your tracking script tag to configure heatmap collection:",
+          "dataHeatmap": "Set to \"true\" to activate the heatmap module; click and scroll capture are toggled individually in Site Settings → Heatmap Settings.",
+          "dataKey": "Aggregation key for dynamic routes (e.g. /product/:id). Pass a shared key such as \"product-detail\" to merge matching templates into one heatmap.",
+          "dataVersion": "Release version tag (e.g. \"v2.1\" or \"release-2026-11\") to compare click distributions before and after UI deploys.",
+          "dataVariant": "Experiment variant (e.g. \"default\" or \"variant-b\") for A/B testing comparisons."
+        },
+        "markup": {
+          "heading": "Semantic Element Anchors & Privacy Masking",
+          "description": "Prevent CSS class-hash drift across builds and exclude sensitive DOM subtrees from click capture using dedicated attributes:",
+          "zsId": "Assigns a stable semantic ID (e.g. data-zs-id=\"signup.submit\"). The tracker prioritizes this identifier in Top Elements rankings.",
+          "zsIgnore": "Marks sensitive regions (billing cards, passwords, personal data). Clicks inside elements marked data-zs-ignore are dropped client-side immediately."
+        },
+        "api": {
+          "heading": "Heatmap RESTful API Reference",
+          "description": "Query heatmap configurations, click/scroll aggregates, and page snapshots through these endpoints:",
+          "pagesDesc": "List page URLs or aggregation keys with recorded clicks in the given date range. Supports start, end, scope (url | key), key, and path filters.",
+          "dataDesc": "Fetch click density buckets and top elements for a selected page (pass URL-encoded JSON page object matching an item returned by /pages).",
+          "scrollPagesDesc": "List pages with valid scroll-depth samples inside the retention window (capped by raw_days, up to 7 calendar days).",
+          "scrollDataDesc": "Fetch vertical reach curve, 80-band histogram, and 25%/50%/75%/100% reach rates (pass start, end, scope, and URL-encoded page JSON).",
+          "captureDesc": "Trigger an automated headless snapshot when heatmap-screenshot is enabled, or upload a PNG/JPEG manually via POST /api/sites/:domain/heatmap/snapshots."
+        }
       },
       "goals": {
         "description": "Goals measure how many visitors complete a specific action — a pageview or a custom event. Configure them in Site Settings → Goals.",
@@ -1844,7 +1954,12 @@
         "callout": "Computed dynamically from session events in ClickHouse without additional client configuration. Supports filtering by initial entry page, step depth (2-4), and node count per step.",
         "query": {
           "heading": "Querying User Flows",
-          "description": "Send a GET request to /stats/{domain}/user-flows to retrieve node topology and transition links."
+          "description": "Send a GET request to /api/stats/:domain/user-flows to retrieve node topology and transition links."
+        },
+        "params": {
+          "entryPath": "Restrict flows to sessions first observed on this path (e.g. / or /pricing); omit to aggregate all entry pages.",
+          "steps": "Number of navigation steps to trace (2–4, default 3).",
+          "limit": "Top paths kept per step (3–12, default 6); long-tail paths collapse into (other)."
         }
       },
       "health": {
@@ -1860,18 +1975,20 @@
         },
         "envVars": {
           "heading": "Key Environment Variables",
-          "secretKey": "JWT signing secret. Required in production. Generate with: openssl rand -base64 32",
+          "secretKey": "JWT signing secret. Required in production (≥ 32 bytes, placeholder values rejected). Generate with: openssl rand -base64 32",
           "domain": "Public hostname of your ZenStats instance (e.g. stats.example.com). Used in the tracking script snippet.",
+          "baseUrl": "Full public origin URL (e.g. https://stats.example.com) used for verification/reset emails; derived from ZENSTATS_DOMAIN if omitted.",
           "dbPassword": "PostgreSQL password. Change from the default before deploying.",
-          "maxmindKey": "MaxMind GeoLite2 license key for GeoIP resolution. Leave empty to use the Loyalsoldier fallback database.",
+          "maxmindKey": "MaxMind GeoLite2 license key for GeoIP resolution. Leave empty to use the fallback database.",
           "logLevel": "Log verbosity. One of: debug, info, warn, error. Default: info."
         },
         "services": {
           "heading": "Services",
           "frontend": "Caddy-based reverse proxy serving the React frontend and proxying API calls. Handles TLS automatically.",
           "backend": "Go API server. Handles event ingestion, authentication, and analytics queries.",
-          "postgres": "PostgreSQL — stores users, sites, goals, funnels, and configuration.",
-          "clickhouse": "ClickHouse — stores raw pageview and event data for analytics queries."
+          "postgres": "PostgreSQL 18 — stores users, sites, goals, funnels, and configuration.",
+          "clickhouse": "ClickHouse 25 — stores raw pageviews, events, heatmaps, and performance samples.",
+          "screenshot": "(Optional) heatmap-screenshot worker for automated page snapshots; enable with -f docker-compose.heatmap.yml."
         },
         "callout": "Data is persisted in named Docker volumes (db-data, event-data, zenstats-data). Back these up regularly."
       },
@@ -2005,7 +2122,7 @@
       "month": "Current calendar month.",
       "sixMonth": "Last 6 months.",
       "twelveMonth": "Last 12 months.",
-      "custom": "Custom date range. Use date_range in the v2 API.",
+      "custom": "Custom date range; requires both from and to (YYYY-MM-DD).",
       "year": "The calendar year of `date`.",
       "all": "All available data (approximated to the last 5 years).",
       "shorthand": "Relative shorthand: Nd = last N days, Nmo = last N months (e.g. 7d, 28d, 3mo)."

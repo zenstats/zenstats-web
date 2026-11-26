@@ -786,17 +786,17 @@ export default function LandingPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/docs" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+                    <Link to="/docs#trackingScript" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
                       {t(i("Tracker 客户端接入", "Tracking Script"))}
                     </Link>
                   </li>
                   <li>
-                    <Link to="/docs" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+                    <Link to="/docs#v2Query" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
                       {t(i("REST API v1 / v2 参考", "API Reference"))}
                     </Link>
                   </li>
                   <li>
-                    <Link to="/docs" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+                    <Link to="/docs#health" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
                       {t(i("系统健康检查探针", "Health Probes"))}
                     </Link>
                   </li>

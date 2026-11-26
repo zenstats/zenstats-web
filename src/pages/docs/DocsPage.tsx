@@ -10,6 +10,11 @@ import {
   Moon,
   ExternalLink,
   ArrowLeft,
+  Copy,
+  Check,
+  Info,
+  AlertTriangle,
+  Hash,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LogoHorizontal from "@/assets/logo-h.svg";
@@ -44,30 +49,35 @@ const NAV_SECTIONS = [
     groupKey: "operations",
     items: ["deployment", "health"],
   },
-];
+] as const;
 
-const SECTION_IDS = NAV_SECTIONS.flatMap((g) => g.items);
+const SECTION_IDS: string[] = NAV_SECTIONS.flatMap((g) => [...g.items]);
 
 function CodeBlock({ label, children }: { label?: string; children: string }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+
   const copy = () => {
     navigator.clipboard.writeText(children).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
   };
+
   return (
-    <div className="my-4 rounded-md overflow-hidden border border-slate-700">
-      <div className="flex items-center justify-between bg-[#161b22] px-4 py-2 border-b border-slate-700">
-        <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">{label}</span>
+    <div className="my-4 rounded-xl overflow-hidden border border-border/80 dark:border-slate-800/90 shadow-2xs">
+      <div className="flex items-center justify-between bg-[#161b22] px-4 py-2 border-b border-slate-800/90">
+        <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">{label}</span>
         <button
+          type="button"
           onClick={copy}
-          className="text-xs text-slate-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
         >
-          {copied ? "Copied!" : "Copy"}
+          {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+          <span>{copied ? t("docs.copied", "Copied") : t("docs.copy", "Copy")}</span>
         </button>
       </div>
-      <pre className="bg-[#0d1117] text-[#e6edf3] text-sm font-mono p-4 overflow-x-auto leading-relaxed whitespace-pre">
+      <pre className="bg-[#0d1117] text-[#e6edf3] text-xs sm:text-[13px] font-mono p-4 overflow-x-auto leading-relaxed whitespace-pre">
         {children}
       </pre>
     </div>
@@ -78,23 +88,33 @@ function Callout({ type = "info", children }: { type?: "info" | "warn"; children
   return (
     <div
       className={cn(
-        "border-l-4 px-4 py-3 rounded-r-md my-4 text-sm",
-        type === "info" && "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
-        type === "warn" && "border-amber-400 bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300",
+        "flex items-start gap-2.5 rounded-xl border px-4 py-3 my-4 text-sm leading-relaxed",
+        type === "info" &&
+          "border-primary/25 bg-primary/[0.06] text-foreground dark:bg-primary/[0.12]",
+        type === "warn" &&
+          "border-amber-500/30 bg-amber-500/[0.08] text-amber-900 dark:text-amber-200 dark:bg-amber-500/[0.12]",
       )}
     >
-      {children}
+      {type === "info" ? (
+        <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+      ) : (
+        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+      )}
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }
 
-function MethodBadge({ method }: { method: string }) {
+function MethodBadge({ method }: { method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" }) {
   return (
     <span
       className={cn(
-        "font-mono text-xs font-bold px-2 py-0.5 rounded mr-2",
-        method === "GET" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400",
-        method === "POST" && "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400",
+        "font-mono text-[11px] font-bold px-2 py-0.5 rounded-md shrink-0 tracking-wide",
+        method === "GET" && "bg-emerald-500/12 text-emerald-700 dark:text-emerald-400",
+        method === "POST" && "bg-indigo-500/12 text-indigo-700 dark:text-indigo-400",
+        method === "PUT" && "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+        method === "PATCH" && "bg-violet-500/15 text-violet-700 dark:text-violet-400",
+        method === "DELETE" && "bg-rose-500/12 text-rose-700 dark:text-rose-400",
       )}
     >
       {method}
@@ -102,29 +122,97 @@ function MethodBadge({ method }: { method: string }) {
   );
 }
 
+function EndpointBar({
+  method,
+  path,
+}: {
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  path: string;
+}) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const copyPath = () => {
+    navigator.clipboard.writeText(path).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-card border border-border/80 px-3.5 py-2.5 my-3 shadow-2xs">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <MethodBadge method={method} />
+        <code className="font-mono text-xs sm:text-sm text-foreground truncate">{path}</code>
+      </div>
+      <button
+        type="button"
+        onClick={copyPath}
+        title={t("docs.copy", "Copy")}
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground shrink-0 px-2 py-1 rounded-md hover:bg-muted/60 transition-colors"
+      >
+        {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+      </button>
+    </div>
+  );
+}
+
+function SectionHeading({ id, children }: { id: string; children: React.ReactNode }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyLink = () => {
+    const url = `${window.location.origin}${window.location.pathname}#${id}`;
+    window.history.replaceState(null, "", `#${id}`);
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
+  return (
+    <h2 className="group flex items-center gap-2 text-2xl font-bold tracking-tight text-foreground mb-3">
+      <span>{children}</span>
+      <button
+        type="button"
+        onClick={copyLink}
+        aria-label={`Copy link to ${id}`}
+        className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-muted/60 transition-all"
+      >
+        {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Hash className="w-4 h-4" />}
+      </button>
+    </h2>
+  );
+}
+
 function ParamTable({ rows }: { rows: { name: string; req?: boolean; desc: React.ReactNode }[] }) {
   const { t } = useTranslation();
   return (
-    <div className="overflow-x-auto my-4">
+    <div className="overflow-x-auto my-4 rounded-xl border border-border/80 bg-card shadow-2xs">
       <table className="w-full text-sm border-collapse">
         <thead>
-          <tr className="border-b border-slate-200 dark:border-slate-700">
-            <th className="text-left py-2 px-3 font-semibold text-slate-700 dark:text-slate-300 w-48">{t("docs.table.parameter")}</th>
-            <th className="text-left py-2 px-3 font-semibold text-slate-700 dark:text-slate-300">{t("docs.table.description")}</th>
+          <tr className="border-b border-border/80 bg-muted/35">
+            <th className="text-left py-2.5 px-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground w-52">
+              {t("docs.table.parameter")}
+            </th>
+            <th className="text-left py-2.5 px-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("docs.table.description")}
+            </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-border/60">
           {rows.map((row) => (
-            <tr key={row.name} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-              <td className="py-2 px-3 align-top">
-                <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">{row.name}</code>
+            <tr key={row.name} className="hover:bg-muted/25 transition-colors">
+              <td className="py-2.5 px-3.5 align-top">
+                <code className="font-mono text-xs font-medium text-primary">{row.name}</code>
                 {row.req && (
-                  <span className="ml-1.5 text-[10px] font-semibold text-amber-700 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/40 px-1 py-0.5 rounded">
-                    {t("docs.table.required", "必填")}
+                  <span className="ml-1.5 inline-block text-[10px] font-semibold text-amber-700 bg-amber-500/12 dark:text-amber-400 px-1.5 py-0.5 rounded">
+                    {t("docs.table.required", "required")}
                   </span>
                 )}
               </td>
-              <td className="py-2 px-3 text-slate-600 dark:text-slate-400 leading-relaxed">{row.desc}</td>
+              <td className="py-2.5 px-3.5 text-muted-foreground leading-relaxed text-xs sm:text-sm">
+                {row.desc}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -135,11 +223,16 @@ function ParamTable({ rows }: { rows: { name: string; req?: boolean; desc: React
 
 function RefGrid({ items }: { items: { code: string; desc: string }[] }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 my-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 my-4">
       {items.map((item) => (
-        <div key={item.code} className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded p-2.5">
-          <code className="block text-xs text-emerald-700 dark:text-emerald-400 font-mono mb-1">{item.code}</code>
-          <small className="text-xs text-slate-500 dark:text-slate-400 leading-snug block">{item.desc}</small>
+        <div
+          key={item.code}
+          className="rounded-xl border border-border/75 bg-card hover:border-primary/35 transition-colors p-3 shadow-2xs"
+        >
+          <code className="block text-xs text-primary font-mono font-semibold mb-1 break-all">
+            {item.code}
+          </code>
+          <small className="text-xs text-muted-foreground leading-snug block">{item.desc}</small>
         </div>
       ))}
     </div>
@@ -152,9 +245,11 @@ export default function DocsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const hasToken = typeof window !== "undefined" && Boolean(localStorage.getItem("token"));
 
   const toggleTheme = () => {
     setTheme(isDark ? "light" : "dark");
@@ -162,9 +257,10 @@ export default function DocsPage() {
 
   const toggleLang = () => {
     const nextLang = i18n.language.startsWith("zh") ? "en" : "zh-CN";
-    i18n.changeLanguage(nextLang);
+    void i18n.changeLanguage(nextLang);
   };
 
+  // Scroll-spy for section highlighting
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -184,10 +280,47 @@ export default function DocsPage() {
     return () => observer.disconnect();
   }, []);
 
+  // Scroll to initial URL hash (e.g. /docs#heatmap or /docs#trackingScript)
+  useEffect(() => {
+    const hashId = window.location.hash.replace(/^#/, "");
+    if (hashId && SECTION_IDS.includes(hashId)) {
+      const timer = window.setTimeout(() => {
+        const el = document.getElementById(hashId);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          setActive(hashId);
+        }
+      }, 60);
+      return () => window.clearTimeout(timer);
+    }
+  }, []);
+
+  // Working "/" keyboard shortcut to focus sidebar search
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.replaceState(null, "", `#${id}`);
       setActive(id);
       setMobileMenuOpen(false);
     }
@@ -195,7 +328,11 @@ export default function DocsPage() {
 
   const navKey = (item: string) => `docs.nav.${item}`;
 
-  // 搜索过滤小节
+  const activeGroupKey = useMemo(() => {
+    const found = NAV_SECTIONS.find((g) => (g.items as readonly string[]).includes(active));
+    return found?.groupKey ?? "overview";
+  }, [active]);
+
   const filteredNavSections = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return NAV_SECTIONS;
@@ -214,41 +351,45 @@ export default function DocsPage() {
   }, [searchQuery, t]);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col md:flex-row">
-      {/* 移动端顶部吸顶 Bar */}
-      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-14 bg-white/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs">
+    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
+      {/* Mobile sticky top bar */}
+      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-14 bg-background/90 backdrop-blur-xl border-b border-border/80 shadow-2xs">
         <div className="flex items-center gap-2.5">
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-            aria-label="Open menu"
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition"
+            aria-label="Toggle navigation"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
           <Link to="/" className="flex items-center gap-2">
             <img src={isDark ? LogoHorizontalDark : LogoHorizontal} alt="ZenStats" className="h-7 w-auto" />
-            <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
-              Docs
+            <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+              {t("docs.badge", "Docs")}
             </span>
           </Link>
         </div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={toggleTheme}
-            className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            aria-label="Toggle theme"
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition"
           >
-            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
           </button>
           <button
+            type="button"
             onClick={toggleLang}
-            className="px-2 py-1 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="px-2 py-1 text-xs font-medium rounded-lg border border-border bg-card text-foreground hover:bg-muted transition"
           >
             {i18n.language.startsWith("zh") ? "EN" : "中"}
           </button>
         </div>
       </div>
 
-      {/* 移动端遮罩层 */}
+      {/* Mobile drawer backdrop */}
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs md:hidden"
@@ -256,169 +397,202 @@ export default function DocsPage() {
         />
       )}
 
-      {/* 侧边栏 Sidebar */}
+      {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 h-screen w-72 md:w-64 z-50 flex flex-col bg-slate-50/90 dark:bg-[#0d1117] border-r border-slate-200/90 dark:border-[#21262d] backdrop-blur-sm transition-transform duration-200 ease-in-out md:translate-x-0 overflow-hidden shadow-xs",
+          "fixed top-0 left-0 h-screen w-72 md:w-64 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-transform duration-200 ease-in-out md:translate-x-0 overflow-hidden",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}
       >
-        {/* Logo 标题区域 */}
-        <div className="px-5 py-4 border-b border-slate-200/80 dark:border-[#21262d] flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 no-underline group">
-            <img src={isDark ? LogoHorizontalDark : LogoHorizontal} alt="ZenStats" className="h-7 w-auto transition-transform group-hover:scale-102" />
-            <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-100/80 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
-              Docs
+        {/* Logo & home link */}
+        <div className="px-4 py-3.5 border-b border-sidebar-border flex items-center justify-between gap-2">
+          <Link to="/" className="flex items-center gap-2 no-underline group min-w-0">
+            <img
+              src={isDark ? LogoHorizontalDark : LogoHorizontal}
+              alt="ZenStats"
+              className="h-7 w-auto transition-transform group-hover:scale-102"
+            />
+            <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
+              {t("docs.badge", "Docs")}
             </span>
           </Link>
           <Link
             to="/"
-            className="px-2 py-1 rounded-md text-[11px] font-medium text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-800/80 transition flex items-center gap-1"
-            title="返回产品首页"
+            className="px-2 py-1 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition flex items-center gap-1 shrink-0"
+            title={t("docs.backHome")}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">主页</span>
+            <span className="hidden sm:inline">{t("docs.backHomeShort", "Home")}</span>
           </Link>
         </div>
 
-        {/* 侧边栏搜索框 */}
-        <div className="p-3 border-b border-slate-200/70 dark:border-[#21262d]/80 bg-white/40 dark:bg-slate-950/30">
+        {/* Search input with working "/" shortcut */}
+        <div className="p-3 border-b border-sidebar-border">
           <div className="relative flex items-center">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-400 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 absolute left-2.5 text-muted-foreground pointer-events-none" />
             <input
+              ref={searchInputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("docs.searchPlaceholder", "快速检索 API / 小节...")}
-              className="w-full pl-8 pr-8 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-hidden focus:ring-1 focus:ring-emerald-500 shadow-2xs transition"
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setSearchQuery("");
+                  searchInputRef.current?.blur();
+                }
+              }}
+              placeholder={t("docs.searchPlaceholder")}
+              className="w-full pl-8 pr-8 py-1.5 text-xs rounded-lg border border-input bg-card text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring/40 shadow-2xs transition"
             />
             {searchQuery ? (
               <button
+                type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                aria-label="Clear search"
+                className="absolute right-2 text-muted-foreground hover:text-foreground"
               >
                 <X className="w-3 h-3" />
               </button>
             ) : (
-              <kbd className="absolute right-2 text-[10px] font-mono text-slate-400 px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 select-none">
+              <kbd className="absolute right-2 text-[10px] font-mono text-muted-foreground px-1.5 py-0.2 rounded bg-muted border border-border select-none">
                 /
               </kbd>
             )}
           </div>
         </div>
 
-        {/* 导航菜单列表 */}
-        <nav className="flex-1 py-4 px-2 overflow-y-auto">
+        {/* Navigation sections */}
+        <nav className="flex-1 py-4 px-2.5 overflow-y-auto">
           {filteredNavSections.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-400">
-              未找到匹配的文档小节
+            <div className="py-8 text-center text-xs text-muted-foreground">
+              {t("docs.searchEmpty")}
             </div>
           ) : (
             filteredNavSections.map((group) => (
               <div key={group.groupKey} className="mb-5">
-                <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-[#6e7681]">
+                <div className="px-2.5 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/75">
                   {t(`docs.nav.groups.${group.groupKey}`)}
                 </div>
-                {group.items.map((item) => (
-                  <button
-                    key={item}
-                    onClick={() => scrollTo(item)}
-                    className={cn(
-                      "w-full text-left px-3 py-1.5 rounded text-[13px] transition-colors block truncate",
-                      active === item
-                        ? "text-emerald-600 bg-emerald-50 font-medium dark:text-emerald-400 dark:bg-[#161b22]"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-[#7d8590] dark:hover:text-[#e6edf3] dark:hover:bg-slate-800/40",
-                    )}
-                  >
-                    {t(navKey(item))}
-                  </button>
-                ))}
+                <div className="space-y-0.5">
+                  {group.items.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => scrollTo(item)}
+                      className={cn(
+                        "w-full text-left px-2.5 py-1.5 rounded-lg text-[13px] transition-colors block truncate",
+                        active === item
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                      )}
+                    >
+                      {t(navKey(item))}
+                    </button>
+                  ))}
+                </div>
               </div>
             ))
           )}
         </nav>
 
-        {/* 侧边栏底部快捷操作 */}
-        <div className="p-3 border-t border-slate-200 dark:border-[#21262d] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-[#0d1117]">
+        {/* Sidebar footer actions */}
+        <div className="p-3 border-t border-sidebar-border flex items-center justify-between text-xs text-muted-foreground">
           <button
+            type="button"
             onClick={toggleTheme}
-            className="flex items-center gap-1.5 hover:text-slate-800 dark:hover:text-slate-200 transition"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md hover:text-foreground hover:bg-muted transition"
           >
             {isDark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5" />}
-            <span>{isDark ? "Light" : "Dark"}</span>
+            <span>{isDark ? t("docs.themeLight", "Light") : t("docs.themeDark", "Dark")}</span>
           </button>
           <button
+            type="button"
             onClick={toggleLang}
-            className="px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800 text-[11px] font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="px-2 py-1 rounded-md border border-border bg-card text-[11px] font-medium text-foreground hover:bg-muted transition"
           >
             {i18n.language.startsWith("zh") ? "English" : "简体中文"}
           </button>
         </div>
       </aside>
 
-      {/* 主内容区 Content */}
+      {/* Main Content */}
       <main ref={contentRef} className="md:ml-64 flex-1 min-w-0 flex flex-col">
-        {/* 桌面端顶部小工具条 */}
-        <div className="hidden md:flex items-center justify-between px-8 py-3.5 border-b border-slate-100 dark:border-slate-800/80 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <Link to="/" className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 transition">
-              <ArrowLeft className="w-3 h-3" />
-              <span>{t("docs.backHome", "返回产品首页")}</span>
+        {/* Sticky desktop breadcrumb & utility bar */}
+        <div className="hidden md:flex sticky top-0 z-30 items-center justify-between px-8 h-14 bg-background/85 backdrop-blur-xl border-b border-border/70 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 min-w-0">
+            <Link
+              to="/"
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors shrink-0"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{t("docs.backHome")}</span>
             </Link>
-            <span className="text-slate-300 dark:text-slate-700">/</span>
-            <span className="font-mono text-slate-800 dark:text-slate-200">REST API & Documentation</span>
+            <span className="text-border">/</span>
+            <span className="text-muted-foreground truncate">{t(`docs.nav.groups.${activeGroupKey}`)}</span>
+            <span className="text-border">/</span>
+            <span className="font-medium text-foreground truncate">{t(navKey(active))}</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 shrink-0">
             <a
               href="https://github.com/zenstats/zenstats"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 transition"
+              className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
             >
               <span>GitHub</span>
               <ExternalLink className="w-3 h-3" />
             </a>
             <Link
-              to="/login"
-              className="px-3 py-1 rounded-md bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition"
+              to={hasToken ? "/sites" : "/login"}
+              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 shadow-2xs transition-colors"
             >
-              {t("docs.loginDashboard", "登录控制台")}
+              {hasToken ? t("docs.openDashboard", "Open Dashboard") : t("docs.loginDashboard")}
             </Link>
           </div>
         </div>
 
         <div className="max-w-3xl mx-auto px-6 md:px-8 py-8 md:py-12 w-full">
-
           {/* Introduction */}
-          <section id="introduction" className="mb-16 scroll-mt-8">
-            <div className="mb-8 pb-8 border-b border-slate-100 dark:border-slate-800">
-              <h1 className="font-serif text-4xl font-bold text-slate-900 dark:text-slate-50 mb-3">
+          <section id="introduction" className="mb-16 scroll-mt-20">
+            <div className="mb-8 pb-8 border-b border-border/70">
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground mb-3">
                 {t("docs.hero.title")}
               </h1>
-              <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed mb-4">
+              <p className="text-muted-foreground text-base sm:text-lg leading-relaxed mb-4">
                 {t("docs.hero.description")}
               </p>
               <div className="flex flex-wrap gap-2">
                 {(t("docs.hero.chips", { returnObjects: true }) as string[]).map((chip) => (
-                  <span key={chip} className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  <span
+                    key={chip}
+                    className="text-xs font-medium px-2.5 py-1 rounded-full bg-card text-foreground/85 border border-border/80 shadow-2xs"
+                  >
                     {chip}
                   </span>
                 ))}
               </div>
             </div>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.introduction.baseUrl.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.introduction.baseUrl.description")}</p>
-            <CodeBlock label={t("docs.labels.baseUrl", "基础 API 地址")}>https://your-zenstats-instance.com/api</CodeBlock>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.introduction.baseUrl.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.introduction.baseUrl.description")}
+            </p>
+            <CodeBlock label={t("docs.labels.baseUrl")}>https://your-zenstats-instance.com/api</CodeBlock>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.introduction.responseFormat.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.introduction.responseFormat.description")}</p>
-            <CodeBlock label={t("docs.labels.successResponse", "成功响应示例")}>{`{
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.introduction.responseFormat.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.introduction.responseFormat.description")}
+            </p>
+            <CodeBlock label={t("docs.labels.successResponse")}>{`{
   "code":    200,
   "message": "success",
   "data":    { ... }
 }`}</CodeBlock>
-            <CodeBlock label={t("docs.labels.errorResponse", "错误响应示例")}>{`{
+            <CodeBlock label={t("docs.labels.errorResponse")}>{`{
   "code":    400,
   "message": "bad request",
   "error":   "site_id is required"
@@ -426,44 +600,59 @@ export default function DocsPage() {
           </section>
 
           {/* Authentication */}
-          <section id="authentication" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.authentication")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.authentication.description")}</p>
+          <section id="authentication" className="mb-16 scroll-mt-20">
+            <SectionHeading id="authentication">{t("docs.nav.authentication")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.authentication.description")}</p>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.authentication.apiKey.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.authentication.apiKey.description")}</p>
-            <CodeBlock label={t("docs.labels.curl", "cURL 请求示例")}>{`curl https://your-instance.com/api/stats/example.com/aggregate \\
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.authentication.apiKey.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.authentication.apiKey.description")}
+            </p>
+            <CodeBlock label={t("docs.labels.curl")}>{`curl https://your-instance.com/api/stats/example.com/aggregate \\
   -H "Authorization: Bearer zs_live_abc123..." \\
   -G \\
   -d "period=p30&metrics=visitors,pageviews"`}</CodeBlock>
             <Callout type="info">{t("docs.sections.authentication.apiKey.callout")}</Callout>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.authentication.jwt.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">{t("docs.sections.authentication.jwt.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.authentication.jwt.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm">{t("docs.sections.authentication.jwt.description")}</p>
           </section>
 
           {/* Tracking Script */}
-          <section id="trackingScript" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.trackingScript")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.description")}</p>
-            <CodeBlock label={t("docs.labels.html", "HTML 引入示例")}>{`<script
+          <section id="trackingScript" className="mb-16 scroll-mt-20">
+            <SectionHeading id="trackingScript">{t("docs.nav.trackingScript")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.trackingScript.description")}
+            </p>
+            <CodeBlock label={t("docs.labels.html")}>{`<script
   defer
   data-domain="example.com"
   src="https://your-instance.com/js/script.js"
 ></script>`}</CodeBlock>
-            <p className="text-sm text-slate-600 dark:text-slate-400">{t("docs.sections.trackingScript.note")}</p>
+            <p className="text-sm text-muted-foreground">{t("docs.sections.trackingScript.note")}</p>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("sites.install.optional.title")}</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400">{t("sites.install.optional.docsHelp")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("sites.install.optional.title")}
+            </h3>
+            <p className="text-sm text-muted-foreground">{t("sites.install.optional.docsHelp")}</p>
             <Callout type="info">{t("sites.install.optional.help")}</Callout>
-            <ParamTable rows={[
-              { name: "data-heatmap", desc: t("sites.install.optional.heatmap.desc") },
-              { name: "data-performance", desc: t("sites.install.optional.performance.desc") },
-              { name: "data-heatmap-version / data-performance-version", desc: t("sites.install.optional.releaseHelp") },
-              { name: "data-heatmap-key", desc: t("sites.install.optional.keyHelp") },
-              { name: "data-heatmap-variant", desc: t("sites.install.optional.variantHelp") },
-            ]} />
-            <CodeBlock label={t("docs.labels.heatmapsAndVitals", "热力图与性能监控引入")}>{`<script defer crossorigin="anonymous"
+            <ParamTable
+              rows={[
+                { name: "data-heatmap", desc: t("sites.install.optional.heatmap.desc") },
+                { name: "data-performance", desc: t("sites.install.optional.performance.desc") },
+                {
+                  name: "data-heatmap-version / data-performance-version",
+                  desc: t("sites.install.optional.releaseHelp"),
+                },
+                { name: "data-heatmap-key", desc: t("sites.install.optional.keyHelp") },
+                { name: "data-heatmap-variant", desc: t("sites.install.optional.variantHelp") },
+              ]}
+            />
+            <CodeBlock label={t("docs.labels.heatmapsAndVitals")}>{`<script defer crossorigin="anonymous"
   data-domain="example.com"
   src="https://your-instance.com/js/script.heatmap.performance.js"
   data-heatmap="true"
@@ -471,85 +660,105 @@ export default function DocsPage() {
   data-heatmap-variant="default"
   data-performance="true"
   data-performance-version="release-1"></script>`}</CodeBlock>
-            <p className="text-sm text-slate-600 dark:text-slate-400">{t("sites.install.optional.deployHelp")}</p>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{t("sites.install.optional.proxyHelp")}</p>
+            <p className="text-sm text-muted-foreground">{t("sites.install.optional.deployHelp")}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("sites.install.optional.proxyHelp")}</p>
 
-            {/* 埋点总览：事件 = 事件名 + 属性；四种采集方式 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.instrumentation.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.instrumentation.description")}</p>
-            <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-400 space-y-1 mb-2">
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.trackingScript.instrumentation.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.trackingScript.instrumentation.description")}
+            </p>
+            <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1 mb-2">
               <li>{t("docs.sections.trackingScript.instrumentation.ways.auto")}</li>
               <li>{t("docs.sections.trackingScript.instrumentation.ways.tagged")}</li>
               <li>{t("docs.sections.trackingScript.instrumentation.ways.js")}</li>
               <li>{t("docs.sections.trackingScript.instrumentation.ways.server")}</li>
             </ul>
 
-            {/* 内置事件名（自动采集） */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.auto.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.auto.description")}</p>
-            <ParamTable rows={[
-              { name: "pageview", desc: t("docs.sections.trackingScript.auto.events.pageview") },
-              { name: "engagement", desc: t("docs.sections.trackingScript.auto.events.engagement") },
-              { name: "Outbound Link: Click", desc: t("docs.sections.trackingScript.auto.events.outbound") },
-              { name: "File Download", desc: t("docs.sections.trackingScript.auto.events.download") },
-              { name: "Form: Submission", desc: t("docs.sections.trackingScript.auto.events.form") },
-            ]} />
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.trackingScript.auto.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.trackingScript.auto.description")}
+            </p>
+            <ParamTable
+              rows={[
+                { name: "pageview", desc: t("docs.sections.trackingScript.auto.events.pageview") },
+                { name: "engagement", desc: t("docs.sections.trackingScript.auto.events.engagement") },
+                { name: "Outbound Link: Click", desc: t("docs.sections.trackingScript.auto.events.outbound") },
+                { name: "File Download", desc: t("docs.sections.trackingScript.auto.events.download") },
+                { name: "Form: Submission", desc: t("docs.sections.trackingScript.auto.events.form") },
+              ]}
+            />
             <Callout type="info">{t("docs.sections.trackingScript.auto.callout")}</Callout>
 
-            {/* 事件名规则 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.eventName.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.eventName.description")}</p>
-            <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-400 space-y-1 mb-2">
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.trackingScript.eventName.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.trackingScript.eventName.description")}
+            </p>
+            <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1 mb-2">
               <li>{t("docs.sections.trackingScript.eventName.rules.exact")}</li>
               <li>{t("docs.sections.trackingScript.eventName.rules.reserved")}</li>
               <li>{t("docs.sections.trackingScript.eventName.rules.stable")}</li>
               <li>{t("docs.sections.trackingScript.eventName.rules.props")}</li>
             </ul>
 
-            {/* 方式一：JS API */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.js.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.js.description")}</p>
-            <CodeBlock label={t("docs.labels.javascript", "JavaScript 代码示例")}>{`// 1. 触发命名自定义事件
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.trackingScript.js.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.trackingScript.js.description")}
+            </p>
+            <CodeBlock label={t("docs.labels.javascript")}>{`// 1. Trigger a named custom event
 zenstats('Signup')
 
-// 2. 携带自定义属性（键值对）
+// 2. Attach custom properties (key/value pairs)
 zenstats('Purchase', {
   props: { plan: 'pro', amount: 49 }
 })
 
-// 3. 非交互事件（不影响跳出率计算）
+// 3. Non-interactive event (excluded from bounce-rate impact)
 zenstats('Scroll Depth', { interactive: false })
 
-// 4. 带回调函数：status 表示 HTTP 状态码，ignored 表示是否被屏蔽规则丢弃
+// 4. Optional callback with HTTP status and shield ignore flag
 zenstats('Download', {
   callback: (r) => console.log(r.status, r.ignored)
 })`}</CodeBlock>
 
-            {/* 方式二：CSS class 无代码埋点 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.tagged.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.tagged.description")}</p>
-            <CodeBlock label={t("docs.labels.html", "HTML 属性标记示例")}>{`<!-- 按钮点击上报自定义事件 -->
-<button class="event-name=Signup">立即注册</button>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.trackingScript.tagged.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.trackingScript.tagged.description")}
+            </p>
+            <CodeBlock label={t("docs.labels.htmlMarkup")}>{`<!-- Custom event on button click -->
+<button class="event-name=Signup">Sign Up</button>
 
-<!-- 链接点击（"+" 号自动转换为空格："Pricing Click"；url 属性自动填充） -->
-<a href="/pricing" class="event-name=Pricing+Click">查看价格</a>
+<!-- Link click ("+" becomes space: "Pricing Click"; url prop auto-filled) -->
+<a href="/pricing" class="event-name=Pricing+Click">Pricing</a>
 
-<!-- 通过 event-<键>=<值> 附加额外自定义属性 -->
-<button class="event-name=Purchase event-plan=Pro event-amount=99">购买专业版</button>
+<!-- Additional event-<key>=<value> custom properties -->
+<button class="event-name=Purchase event-plan=Pro event-amount=99">Buy Pro</button>
 
-<!-- 表单提交（未指定名称时默认记录为 "Form: Submission"） -->
+<!-- Form submit (defaults to "Form: Submission" if no event-name given) -->
 <form class="event-name=Contact+Form">…</form>`}</CodeBlock>
-            <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-400 space-y-1 mb-2">
+            <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1 mb-2">
               <li>{t("docs.sections.trackingScript.tagged.rules.plus")}</li>
               <li>{t("docs.sections.trackingScript.tagged.rules.parents")}</li>
               <li>{t("docs.sections.trackingScript.tagged.rules.link")}</li>
             </ul>
             <Callout type="warn">{t("docs.sections.trackingScript.tagged.callout")}</Callout>
 
-            {/* 自定义属性：如何发、如何查 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.props.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.props.description")}</p>
-            <CodeBlock label={t("docs.labels.propBreakdown", "按属性细分查询")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.trackingScript.props.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.trackingScript.props.description")}
+            </p>
+            <CodeBlock label={t("docs.labels.propBreakdown")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -560,9 +769,12 @@ zenstats('Download', {
   }'`}</CodeBlock>
             <Callout type="info">{t("docs.sections.trackingScript.props.callout")}</Callout>
 
-            {/* 方式三：服务端上报 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.server.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.server.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.trackingScript.server.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.trackingScript.server.description")}
+            </p>
             <CodeBlock label="POST /api/event">{`{
   "n": "Purchase",
   "d": "example.com",
@@ -570,8 +782,12 @@ zenstats('Download', {
   "p": { "plan": "pro" }
 }`}</CodeBlock>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trackingScript.revenue.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.trackingScript.revenue.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.trackingScript.revenue.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.trackingScript.revenue.description")}
+            </p>
             <CodeBlock label="POST /api/event">{`{
   "n": "Purchase",
   "d": "example.com",
@@ -582,64 +798,116 @@ zenstats('Download', {
           </section>
 
           {/* Aggregate */}
-          <section id="aggregate" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.aggregate")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.aggregate.description")}</p>
-            <div className="flex items-center font-mono text-sm bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded px-4 py-2.5 mb-4">
-              <MethodBadge method="GET" />
-              <span className="text-slate-700 dark:text-slate-300">/api/stats/:domain/aggregate</span>
-            </div>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.table.queryParameters")}</h3>
-            <ParamTable rows={[
-              { name: "period", req: true, desc: <>{t("docs.params.period")} <a href="#periods" className="text-emerald-600 dark:text-emerald-400 hover:underline">{t("docs.nav.periods")}</a>.</> },
-              { name: "metrics", desc: <>{t("docs.params.metrics")} <a href="#metrics" className="text-emerald-600 dark:text-emerald-400 hover:underline">{t("docs.nav.metrics")}</a>.</> },
-              { name: "filters", desc: <>{t("docs.params.filters")} <a href="#filters" className="text-emerald-600 dark:text-emerald-400 hover:underline">{t("docs.nav.filters")}</a>.</> },
-              { name: "compare", desc: t("docs.params.compare") },
-              { name: "date", desc: t("docs.params.date") },
-            ]} />
-            <CodeBlock label={t("docs.labels.request", "请求示例")}>{`curl https://your-instance.com/api/stats/example.com/aggregate \\
+          <section id="aggregate" className="mb-16 scroll-mt-20">
+            <SectionHeading id="aggregate">{t("docs.nav.aggregate")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.aggregate.description")}</p>
+            <EndpointBar method="GET" path="/api/stats/:domain/aggregate" />
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">{t("docs.table.queryParameters")}</h3>
+            <ParamTable
+              rows={[
+                {
+                  name: "period",
+                  req: true,
+                  desc: (
+                    <>
+                      {t("docs.params.period")}{" "}
+                      <a href="#periods" className="text-primary hover:underline">
+                        {t("docs.nav.periods")}
+                      </a>
+                      .
+                    </>
+                  ),
+                },
+                {
+                  name: "metrics",
+                  desc: (
+                    <>
+                      {t("docs.params.metrics")}{" "}
+                      <a href="#metrics" className="text-primary hover:underline">
+                        {t("docs.nav.metrics")}
+                      </a>
+                      .
+                    </>
+                  ),
+                },
+                {
+                  name: "filters",
+                  desc: (
+                    <>
+                      {t("docs.params.filters")}{" "}
+                      <a href="#filters" className="text-primary hover:underline">
+                        {t("docs.nav.filters")}
+                      </a>
+                      .
+                    </>
+                  ),
+                },
+                { name: "compare", desc: t("docs.params.compare") },
+                { name: "date", desc: t("docs.params.date") },
+                { name: "from", desc: t("docs.params.from") },
+                { name: "to", desc: t("docs.params.to") },
+              ]}
+            />
+            <CodeBlock label={t("docs.labels.request")}>{`curl https://your-instance.com/api/stats/example.com/aggregate \\
   -H "Authorization: Bearer <token>" \\
   -G \\
   -d "period=p30&metrics=visitors,pageviews,bounce_rate"`}</CodeBlock>
-            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{
+            <CodeBlock label={t("docs.labels.response")}>{`{
   "code": 200,
   "data": {
-    "visitors":    { "value": 12840, "change": 5.2 },
-    "pageviews":   { "value": 48320, "change": 3.1 },
-    "bounce_rate": { "value": 42.7,  "change": -1.4 }
+    "results": {
+      "visitors":    { "value": 12840, "change": 5.2 },
+      "pageviews":   { "value": 48320, "change": 3.1 },
+      "bounce_rate": { "value": 42.7,  "change": -1.4 }
+    }
   }
 }`}</CodeBlock>
           </section>
 
           {/* Breakdown */}
-          <section id="breakdown" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.breakdown")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.breakdown.description")}</p>
-            <div className="flex items-center font-mono text-sm bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded px-4 py-2.5 mb-4">
-              <MethodBadge method="GET" />
-              <span className="text-slate-700 dark:text-slate-300">/api/stats/:domain/breakdown</span>
-            </div>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.table.queryParameters")}</h3>
-            <ParamTable rows={[
-              { name: "period", req: true, desc: t("docs.params.period") },
-              { name: "property", req: true, desc: <>{t("docs.params.property")} <a href="#dimensions" className="text-emerald-600 dark:text-emerald-400 hover:underline">{t("docs.nav.dimensions")}</a>.</> },
-              { name: "metrics", desc: t("docs.params.metrics") },
-              { name: "filters", desc: t("docs.params.filters") },
-              { name: "limit", desc: t("docs.params.limit") },
-              { name: "page", desc: t("docs.params.page") },
-            ]} />
-            <CodeBlock label={t("docs.labels.request", "请求示例")}>{`curl https://your-instance.com/api/stats/example.com/breakdown \\
+          <section id="breakdown" className="mb-16 scroll-mt-20">
+            <SectionHeading id="breakdown">{t("docs.nav.breakdown")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.breakdown.description")}</p>
+            <EndpointBar method="GET" path="/api/stats/:domain/breakdown" />
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">{t("docs.table.queryParameters")}</h3>
+            <ParamTable
+              rows={[
+                { name: "period", req: true, desc: t("docs.params.period") },
+                {
+                  name: "property",
+                  req: true,
+                  desc: (
+                    <>
+                      {t("docs.params.property")}{" "}
+                      <a href="#dimensions" className="text-primary hover:underline">
+                        {t("docs.nav.dimensions")}
+                      </a>
+                      .
+                    </>
+                  ),
+                },
+                { name: "metrics", desc: t("docs.params.metrics") },
+                { name: "filters", desc: t("docs.params.filters") },
+                { name: "limit", desc: t("docs.params.limit") },
+                { name: "page", desc: t("docs.params.page") },
+                { name: "from", desc: t("docs.params.from") },
+                { name: "to", desc: t("docs.params.to") },
+              ]}
+            />
+            <CodeBlock label={t("docs.labels.request")}>{`curl https://your-instance.com/api/stats/example.com/breakdown \\
   -H "Authorization: Bearer <token>" \\
   -G \\
   -d "period=p30&property=visit:source&metrics=visitors,bounce_rate"`}</CodeBlock>
-            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{
+            <CodeBlock label={t("docs.labels.response")}>{`{
   "code": 200,
   "data": {
-    "columns": ["visitors", "bounce_rate"],
+    "columns": ["source", "visitors", "bounce_rate"],
     "data": [
-      { "name": "Google",   "visitors": 5820, "bounce_rate": 38.2 },
-      { "name": "Direct",   "visitors": 3140, "bounce_rate": 45.1 },
-      { "name": "Twitter",  "visitors": 1280, "bounce_rate": 52.7 }
+      { "source": "Google",  "visitors": 5820, "bounce_rate": 38.2 },
+      { "source": "Direct",  "visitors": 3140, "bounce_rate": 45.1 },
+      { "source": "Twitter", "visitors": 1280, "bounce_rate": 52.7 }
     ],
     "total_rows": 25
   }
@@ -647,67 +915,82 @@ zenstats('Download', {
           </section>
 
           {/* Timeseries */}
-          <section id="timeseries" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.timeseries")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.timeseries.description")}</p>
-            <div className="flex items-center font-mono text-sm bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded px-4 py-2.5 mb-4">
-              <MethodBadge method="GET" />
-              <span className="text-slate-700 dark:text-slate-300">/api/stats/:domain/main-graph</span>
-            </div>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.table.queryParameters")}</h3>
-            <ParamTable rows={[
-              { name: "period", req: true, desc: t("docs.params.period") },
-              { name: "metrics", desc: t("docs.params.metrics") },
-              { name: "filters", desc: t("docs.params.filters") },
-            ]} />
-            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{
+          <section id="timeseries" className="mb-16 scroll-mt-20">
+            <SectionHeading id="timeseries">{t("docs.nav.timeseries")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.timeseries.description")}</p>
+            <EndpointBar method="GET" path="/api/stats/:domain/main-graph" />
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">{t("docs.table.queryParameters")}</h3>
+            <ParamTable
+              rows={[
+                { name: "period", req: true, desc: t("docs.params.period") },
+                { name: "interval", desc: t("docs.params.interval") },
+                { name: "metrics", desc: t("docs.params.metrics") },
+                { name: "filters", desc: t("docs.params.filters") },
+                { name: "date", desc: t("docs.params.date") },
+                { name: "from", desc: t("docs.params.from") },
+                { name: "to", desc: t("docs.params.to") },
+              ]}
+            />
+            <CodeBlock label={t("docs.labels.response")}>{`{
   "code": 200,
   "data": [
-    { "date": "2024-01-01", "visitors": 340, "pageviews": 1200 },
-    { "date": "2024-01-02", "visitors": 412, "pageviews": 1480 }
+    {
+      "timestamp": "2026-11-01",
+      "metrics": { "visitors": 340, "pageviews": 1200 }
+    },
+    {
+      "timestamp": "2026-11-02",
+      "metrics": { "visitors": 412, "pageviews": 1480 }
+    }
   ]
 }`}</CodeBlock>
           </section>
 
           {/* Current Visitors */}
-          <section id="currentVisitors" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.currentVisitors")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.currentVisitors.description")}</p>
-            <div className="flex items-center font-mono text-sm bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded px-4 py-2.5 mb-4">
-              <MethodBadge method="GET" />
-              <span className="text-slate-700 dark:text-slate-300">/api/stats/:domain/current-visitors</span>
-            </div>
-            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{
+          <section id="currentVisitors" className="mb-16 scroll-mt-20">
+            <SectionHeading id="currentVisitors">{t("docs.nav.currentVisitors")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">
+              {t("docs.sections.currentVisitors.description")}
+            </p>
+            <EndpointBar method="GET" path="/api/stats/:domain/current-visitors" />
+            <CodeBlock label={t("docs.labels.response")}>{`{
   "code": 200,
-  "data": { "current_visitors": 47 }
+  "data": {
+    "total": 47,
+    "visitors": 47,
+    "sessions": 52,
+    "last_updated": "2026-11-26T06:00:00Z"
+  }
 }`}</CodeBlock>
           </section>
 
           {/* V2 Query */}
-          <section id="v2Query" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.v2Query")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.v2Query.description")}</p>
-            <div className="flex items-center font-mono text-sm bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded px-4 py-2.5 mb-4">
-              <MethodBadge method="POST" />
-              <span className="text-slate-700 dark:text-slate-300">/api/v2/query/:domain</span>
-            </div>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.table.requestBody")}</h3>
-            <ParamTable rows={[
-              { name: "period", desc: t("docs.params.periodV2") },
-              { name: "date", desc: t("docs.params.date") },
-              { name: "from", desc: t("docs.params.from") },
-              { name: "to", desc: t("docs.params.to") },
-              { name: "metrics", req: true, desc: t("docs.params.metricsV2") },
-              { name: "dimensions", desc: t("docs.params.dimensionsV2") },
-              { name: "filters", desc: t("docs.params.filtersV2") },
-              { name: "order_by", desc: t("docs.params.orderBy") },
-              { name: "limit", desc: t("docs.params.limit") },
-              { name: "offset", desc: t("docs.params.offset") },
-              { name: "compare", desc: t("docs.params.compare") },
-              { name: "compare_from / compare_to", desc: t("docs.params.compareCustom") },
-              { name: "sample_threshold", desc: t("docs.params.sampleThreshold") },
-            ]} />
-            <CodeBlock label={t("docs.labels.request", "细分查询请求")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+          <section id="v2Query" className="mb-16 scroll-mt-20">
+            <SectionHeading id="v2Query">{t("docs.nav.v2Query")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.v2Query.description")}</p>
+            <EndpointBar method="POST" path="/api/v2/query/:domain" />
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">{t("docs.table.requestBody")}</h3>
+            <ParamTable
+              rows={[
+                { name: "period", desc: t("docs.params.periodV2") },
+                { name: "date_range", desc: t("docs.params.dateRange") },
+                { name: "date", desc: t("docs.params.date") },
+                { name: "from", desc: t("docs.params.from") },
+                { name: "to", desc: t("docs.params.to") },
+                { name: "metrics", req: true, desc: t("docs.params.metricsV2") },
+                { name: "dimensions", desc: t("docs.params.dimensionsV2") },
+                { name: "filters", desc: t("docs.params.filtersV2") },
+                { name: "order_by", desc: t("docs.params.orderBy") },
+                { name: "limit", desc: t("docs.params.limit") },
+                { name: "offset", desc: t("docs.params.offset") },
+                { name: "compare", desc: t("docs.params.compare") },
+                { name: "compare_from / compare_to", desc: t("docs.params.compareCustom") },
+                { name: "sample_threshold", desc: t("docs.params.sampleThreshold") },
+              ]}
+            />
+            <CodeBlock label={t("docs.labels.request")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -719,7 +1002,7 @@ zenstats('Download', {
     "limit": 20,
     "offset": 0
   }'`}</CodeBlock>
-            <CodeBlock label={t("docs.labels.request", "聚合与同比查询请求")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+            <CodeBlock label={t("docs.labels.request")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -727,9 +1010,14 @@ zenstats('Download', {
     "metrics": ["visitors", "pageviews", "bounce_rate", "visit_duration"],
     "compare": "previous_period"
   }'`}</CodeBlock>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.v2Query.multiDim.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.v2Query.multiDim.description")}</p>
-            <CodeBlock label={t("docs.labels.request", "多维交叉细分请求")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.v2Query.multiDim.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.v2Query.multiDim.description")}
+            </p>
+            <CodeBlock label={t("docs.labels.request")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -737,26 +1025,26 @@ zenstats('Download', {
     "metrics": ["visitors", "total_revenue"],
     "dimensions": ["event:page", "visit:country"]
   }'
-// 每一行返回结果均包含所选维度的所有列，例如：
+// Each row includes columns for every requested dimension:
 // { "page": "/pricing", "country": "US", "visitors": 421, "total_revenue": 1290.50 }`}</CodeBlock>
-            <CodeBlock label={t("docs.labels.response", "聚合响应数据")}>{`{
+            <CodeBlock label={t("docs.labels.response")}>{`{
   "code": 200,
   "data": {
     "results": {
       "visitors":       { "value": 12840, "change": 5.2, "comparison_value": 12208 },
-      "pageviews":      { "value": 48320,  "change": 3.1, "comparison_value": 46850  },
-      "bounce_rate":    { "value": 38.2,  "change": -1.5, "comparison_value": 39.8   },
-      "visit_duration":  { "value": 68.5,  "change": 2.0,  "comparison_value": 67.1   }
+      "pageviews":      { "value": 48320, "change": 3.1, "comparison_value": 46850 },
+      "bounce_rate":    { "value": 38.2,  "change": -1.5, "comparison_value": 39.8 },
+      "visit_duration": { "value": 68.5,  "change": 2.0, "comparison_value": 67.1 }
     }
   }
 }`}</CodeBlock>
-            <CodeBlock label={t("docs.labels.response", "细分响应数据")}>{`{
+            <CodeBlock label={t("docs.labels.response")}>{`{
   "code": 200,
   "data": {
-    "columns": ["visitors", "pageviews", "bounce_rate"],
+    "columns": ["source", "visitors", "pageviews", "bounce_rate"],
     "data": [
-      { "name": "Google",  "visitors": 5820, "pageviews": 18400, "bounce_rate": 32.1 },
-      { "name": "Direct",  "visitors": 3140, "pageviews": 10200, "bounce_rate": 45.1 }
+      { "source": "Google", "visitors": 5820, "pageviews": 18400, "bounce_rate": 32.1 },
+      { "source": "Direct", "visitors": 3140, "pageviews": 10200, "bounce_rate": 45.1 }
     ],
     "total_rows": 12
   }
@@ -764,446 +1052,429 @@ zenstats('Download', {
           </section>
 
           {/* Metrics */}
-          <section id="metrics" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.metrics")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.metrics.description")}</p>
-            <RefGrid items={[
-              { code: "visitors", desc: t("docs.metrics.visitors") },
-              { code: "pageviews", desc: t("docs.metrics.pageviews") },
-              { code: "visits", desc: t("docs.metrics.visits") },
-              { code: "bounce_rate", desc: t("docs.metrics.bounceRate") },
-              { code: "visit_duration", desc: t("docs.metrics.visitDuration") },
-              { code: "time_on_page", desc: t("docs.metrics.timeOnPage") },
-              { code: "scroll_depth", desc: t("docs.metrics.scrollDepth") },
-              { code: "exit_rate", desc: t("docs.metrics.exitRate") },
-              { code: "views_per_visit", desc: t("docs.metrics.viewsPerVisit") },
-              { code: "events", desc: t("docs.metrics.events") },
-              { code: "conversions", desc: t("docs.metrics.conversions") },
-              { code: "conversion_rate", desc: t("docs.metrics.conversionRate") },
-              { code: "percentage", desc: t("docs.metrics.percentage") },
-              { code: "total_revenue", desc: t("docs.metrics.totalRevenue") },
-              { code: "average_revenue", desc: t("docs.metrics.averageRevenue") },
-            ]} />
+          <section id="metrics" className="mb-16 scroll-mt-20">
+            <SectionHeading id="metrics">{t("docs.nav.metrics")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.metrics.description")}</p>
+            <RefGrid
+              items={[
+                { code: "visitors", desc: t("docs.metrics.visitors") },
+                { code: "pageviews", desc: t("docs.metrics.pageviews") },
+                { code: "visits", desc: t("docs.metrics.visits") },
+                { code: "bounce_rate", desc: t("docs.metrics.bounceRate") },
+                { code: "visit_duration", desc: t("docs.metrics.visitDuration") },
+                { code: "time_on_page", desc: t("docs.metrics.timeOnPage") },
+                { code: "scroll_depth", desc: t("docs.metrics.scrollDepth") },
+                { code: "exit_rate", desc: t("docs.metrics.exitRate") },
+                { code: "views_per_visit", desc: t("docs.metrics.viewsPerVisit") },
+                { code: "events", desc: t("docs.metrics.events") },
+                { code: "conversions", desc: t("docs.metrics.conversions") },
+                { code: "conversion_rate", desc: t("docs.metrics.conversionRate") },
+                { code: "percentage", desc: t("docs.metrics.percentage") },
+                { code: "total_revenue", desc: t("docs.metrics.totalRevenue") },
+                { code: "average_revenue", desc: t("docs.metrics.averageRevenue") },
+              ]}
+            />
           </section>
 
           {/* Dimensions */}
-          <section id="dimensions" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.dimensions")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.dimensions.description")}</p>
-            <RefGrid items={[
-              { code: "visit:source", desc: t("docs.dimensions.source") },
-              { code: "visit:channel", desc: t("docs.dimensions.channel") },
-              { code: "visit:utm_source", desc: t("docs.dimensions.utmSource") },
-              { code: "visit:utm_medium", desc: t("docs.dimensions.utmMedium") },
-              { code: "visit:utm_campaign", desc: t("docs.dimensions.utmCampaign") },
-              { code: "visit:utm_content", desc: t("docs.dimensions.utmContent") },
-              { code: "visit:utm_term", desc: t("docs.dimensions.utmTerm") },
-              { code: "event:page", desc: t("docs.dimensions.page") },
-              { code: "visit:entry_page", desc: t("docs.dimensions.entryPage") },
-              { code: "visit:exit_page", desc: t("docs.dimensions.exitPage") },
-              { code: "visit:country", desc: t("docs.dimensions.country") },
-              { code: "visit:region", desc: t("docs.dimensions.region") },
-              { code: "visit:city", desc: t("docs.dimensions.city") },
-              { code: "visit:browser", desc: t("docs.dimensions.browser") },
-              { code: "visit:os", desc: t("docs.dimensions.os") },
-              { code: "visit:device", desc: t("docs.dimensions.device") },
-              { code: "visit:screen_size", desc: t("docs.dimensions.screenSize") },
-              { code: "event:name", desc: t("docs.dimensions.eventName") },
-              { code: "event:props:<key>", desc: t("docs.dimensions.eventProps") },
-              { code: "visit:entry_page_hostname", desc: t("docs.dimensions.entryPageHostname") },
-              { code: "visit:exit_page_hostname", desc: t("docs.dimensions.exitPageHostname") },
-              { code: "event:hostname", desc: t("docs.dimensions.hostname") },
-              { code: "event:goal", desc: t("docs.dimensions.goal") },
-            ]} />
+          <section id="dimensions" className="mb-16 scroll-mt-20">
+            <SectionHeading id="dimensions">{t("docs.nav.dimensions")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.dimensions.description")}</p>
+            <RefGrid
+              items={[
+                { code: "visit:source", desc: t("docs.dimensions.source") },
+                { code: "visit:channel", desc: t("docs.dimensions.channel") },
+                { code: "visit:utm_source", desc: t("docs.dimensions.utmSource") },
+                { code: "visit:utm_medium", desc: t("docs.dimensions.utmMedium") },
+                { code: "visit:utm_campaign", desc: t("docs.dimensions.utmCampaign") },
+                { code: "visit:utm_content", desc: t("docs.dimensions.utmContent") },
+                { code: "visit:utm_term", desc: t("docs.dimensions.utmTerm") },
+                { code: "event:page", desc: t("docs.dimensions.page") },
+                { code: "visit:entry_page", desc: t("docs.dimensions.entryPage") },
+                { code: "visit:exit_page", desc: t("docs.dimensions.exitPage") },
+                { code: "visit:country", desc: t("docs.dimensions.country") },
+                { code: "visit:region", desc: t("docs.dimensions.region") },
+                { code: "visit:city", desc: t("docs.dimensions.city") },
+                { code: "visit:browser", desc: t("docs.dimensions.browser") },
+                { code: "visit:os", desc: t("docs.dimensions.os") },
+                { code: "visit:device", desc: t("docs.dimensions.device") },
+                { code: "visit:screen_size", desc: t("docs.dimensions.screenSize") },
+                { code: "event:name", desc: t("docs.dimensions.eventName") },
+                { code: "event:props:<key>", desc: t("docs.dimensions.eventProps") },
+                { code: "visit:entry_page_hostname", desc: t("docs.dimensions.entryPageHostname") },
+                { code: "visit:exit_page_hostname", desc: t("docs.dimensions.exitPageHostname") },
+                { code: "event:hostname", desc: t("docs.dimensions.hostname") },
+                { code: "event:goal", desc: t("docs.dimensions.goal") },
+              ]}
+            />
           </section>
 
           {/* Filters */}
-          <section id="filters" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.filters")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.filters.description")}</p>
-            <CodeBlock label={t("docs.labels.filterStructure", "过滤器数据结构")}>{`// 每个过滤器均为元组形式：[操作符, 维度字段, [匹配值数组]]
+          <section id="filters" className="mb-16 scroll-mt-20">
+            <SectionHeading id="filters">{t("docs.nav.filters")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.filters.description")}</p>
+            <CodeBlock label={t("docs.labels.filterStructure")}>{`// Each filter is a tuple: [operator, dimension, [values]]
 [
-  ["is",         "visit:country", ["US", "GB"]],
-  ["is_not",     "visit:browser", ["IE"]],
-  ["contains",   "event:page",    ["/blog"]],
-  ["not_contains","visit:source", ["spam"]]
+  ["is",           "visit:country", ["US", "GB"]],
+  ["is_not",       "visit:browser", ["IE"]],
+  ["contains",     "event:page",    ["/blog"]],
+  ["not_contains", "visit:source",  ["spam"]]
 ]`}</CodeBlock>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.filters.operators.heading")}</h3>
-            <ParamTable rows={[
-              { name: "is", desc: t("docs.filters.is") },
-              { name: "is_not", desc: t("docs.filters.isNot") },
-              { name: "contains", desc: t("docs.filters.contains") },
-              { name: "not_contains", desc: t("docs.filters.notContains") },
-              { name: "matches", desc: t("docs.filters.matches") },
-              { name: "contains_not", desc: t("docs.filters.containsNot") },
-              { name: "matches_not", desc: t("docs.filters.matchesNot") },
-              { name: "matches_wildcard", desc: t("docs.filters.matchesWildcard") },
-              { name: "matches_wildcard_not", desc: t("docs.filters.matchesWildcardNot") },
-            ]} />
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.filters.logical.heading")}</h3>
-            <ParamTable rows={[
-              { name: "and / or / not", desc: t("docs.filters.andOrNot") },
-              { name: "has_done", desc: t("docs.filters.hasDone") },
-              { name: "has_not_done", desc: t("docs.filters.hasNotDone") },
-            ]} />
-            <CodeBlock label={t("docs.labels.behaviorFilters", "行为与大小写匹配过滤器")}>{`// 1. has_done：匹配在同一次会话生命周期内触发过指定事件的访客
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.filters.operators.heading")}
+            </h3>
+            <ParamTable
+              rows={[
+                { name: "is", desc: t("docs.filters.is") },
+                { name: "is_not", desc: t("docs.filters.isNot") },
+                { name: "contains", desc: t("docs.filters.contains") },
+                { name: "not_contains", desc: t("docs.filters.notContains") },
+                { name: "matches", desc: t("docs.filters.matches") },
+                { name: "contains_not", desc: t("docs.filters.containsNot") },
+                { name: "matches_not", desc: t("docs.filters.matchesNot") },
+                { name: "matches_wildcard", desc: t("docs.filters.matchesWildcard") },
+                { name: "matches_wildcard_not", desc: t("docs.filters.matchesWildcardNot") },
+              ]}
+            />
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.filters.logical.heading")}
+            </h3>
+            <ParamTable
+              rows={[
+                { name: "and / or / not", desc: t("docs.filters.andOrNot") },
+                { name: "has_done", desc: t("docs.filters.hasDone") },
+                { name: "has_not_done", desc: t("docs.filters.hasNotDone") },
+              ]}
+            />
+            <CodeBlock label={t("docs.labels.behaviorFilters")}>{`// 1. has_done: match sessions that triggered the event at least once
 ["has_done", ["is", "event:name", ["Signup"]]]
 
-// 2. 忽略大小写匹配（默认区分大小写）：传入第 4 个配置项 {"case_sensitive": false}
+// 2. Case-insensitive matching (optional 4th tuple element)
 ["is", "visit:browser", ["chrome"], {"case_sensitive": false}]`}</CodeBlock>
             <Callout type="info">{t("docs.sections.filters.caseCallout")}</Callout>
           </section>
 
           {/* Periods */}
-          <section id="periods" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.periods")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.periods.description")}</p>
-            <ParamTable rows={[
-              { name: "day", desc: t("docs.periods.day") },
-              { name: "realtime", desc: t("docs.periods.realtime") },
-              { name: "p7", desc: t("docs.periods.p7") },
-              { name: "p14", desc: t("docs.periods.p14") },
-              { name: "p30", desc: t("docs.periods.p30") },
-              { name: "month", desc: t("docs.periods.month") },
-              { name: "6mo", desc: t("docs.periods.sixMonth") },
-              { name: "12mo", desc: t("docs.periods.twelveMonth") },
-              { name: "year", desc: t("docs.periods.year") },
-              { name: "all", desc: t("docs.periods.all") },
-              { name: "Nd / Nmo", desc: t("docs.periods.shorthand") },
-              { name: "custom", desc: t("docs.periods.custom") },
-            ]} />
+          <section id="periods" className="mb-16 scroll-mt-20">
+            <SectionHeading id="periods">{t("docs.nav.periods")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.periods.description")}</p>
+            <ParamTable
+              rows={[
+                { name: "day", desc: t("docs.periods.day") },
+                { name: "realtime", desc: t("docs.periods.realtime") },
+                { name: "p7", desc: t("docs.periods.p7") },
+                { name: "p14", desc: t("docs.periods.p14") },
+                { name: "p30", desc: t("docs.periods.p30") },
+                { name: "month", desc: t("docs.periods.month") },
+                { name: "6mo", desc: t("docs.periods.sixMonth") },
+                { name: "12mo", desc: t("docs.periods.twelveMonth") },
+                { name: "year", desc: t("docs.periods.year") },
+                { name: "all", desc: t("docs.periods.all") },
+                { name: "Nd / Nmo", desc: t("docs.periods.shorthand") },
+                { name: "custom", desc: t("docs.periods.custom") },
+              ]}
+            />
           </section>
 
-          {/* Heatmap */}
-          <section id="heatmap" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">
-              {t("docs.nav.heatmap", "热力图 (Heatmap)")}
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
-              ZenStats 原生内置高性能点击热力图与滚动深度分析体系。基于 ClickHouse 列式存储引擎与相对坐标网格归一化算法，无需引入庞大的第三方重型 SDK（如 Hotjar 或 CrazyEgg），即可全景还原访客在页面各交互组件与纵深内容上的真实注意力分布。
+          {/* Core Web Vitals (placed right before Heatmap to match NAV_SECTIONS order) */}
+          <section id="performance" className="mb-16 scroll-mt-20">
+            <SectionHeading id="performance">{t("docs.nav.performance")}</SectionHeading>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+              {t("docs.sections.performance.description")}
             </p>
+            <Callout type="info">{t("docs.sections.performance.callout")}</Callout>
 
-            <Callout type="info">
-              热力点击与滚动深度事件通过独立的有界批处理管道（Batch Ingestion）上报与隔离存储，<strong>绝不污染站点的常规 PV、UV、会话数与业务转化指标</strong>，保障核心统计数据的纯净性。
-            </Callout>
-
-            {/* 双模态分析机制 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
-              双模态分析：点击热力图与滚动深度
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
-              ZenStats 热力图支持两种互补的分析视图，全方位诊断页面转化瓶颈与内容吸睛度：
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
-              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 space-y-2">
-                <div className="flex items-center gap-2 font-semibold text-sm text-slate-800 dark:text-slate-200">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 font-bold text-xs">
-                    1
-                  </span>
-                  点击热力图 (Click Heatmaps)
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  聚合高频交互触点。直观呈现哪些按钮、卡片、图片或空白区域吸引了最多点击，精准识别“误把非链接当按钮”以及关键转化行动项（CTA）的被忽略问题。
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 space-y-2">
-                <div className="flex items-center gap-2 font-semibold text-sm text-slate-800 dark:text-slate-200">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
-                    2
-                  </span>
-                  滚动深度热力图 (Scroll Depth)
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  量化长页面内容留存。划分 25%、50%、75%、100% 四大触达阶段，标注 800px 首屏黄金折叠线（The Fold），以彩虹色温带呈现用户流失的临界高度。
-                </p>
-              </div>
-            </div>
-
-            {/* 核心特性与设备断点 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
-              设备自适应与网格归一化 (Viewport Breakpoints)
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-3">
-              访客使用的屏幕分辨率千差万别，ZenStats 自动将访客视口划分为三大设备断点，并在 40×80 比例网格内计算相对点击百分比坐标：
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
-              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                <div className="font-semibold text-xs text-slate-800 dark:text-slate-200">桌面端 (Desktop)</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">视口宽度 ≥ 1024px，默认捕获 1280×800 标准底图</div>
-              </div>
-              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                <div className="font-semibold text-xs text-slate-800 dark:text-slate-200">平板端 (Tablet)</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">视口宽度 768px ~ 1023px，适合移动横屏与 iPad 分析</div>
-              </div>
-              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                <div className="font-semibold text-xs text-slate-800 dark:text-slate-200">移动端 (Mobile)</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">视口宽度 &lt; 768px，垂直流式布局点击聚合</div>
-              </div>
-            </div>
-
-            {/* Tracker 客户端配置 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
-              Tracker 客户端埋点与属性配置
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
-              在站点引入统计脚本时，添加以下 HTML 数据属性即可启用热力图高级捕获：
-            </p>
-            <ParamTable
-              rows={[
-                { name: "data-heatmap", req: true, desc: "设为 \"true\" 加载热力图模块；点击与滚动采集由站点设置分别控制" },
-                { name: "data-heatmap-key", desc: "模板聚合 Key。适用于动态路由页面（如 /product/:id 或 /blog/:slug），传入统一 Key（如 \"product-detail\"）将多个动态页面归纳合并到同一热力图下" },
-                { name: "data-heatmap-version", desc: "发布版本号（如 \"v2.1\" 或 \"release-2026-11\"），支持按版本切片观察 UI 迭代前后的点击对比" },
-                { name: "data-heatmap-variant", desc: "变体标识符（如 \"default\" 或 \"variant-b\"），用于 A/B 测试场景下多实验组点击热力对比" },
-              ]}
-            />
-            <CodeBlock label={t("docs.labels.trackerEmbed", "统计脚本嵌入示例")}>
-{`<script defer src="https://your-domain.com/js/script.heatmap.js"
-  data-domain="example.com"
-  data-heatmap="true"
-  data-heatmap-key="pricing-page"
-  data-heatmap-version="v2.0"
-  data-heatmap-variant="default">
-</script>`}
-            </CodeBlock>
-
-            {/* 元素语义绑定与隐私忽略 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
-              元素语义锚定与隐私屏蔽属性
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
-              为了避免前端发版构建产生哈希变动导致 CSS 选择器失效，以及严格遵守隐私合规要求，ZenStats 支持针对 DOM 元素配置专属属性：
-            </p>
-            <ParamTable
-              rows={[
-                {
-                  name: "data-zs-id",
-                  desc: (
-                    <span>
-                      显式指定元素的永久语义 ID（例如 <code>data-zs-id="signup.submit"</code>）。Tracker 在上报时将优先使用此 ID 作为元素标识，在元素点击排行中一目了然，彻底杜绝选择器漂移。
-                    </span>
-                  ),
-                },
-                {
-                  name: "data-zs-ignore",
-                  desc: (
-                    <span>
-                      标记忽略区域。在敏感表单、个人账户信息卡片、支付输入框添加此属性后，<strong>Tracker 会主动忽略其内部发生的任何点击事件</strong>，不记录坐标与选择器。
-                    </span>
-                  ),
-                },
-              ]}
-            />
-            <CodeBlock label={t("docs.labels.htmlMarkup", "HTML 属性标记示例")}>
-{`<!-- 1. 显式绑定语义 ID 的重要按钮 -->
-<button data-zs-id="header.cta_upgrade" class="btn btn-primary">
-  立即升级套餐
-</button>
-
-<!-- 2. 包含敏感信息的隐私忽略区域（内部任何点击就地丢弃，不上报） -->
-<div data-zs-ignore class="user-sensitive-billing-card">
-  <input type="password" placeholder="输入密码" />
-  <p>用户敏感私人账单信息</p>
-</div>`}
-            </CodeBlock>
-
-            {/* RESTful API 参考 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
-              热力图 RESTful API 参考
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-3">
-              可通过 API 查询热力图配置、页面聚合列表与点击热点数据：
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <MethodBadge method="GET" />
-                  <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
-                    /sites/:domain/heatmap/pages
-                  </code>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-                  获取在指定时间范围内存在热力点击的页面 URL 或聚合 Key 列表。支持参数 <code>start</code>、<code>end</code>、<code>scope</code> (<code>key</code> | <code>page</code>)。
-                </p>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <MethodBadge method="GET" />
-                  <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
-                    /sites/:domain/heatmap/data
-                  </code>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-                  获取点击密度热点散点阵列与元素点击排行榜（Top Elements）。
-                </p>
-                <CodeBlock label={t("docs.labels.curlExample", "cURL 调用示例")}>
-{`curl -X GET "https://your-instance.com/api/sites/example.com/heatmap/data?start=2026-11-01&end=2026-11-10&scope=key&key=pricing-page" \\
-  -H "Authorization: Bearer <token>"`}
-                </CodeBlock>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <MethodBadge method="GET" />
-                  <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
-                    /sites/:domain/heatmap/scroll
-                  </code>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-                  获取指定页面在选定日期区间内的纵向滚动深度留存曲线与 25%/50%/75%/100% 四阶触达数据。
-                </p>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <MethodBadge method="POST" />
-                  <code className="font-mono text-xs text-blue-700 dark:text-blue-400">
-                    /sites/:domain/heatmap/capture
-                  </code>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-                  为指定页面或聚合 Key 生成/上传背景底图快照，供分析界面精准比对。
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Core Web Vitals 性能监控 */}
-          <section id="performance" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">
-              {t("performance.title", "Core Web Vitals 性能分析")}
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
-              真实用户网页体验质量监控。ZenStats 严格遵循 Google Web Vitals 现代规范，针对真实访客前台完整文档导航进行多维采样，精确量化核心体验指标（LCP、INP、CLS）以及辅助网络诊断指标（TTFB、FCP）。
-            </p>
-
-            <Callout type="info">
-              性能采集默认关闭，拥有独立的有界内存队列与 ClickHouse 表结构。采集指标不影响任何 PV、UV、会话及业务事件统计。
-            </Callout>
-
-            {/* 核心指标表 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
-              Core Web Vitals 指标口径与良好阈值标准
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.performance.metrics.heading")}
             </h3>
             <ParamTable
               rows={[
                 {
-                  name: "LCP (最大内容绘制)",
-                  desc: (
-                    <span>
-                      衡量视口中最大图片或文本块的加载与渲染耗时。<strong className="text-emerald-600 dark:text-emerald-400">良好基准 ≤ 2500 毫秒</strong>；2500~4000 毫秒为待改善；大于 4000 毫秒为较差。
-                    </span>
-                  ),
+                  name: t("docs.sections.performance.metrics.lcpName"),
+                  desc: t("docs.sections.performance.metrics.lcpDesc"),
                 },
                 {
-                  name: "INP (交互到下次绘制)",
-                  desc: (
-                    <span>
-                      衡量用户在页面生命周期中进行点击、按键或轻触时，界面的实际响应延迟。<strong className="text-emerald-600 dark:text-emerald-400">良好基准 ≤ 200 毫秒</strong>；200~500 毫秒为待改善；大于 500 毫秒为较差。无交互时不补零。
-                    </span>
-                  ),
+                  name: t("docs.sections.performance.metrics.inpName"),
+                  desc: t("docs.sections.performance.metrics.inpDesc"),
                 },
                 {
-                  name: "CLS (累积布局偏移)",
-                  desc: (
-                    <span>
-                      衡量页面渲染过程中的非预期布局突变幅度，防止误触。<strong className="text-emerald-600 dark:text-emerald-400">良好基准 ≤ 0.1</strong>；0.1~0.25 为待改善；大于 0.25 为较差。
-                    </span>
-                  ),
+                  name: t("docs.sections.performance.metrics.clsName"),
+                  desc: t("docs.sections.performance.metrics.clsDesc"),
                 },
                 {
-                  name: "TTFB (首字节时间)",
-                  desc: (
-                    <span>
-                      辅助指标。衡量浏览器发起页面请求到接收到服务器首个响应字节的时间。<strong className="text-emerald-600 dark:text-emerald-400">良好基准 ≤ 800 毫秒</strong>；超过 1800 毫秒需优化服务端渲染或 CDN 缓存。
-                    </span>
-                  ),
+                  name: t("docs.sections.performance.metrics.ttfbName"),
+                  desc: t("docs.sections.performance.metrics.ttfbDesc"),
                 },
                 {
-                  name: "FCP (首次内容绘制)",
-                  desc: (
-                    <span>
-                      辅助指标。衡量浏览器渲染出首个 DOM 内容（文本、图片或 Canvas）的时刻。<strong className="text-emerald-600 dark:text-emerald-400">良好基准 ≤ 1800 毫秒</strong>。
-                    </span>
-                  ),
+                  name: t("docs.sections.performance.metrics.fcpName"),
+                  desc: t("docs.sections.performance.metrics.fcpDesc"),
                 },
               ]}
             />
 
-            {/* 采样机制与数据质量保障 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
-              采样机制与防失真质量保障
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.performance.quality.heading")}
             </h3>
-            <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-400 space-y-1.5 mb-4">
+            <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1.5 mb-4">
               <li>
-                <strong>P75 黄金判定准则：</strong>所有达标评估与每日趋势均以整体样本分布的第 75 百分位数（P75）为准，而非受极端网络波动影响的算术平均值。
+                <strong className="text-foreground">{t("docs.sections.performance.quality.p75Title")}</strong>{" "}
+                {t("docs.sections.performance.quality.p75Desc")}
               </li>
               <li>
-                <strong>前台导航隔离：</strong>在后台静默打开的标签页（Background Tab）会被打标隔离，不计入有效指标，避免睡眠标签页虚高拉低指标。
+                <strong className="text-foreground">
+                  {t("docs.sections.performance.quality.foregroundTitle")}
+                </strong>{" "}
+                {t("docs.sections.performance.quality.foregroundDesc")}
               </li>
               <li>
-                <strong>延迟初始化剔除：</strong>如果因页面过重导致统计脚本在页面载入 2 秒后才初始化，将记录质量告警，防止捕获被延迟截断的失真样本。
+                <strong className="text-foreground">
+                  {t("docs.sections.performance.quality.lateInitTitle")}
+                </strong>{" "}
+                {t("docs.sections.performance.quality.lateInitDesc")}
               </li>
               <li>
-                <strong>完整文档导航：</strong>指标严格绑定真实网页完整生命周期，单页应用 (SPA) 内部路由切换不产生伪 CWV 导航，符合国际标准。
+                <strong className="text-foreground">
+                  {t("docs.sections.performance.quality.fullNavTitle")}
+                </strong>{" "}
+                {t("docs.sections.performance.quality.fullNavDesc")}
               </li>
             </ul>
 
-            {/* 脚本引入 */}
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
-              Tracker 性能监控代码引入
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.performance.tracker.heading")}
             </h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
-              在站点管理后台开启性能采集后，通过引入包含性能监控模块的 Tracker 脚本即可：
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.performance.tracker.description")}
             </p>
-            <CodeBlock label={t("docs.labels.coreWebVitals", "Core Web Vitals 引入示例")}>{`<script defer
+            <CodeBlock label={t("docs.labels.coreWebVitals")}>{`<script defer
   src="https://your-instance.com/js/script.performance.js"
   data-domain="example.com"
   data-performance="true"
   data-performance-version="release-1"></script>`}</CodeBlock>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">
-              性能数据查询 API
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.performance.api.heading")}
             </h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
-              <MethodBadge method="GET" />
-              <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
-                /sites/:domain/performance/data
-              </code>
-            </p>
+            <p className="text-xs text-muted-foreground mb-2">{t("docs.authJwtNote")}</p>
+            <EndpointBar method="GET" path="/api/sites/:domain/performance/config" />
+            <EndpointBar method="PUT" path="/api/sites/:domain/performance/config" />
+            <p className="text-xs text-muted-foreground mb-4">{t("docs.sections.performance.api.configDesc")}</p>
+
+            <EndpointBar method="GET" path="/api/sites/:domain/performance/data" />
+            <p className="text-xs text-muted-foreground mb-2">{t("docs.sections.performance.api.dataDesc")}</p>
             <ParamTable
               rows={[
-                { name: "start", req: true, desc: "查询起始日期 (YYYY-MM-DD)" },
-                { name: "end", req: true, desc: "查询结束日期 (YYYY-MM-DD)" },
-                { name: "metric", desc: "主分析指标 (LCP, INP, CLS, TTFB, FCP，默认 LCP)" },
-                { name: "device", desc: "设备过滤 (desktop, mobile, tablet)" },
-                { name: "path", desc: "页面路径过滤，支持单段通配符（如 /pricing 或 /blog/*）" },
+                { name: "start", req: true, desc: t("docs.sections.performance.api.params.start") },
+                { name: "end", req: true, desc: t("docs.sections.performance.api.params.end") },
+                { name: "metric", desc: t("docs.sections.performance.api.params.metric") },
+                { name: "device", desc: t("docs.sections.performance.api.params.device") },
+                { name: "path", desc: t("docs.sections.performance.api.params.path") },
+                { name: "hostname", desc: t("docs.sections.performance.api.params.hostname") },
+                { name: "release", desc: t("docs.sections.performance.api.params.release") },
+                { name: "browser", desc: t("docs.sections.performance.api.params.browser") },
+                { name: "country", desc: t("docs.sections.performance.api.params.country") },
+                { name: "navigation", desc: t("docs.sections.performance.api.params.navigation") },
               ]}
             />
           </section>
 
-          {/* User Flows */}
-          <section id="userFlows" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t('docs.nav.userFlows')}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">{t('docs.sections.userFlows.description')}</p>
-            <Callout type="info">{t('docs.sections.userFlows.callout')}</Callout>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t('docs.sections.userFlows.query.heading')}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
-              <MethodBadge method="GET" />
-              <code className="font-mono text-xs text-emerald-700 dark:text-emerald-400">/stats/:domain/user-flows</code>
+          {/* Heatmap */}
+          <section id="heatmap" className="mb-16 scroll-mt-20">
+            <SectionHeading id="heatmap">{t("docs.nav.heatmap")}</SectionHeading>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+              {t("docs.sections.heatmap.description")}
             </p>
-            <ParamTable rows={[
-              { name: "period", req: true, desc: t("docs.params.period") },
-              { name: "entry_path", desc: "限定起始落地页路径（如 / 或 /pricing），默认为空聚合全部落地页" },
-              { name: "steps", desc: "流转深度步数（2 ~ 4 步，默认 3）" },
-              { name: "limit", desc: "每步热门路径保留数量（3 ~ 12，默认 6），长尾页面归入 (other)" },
-            ]} />
-            <CodeBlock label={t("docs.labels.userFlowCurl", "用户流向查询请求")}>{`curl -X GET "https://your-instance.com/api/stats/example.com/user-flows?period=p30&steps=3&limit=6" \\
+            <Callout type="info">{t("docs.sections.heatmap.callout")}</Callout>
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.heatmap.modes.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+              {t("docs.sections.heatmap.modes.description")}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+              <div className="p-4 rounded-xl border border-border/80 bg-card space-y-2 shadow-2xs">
+                <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-orange-500/12 text-orange-600 dark:text-orange-400 font-bold text-xs">
+                    1
+                  </span>
+                  <span>{t("docs.sections.heatmap.modes.clickTitle")}</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t("docs.sections.heatmap.modes.clickDesc")}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl border border-border/80 bg-card space-y-2 shadow-2xs">
+                <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/12 text-primary font-bold text-xs">
+                    2
+                  </span>
+                  <span>{t("docs.sections.heatmap.modes.scrollTitle")}</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t("docs.sections.heatmap.modes.scrollDesc")}
+                </p>
+              </div>
+            </div>
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.heatmap.breakpoints.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-3">
+              {t("docs.sections.heatmap.breakpoints.description")}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
+              <div className="p-3.5 rounded-xl border border-border/80 bg-card shadow-2xs">
+                <div className="font-semibold text-xs text-foreground">
+                  {t("docs.sections.heatmap.breakpoints.desktopTitle")}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  {t("docs.sections.heatmap.breakpoints.desktopDesc")}
+                </div>
+              </div>
+              <div className="p-3.5 rounded-xl border border-border/80 bg-card shadow-2xs">
+                <div className="font-semibold text-xs text-foreground">
+                  {t("docs.sections.heatmap.breakpoints.tabletTitle")}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  {t("docs.sections.heatmap.breakpoints.tabletDesc")}
+                </div>
+              </div>
+              <div className="p-3.5 rounded-xl border border-border/80 bg-card shadow-2xs">
+                <div className="font-semibold text-xs text-foreground">
+                  {t("docs.sections.heatmap.breakpoints.mobileTitle")}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  {t("docs.sections.heatmap.breakpoints.mobileDesc")}
+                </div>
+              </div>
+            </div>
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.heatmap.tracker.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.heatmap.tracker.description")}
+            </p>
+            <ParamTable
+              rows={[
+                { name: "data-heatmap", req: true, desc: t("docs.sections.heatmap.tracker.dataHeatmap") },
+                { name: "data-heatmap-key", desc: t("docs.sections.heatmap.tracker.dataKey") },
+                { name: "data-heatmap-version", desc: t("docs.sections.heatmap.tracker.dataVersion") },
+                { name: "data-heatmap-variant", desc: t("docs.sections.heatmap.tracker.dataVariant") },
+              ]}
+            />
+            <CodeBlock label={t("docs.labels.trackerEmbed")}>{`<script defer src="https://your-instance.com/js/script.heatmap.js"
+  data-domain="demo.site"
+  data-heatmap="true"
+  data-heatmap-key="pricing-page"
+  data-heatmap-version="v2.0"
+  data-heatmap-variant="default">
+</script>`}</CodeBlock>
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.heatmap.markup.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.heatmap.markup.description")}
+            </p>
+            <ParamTable
+              rows={[
+                { name: "data-zs-id", desc: t("docs.sections.heatmap.markup.zsId") },
+                { name: "data-zs-ignore", desc: t("docs.sections.heatmap.markup.zsIgnore") },
+              ]}
+            />
+            <CodeBlock label={t("docs.labels.htmlMarkup")}>{`<!-- 1. Stable semantic ID for top-element ranking -->
+<button data-zs-id="header.cta_upgrade" class="btn btn-primary">
+  Upgrade Plan
+</button>
+
+<!-- 2. Privacy-masked container (clicks inside are dropped client-side) -->
+<div data-zs-ignore class="user-sensitive-billing-card">
+  <input type="password" placeholder="Password" />
+</div>`}</CodeBlock>
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.heatmap.api.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.heatmap.api.description")}
+            </p>
+            <p className="text-xs text-muted-foreground mb-4">{t("docs.authJwtNote")}</p>
+
+            <div className="space-y-4">
+              <div>
+                <EndpointBar method="GET" path="/api/sites/:domain/heatmap/pages" />
+                <p className="text-xs text-muted-foreground mb-2">
+                  {t("docs.sections.heatmap.api.pagesDesc")}
+                </p>
+                <CodeBlock label={t("docs.labels.curlExample")}>{`curl -G "https://your-instance.com/api/sites/example.com/heatmap/pages" \\
+  -H "Authorization: Bearer <jwt>" \\
+  -d "start=2026-11-01&end=2026-11-10&scope=key&key=pricing-page"`}</CodeBlock>
+              </div>
+
+              <div>
+                <EndpointBar method="GET" path="/api/sites/:domain/heatmap/data" />
+                <p className="text-xs text-muted-foreground mb-2">
+                  {t("docs.sections.heatmap.api.dataDesc")}
+                </p>
+              </div>
+
+              <div>
+                <EndpointBar method="GET" path="/api/sites/:domain/heatmap/scroll/pages" />
+                <p className="text-xs text-muted-foreground mb-2">
+                  {t("docs.sections.heatmap.api.scrollPagesDesc")}
+                </p>
+              </div>
+
+              <div>
+                <EndpointBar method="GET" path="/api/sites/:domain/heatmap/scroll/data" />
+                <p className="text-xs text-muted-foreground mb-2">
+                  {t("docs.sections.heatmap.api.scrollDataDesc")}
+                </p>
+              </div>
+
+              <div>
+                <EndpointBar method="POST" path="/api/sites/:domain/heatmap/capture" />
+                <EndpointBar method="POST" path="/api/sites/:domain/heatmap/snapshots" />
+                <p className="text-xs text-muted-foreground">
+                  {t("docs.sections.heatmap.api.captureDesc")}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* User Flows */}
+          <section id="userFlows" className="mb-16 scroll-mt-20">
+            <SectionHeading id="userFlows">{t("docs.nav.userFlows")}</SectionHeading>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+              {t("docs.sections.userFlows.description")}
+            </p>
+            <Callout type="info">{t("docs.sections.userFlows.callout")}</Callout>
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.userFlows.query.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.userFlows.query.description")}
+            </p>
+            <EndpointBar method="GET" path="/api/stats/:domain/user-flows" />
+            <ParamTable
+              rows={[
+                { name: "period", req: true, desc: t("docs.params.period") },
+                { name: "entry_path", desc: t("docs.sections.userFlows.params.entryPath") },
+                { name: "filters", desc: t("docs.params.filters") },
+                { name: "steps", desc: t("docs.sections.userFlows.params.steps") },
+                { name: "limit", desc: t("docs.sections.userFlows.params.limit") },
+              ]}
+            />
+            <CodeBlock label={t("docs.labels.userFlowCurl")}>{`curl -X GET "https://your-instance.com/api/stats/example.com/user-flows?period=p30&steps=3&limit=6" \\
   -H "Authorization: Bearer <token>"`}</CodeBlock>
-            <CodeBlock label={t("docs.labels.userFlowResponse", "用户流向响应数据")}>{`{
-  "code": 0,
+            <CodeBlock label={t("docs.labels.userFlowResponse")}>{`{
+  "code": 200,
   "data": {
     "nodes": [
       { "id": "0:/", "name": "/", "depth": 0 },
@@ -1221,20 +1492,35 @@ zenstats('Download', {
 }`}</CodeBlock>
           </section>
 
-          <section id="goals" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.goals")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.goals.description")}</p>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.goals.create.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.goals.create.description")}</p>
+          {/* Goals */}
+          <section id="goals" className="mb-16 scroll-mt-20">
+            <SectionHeading id="goals">{t("docs.nav.goals")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.goals.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.goals.create.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.goals.create.description")}
+            </p>
             <Callout type="info">{t("docs.sections.goals.callout")}</Callout>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.goals.types.heading")}</h3>
-            <ParamTable rows={[
-              { name: t("docs.sections.goals.types.pageview"), desc: t("docs.sections.goals.types.pageviewDesc") },
-              { name: t("docs.sections.goals.types.event"), desc: t("docs.sections.goals.types.eventDesc") },
-            ]} />
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.goals.breakdown.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.goals.breakdown.description")}</p>
-            <CodeBlock label={t("docs.labels.goalBreakdown", "目标转化细分查询")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.goals.types.heading")}
+            </h3>
+            <ParamTable
+              rows={[
+                { name: t("docs.sections.goals.types.pageview"), desc: t("docs.sections.goals.types.pageviewDesc") },
+                { name: t("docs.sections.goals.types.event"), desc: t("docs.sections.goals.types.eventDesc") },
+              ]}
+            />
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.goals.breakdown.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.goals.breakdown.description")}
+            </p>
+            <CodeBlock label={t("docs.labels.goalBreakdown")}>{`curl -X POST https://your-instance.com/api/v2/query/example.com \\
   -H "Authorization: Bearer <token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1246,27 +1532,40 @@ zenstats('Download', {
           </section>
 
           {/* Funnels */}
-          <section id="funnels" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.funnels")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.funnels.description")}</p>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.funnels.create.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">{t("docs.sections.funnels.create.description")}</p>
+          <section id="funnels" className="mb-16 scroll-mt-20">
+            <SectionHeading id="funnels">{t("docs.nav.funnels")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.funnels.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.funnels.create.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm">{t("docs.sections.funnels.create.description")}</p>
             <Callout type="info">{t("docs.sections.funnels.callout")}</Callout>
           </section>
 
           {/* Segments */}
-          <section id="segments" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.segments")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.segments.description")}</p>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.segments.management.heading")}</h3>
-            <ParamTable rows={[
-              { name: "GET /segments", desc: t("docs.sections.segments.management.list") },
-              { name: "POST /segments", desc: t("docs.sections.segments.management.create") },
-              { name: "PUT /segments/:id", desc: t("docs.sections.segments.management.update") },
-              { name: "DELETE /segments/:id", desc: t("docs.sections.segments.management.delete") },
-            ]} />
-            <CodeBlock label={t("docs.labels.createSegment", "创建受众分群")}>{`curl -X POST https://your-instance.com/api/sites/example.com/segments \\
-  -H "Authorization: Bearer <token>" \\
+          <section id="segments" className="mb-16 scroll-mt-20">
+            <SectionHeading id="segments">{t("docs.nav.segments")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.segments.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.segments.management.heading")}
+            </h3>
+            <p className="text-xs text-muted-foreground mb-2">{t("docs.authJwtNote")}</p>
+            <ParamTable
+              rows={[
+                { name: "GET /api/sites/:domain/segments", desc: t("docs.sections.segments.management.list") },
+                { name: "POST /api/sites/:domain/segments", desc: t("docs.sections.segments.management.create") },
+                {
+                  name: "PATCH /api/sites/:domain/segments/:segmentId",
+                  desc: t("docs.sections.segments.management.update"),
+                },
+                {
+                  name: "DELETE /api/sites/:domain/segments/:segmentId",
+                  desc: t("docs.sections.segments.management.delete"),
+                },
+              ]}
+            />
+            <CodeBlock label={t("docs.labels.createSegment")}>{`curl -X POST https://your-instance.com/api/sites/example.com/segments \\
+  -H "Authorization: Bearer <jwt>" \\
   -H "Content-Type: application/json" \\
   -d '{
     "name": "Mobile US Users",
@@ -1279,16 +1578,20 @@ zenstats('Download', {
           </section>
 
           {/* Shared Links */}
-          <section id="sharedLinks" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.sharedLinks")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.sharedLinks.description")}</p>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.sharedLinks.create.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.sharedLinks.create.description")}</p>
-            <CodeBlock label={t("docs.labels.createSharedLink", "创建分享链接")}>{`curl -X POST https://your-instance.com/api/sites/example.com/shared-links \\
-  -H "Authorization: Bearer <token>" \\
+          <section id="sharedLinks" className="mb-16 scroll-mt-20">
+            <SectionHeading id="sharedLinks">{t("docs.nav.sharedLinks")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.sharedLinks.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.sharedLinks.create.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.sharedLinks.create.description")}
+            </p>
+            <CodeBlock label={t("docs.labels.createSharedLink")}>{`curl -X POST https://your-instance.com/api/sites/example.com/shared-links \\
+  -H "Authorization: Bearer <jwt>" \\
   -H "Content-Type: application/json" \\
   -d '{ "name": "Public Dashboard" }'`}</CodeBlock>
-            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{
+            <CodeBlock label={t("docs.labels.response")}>{`{
   "code": 200,
   "data": {
     "id":   42,
@@ -1301,129 +1604,201 @@ zenstats('Download', {
           </section>
 
           {/* Shields */}
-          <section id="shields" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.shields")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.shields.description")}</p>
+          <section id="shields" className="mb-16 scroll-mt-20">
+            <SectionHeading id="shields">{t("docs.nav.shields")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.shields.description")}</p>
             <Callout type="warn">{t("docs.sections.shields.callout")}</Callout>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.shields.ip.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.shields.ip.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.shields.ip.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">{t("docs.sections.shields.ip.description")}</p>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.shields.hostname.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.shields.hostname.description")}</p>
-            <CodeBlock label={t("docs.labels.wildcardExample", "域名通配符示例")}>{`*.example.com   → 匹配 app.example.com、www.example.com 等二级子域名
-example.com     → 仅精确匹配该根域名`}</CodeBlock>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.shields.hostname.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.shields.hostname.description")}
+            </p>
+            <CodeBlock label={t("docs.labels.wildcardExample")}>{`*.example.com   -> matches app.example.com, www.example.com, etc.
+example.com     -> exact match on root domain only`}</CodeBlock>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.shields.country.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.shields.country.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.shields.country.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.shields.country.description")}
+            </p>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.shields.referrer.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">{t("docs.sections.shields.referrer.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.shields.referrer.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm">{t("docs.sections.shields.referrer.description")}</p>
           </section>
 
           {/* Email Reports */}
-          <section id="emailReports" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.emailReports")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.emailReports.description")}</p>
+          <section id="emailReports" className="mb-16 scroll-mt-20">
+            <SectionHeading id="emailReports">{t("docs.nav.emailReports")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.emailReports.description")}</p>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.emailReports.weekly.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.emailReports.weekly.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.emailReports.weekly.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.emailReports.weekly.description")}
+            </p>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.emailReports.monthly.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">{t("docs.sections.emailReports.monthly.description")}</p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.emailReports.monthly.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-2">
+              {t("docs.sections.emailReports.monthly.description")}
+            </p>
             <Callout type="info">{t("docs.sections.emailReports.callout")}</Callout>
           </section>
 
           {/* Traffic Alerts */}
-          <section id="trafficAlerts" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.trafficAlerts")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.trafficAlerts.description")}</p>
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.trafficAlerts.settings.heading")}</h3>
-            <ParamTable rows={[
-              { name: "threshold", desc: t("docs.sections.trafficAlerts.settings.threshold") },
-              { name: "interval", desc: t("docs.sections.trafficAlerts.settings.interval") },
-              { name: "recipients", desc: t("docs.sections.trafficAlerts.settings.recipients") },
-            ]} />
+          <section id="trafficAlerts" className="mb-16 scroll-mt-20">
+            <SectionHeading id="trafficAlerts">{t("docs.nav.trafficAlerts")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">
+              {t("docs.sections.trafficAlerts.description")}
+            </p>
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.trafficAlerts.settings.heading")}
+            </h3>
+            <ParamTable
+              rows={[
+                { name: "threshold", desc: t("docs.sections.trafficAlerts.settings.threshold") },
+                { name: "interval", desc: t("docs.sections.trafficAlerts.settings.interval") },
+                { name: "recipients", desc: t("docs.sections.trafficAlerts.settings.recipients") },
+              ]}
+            />
             <Callout type="info">{t("docs.sections.trafficAlerts.callout")}</Callout>
           </section>
 
           {/* Sub-accounts & Permissions */}
-          <section id="subAccounts" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.subAccounts")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.subAccounts.description")}</p>
+          <section id="subAccounts" className="mb-16 scroll-mt-20">
+            <SectionHeading id="subAccounts">{t("docs.nav.subAccounts")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.subAccounts.description")}</p>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.subAccounts.roles.heading")}</h3>
-            <ParamTable rows={[
-              { name: "viewer", desc: t("docs.sections.subAccounts.roles.viewer") },
-              { name: "editor", desc: t("docs.sections.subAccounts.roles.editor") },
-              { name: "admin", desc: t("docs.sections.subAccounts.roles.admin") },
-              { name: "custom", desc: t("docs.sections.subAccounts.roles.custom") },
-            ]} />
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.subAccounts.roles.heading")}
+            </h3>
+            <ParamTable
+              rows={[
+                { name: "viewer", desc: t("docs.sections.subAccounts.roles.viewer") },
+                { name: "editor", desc: t("docs.sections.subAccounts.roles.editor") },
+                { name: "admin", desc: t("docs.sections.subAccounts.roles.admin") },
+                { name: "custom", desc: t("docs.sections.subAccounts.roles.custom") },
+              ]}
+            />
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.subAccounts.permissions.heading")}</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.subAccounts.permissions.description")}</p>
-            <RefGrid items={[
-              { code: "goals:write", desc: t("docs.sections.subAccounts.permissions.goals") },
-              { code: "funnels:write", desc: t("docs.sections.subAccounts.permissions.funnels") },
-              { code: "segments:write", desc: t("docs.sections.subAccounts.permissions.segments") },
-              { code: "shared_links:write", desc: t("docs.sections.subAccounts.permissions.sharedLinks") },
-              { code: "shields:write", desc: t("docs.sections.subAccounts.permissions.shields") },
-              { code: "email_reports:write", desc: t("docs.sections.subAccounts.permissions.emailReports") },
-              { code: "traffic_alerts:write", desc: t("docs.sections.subAccounts.permissions.trafficAlerts") },
-            ]} />
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.subAccounts.permissions.heading")}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              {t("docs.sections.subAccounts.permissions.description")}
+            </p>
+            <RefGrid
+              items={[
+                { code: "goals:write", desc: t("docs.sections.subAccounts.permissions.goals") },
+                { code: "funnels:write", desc: t("docs.sections.subAccounts.permissions.funnels") },
+                { code: "segments:write", desc: t("docs.sections.subAccounts.permissions.segments") },
+                { code: "shared_links:write", desc: t("docs.sections.subAccounts.permissions.sharedLinks") },
+                { code: "shields:write", desc: t("docs.sections.subAccounts.permissions.shields") },
+                { code: "email_reports:write", desc: t("docs.sections.subAccounts.permissions.emailReports") },
+                { code: "traffic_alerts:write", desc: t("docs.sections.subAccounts.permissions.trafficAlerts") },
+              ]}
+            />
             <Callout type="info">{t("docs.sections.subAccounts.callout")}</Callout>
           </section>
 
           {/* Deployment */}
-          <section id="deployment" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.deployment")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.deployment.description")}</p>
+          <section id="deployment" className="mb-16 scroll-mt-20">
+            <SectionHeading id="deployment">{t("docs.nav.deployment")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.deployment.description")}</p>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.deployment.quickStart.heading")}</h3>
-            <CodeBlock label={t("docs.labels.cloneStep", "第一步：克隆部署仓库")}>{`git clone https://github.com/zenstats/zenstats-deploy
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.deployment.quickStart.heading")}
+            </h3>
+            <CodeBlock label={t("docs.labels.cloneStep")}>{`git clone https://github.com/zenstats/zenstats-deploy
 cd zenstats-deploy`}</CodeBlock>
-            <CodeBlock label={t("docs.labels.configStep", "第二步：配置环境变量")}>{`cp .env.example .env
-# 编辑 .env 文件 — 至少配置 ZENSTATS_SECRET_KEY 与 ZENSTATS_DOMAIN 域名`}</CodeBlock>
-            <CodeBlock label={t("docs.labels.deployStep", "第三步：启动容器服务")}>{`docker compose up -d`}</CodeBlock>
+            <CodeBlock label={t("docs.labels.configStep")}>{`cp .env.example .env
+# Edit .env — set ZENSTATS_SECRET_KEY (>= 32 bytes) and ZENSTATS_DOMAIN`}</CodeBlock>
+            <CodeBlock label={t("docs.labels.deployStep")}>{`docker compose up -d
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.deployment.envVars.heading")}</h3>
-            <ParamTable rows={[
-              { name: "ZENSTATS_SECRET_KEY", req: true, desc: t("docs.sections.deployment.envVars.secretKey") },
-              { name: "ZENSTATS_DOMAIN", req: true, desc: t("docs.sections.deployment.envVars.domain") },
-              { name: "DB_PASSWORD", desc: t("docs.sections.deployment.envVars.dbPassword") },
-              { name: "ZENSTATS_MAXMIND_LICENSE_KEY", desc: t("docs.sections.deployment.envVars.maxmindKey") },
-              { name: "ZENSTATS_LOG_LEVEL", desc: t("docs.sections.deployment.envVars.logLevel") },
-            ]} />
+# Optional: include automated headless snapshot capture for heatmaps
+docker compose -f docker-compose.yml -f docker-compose.heatmap.yml up -d`}</CodeBlock>
 
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-6">{t("docs.sections.deployment.services.heading")}</h3>
-            <ParamTable rows={[
-              { name: "frontend", desc: t("docs.sections.deployment.services.frontend") },
-              { name: "zenstats", desc: t("docs.sections.deployment.services.backend") },
-              { name: "zenstats_db", desc: t("docs.sections.deployment.services.postgres") },
-              { name: "zenstats_events_db", desc: t("docs.sections.deployment.services.clickhouse") },
-            ]} />
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.deployment.envVars.heading")}
+            </h3>
+            <ParamTable
+              rows={[
+                {
+                  name: "ZENSTATS_SECRET_KEY",
+                  req: true,
+                  desc: t("docs.sections.deployment.envVars.secretKey"),
+                },
+                {
+                  name: "ZENSTATS_DOMAIN",
+                  req: true,
+                  desc: t("docs.sections.deployment.envVars.domain"),
+                },
+                { name: "ZENSTATS_BASE_URL", desc: t("docs.sections.deployment.envVars.baseUrl") },
+                { name: "DB_PASSWORD", desc: t("docs.sections.deployment.envVars.dbPassword") },
+                {
+                  name: "ZENSTATS_MAXMIND_LICENSE_KEY",
+                  desc: t("docs.sections.deployment.envVars.maxmindKey"),
+                },
+                { name: "ZENSTATS_LOG_LEVEL", desc: t("docs.sections.deployment.envVars.logLevel") },
+              ]}
+            />
+
+            <h3 className="font-semibold text-foreground mb-2 mt-6">
+              {t("docs.sections.deployment.services.heading")}
+            </h3>
+            <ParamTable
+              rows={[
+                { name: "frontend", desc: t("docs.sections.deployment.services.frontend") },
+                { name: "zenstats", desc: t("docs.sections.deployment.services.backend") },
+                { name: "zenstats_db", desc: t("docs.sections.deployment.services.postgres") },
+                { name: "zenstats_events_db", desc: t("docs.sections.deployment.services.clickhouse") },
+                { name: "heatmap-screenshot", desc: t("docs.sections.deployment.services.screenshot") },
+              ]}
+            />
             <Callout type="warn">{t("docs.sections.deployment.callout")}</Callout>
           </section>
 
           {/* Health */}
-          <section id="health" className="mb-16 scroll-mt-8">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-slate-50 mb-3">{t("docs.nav.health")}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{t("docs.sections.health.description")}</p>
-            <div className="flex items-center font-mono text-sm bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded px-4 py-2.5 mb-2">
-              <MethodBadge method="GET" />
-              <span className="text-slate-700 dark:text-slate-300">/health/live</span>
-            </div>
-            <div className="flex items-center font-mono text-sm bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded px-4 py-2.5 mb-4">
-              <MethodBadge method="GET" />
-              <span className="text-slate-700 dark:text-slate-300">/health/ready</span>
-            </div>
-            <CodeBlock label={t("docs.labels.response", "响应示例")}>{`{ "status": "ok" }`}</CodeBlock>
+          <section id="health" className="mb-16 scroll-mt-20">
+            <SectionHeading id="health">{t("docs.nav.health")}</SectionHeading>
+            <p className="text-muted-foreground text-sm mb-4">{t("docs.sections.health.description")}</p>
+            <EndpointBar method="GET" path="/api/health/live" />
+            <CodeBlock label={t("docs.labels.response")}>{`{ "ok": true }`}</CodeBlock>
+
+            <EndpointBar method="GET" path="/api/health/ready" />
+            <CodeBlock label={t("docs.labels.response")}>{`{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "status": "healthy",
+    "postgres": "connected",
+    "clickhouse": "connected",
+    "timestamp": 1732600000
+  }
+}`}</CodeBlock>
           </section>
 
           {/* Footer */}
-          <footer className="mt-16 pt-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
+          <footer className="mt-16 pt-6 border-t border-border/70 flex items-center justify-between text-xs text-muted-foreground">
             <span>{t("docs.footer.copyright")}</span>
-            <a href="https://github.com/zenstats/zenstats" target="_blank" rel="noopener noreferrer" className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+            <a
+              href="https://github.com/zenstats/zenstats"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
               GitHub
             </a>
           </footer>
