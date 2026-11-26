@@ -2,9 +2,9 @@
 
 <a href="https://github.com/zenstats/zenstats-web">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="public/logo-h-dark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="public/logo-h.svg" />
-    <img alt="ZenStats Web" src="public/logo-h.svg" height="48" />
+    <source media="(prefers-color-scheme: dark)" srcset="src/assets/logo-h-dark.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="src/assets/logo-h.svg" />
+    <img alt="ZenStats Web" src="src/assets/logo-h.svg" height="56" />
   </picture>
 </a>
 
