@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from 'react-i18next';
 import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { Loader2, Globe, ArrowLeft } from "lucide-react"
 import { useState } from "react"
 import { useForm, Controller } from "react-hook-form"
 import axios from "@utils/axios";
@@ -79,90 +79,116 @@ export default function NewSitePage() {
   }
 
   return (
-    <div className="flex items-center justify-center h-full">
-      <Card className="w-full max-w-md p-6 space-y-4">
-        <h1 className="text-2xl font-bold text-center">{t('sites.new.title')}</h1>
+    <div className="relative flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-10 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center">
+        <div className="h-[340px] w-[480px] rounded-full bg-primary/[0.07] dark:bg-primary/[0.12] blur-3xl" />
+      </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="domain">{t('sites.new.domain')}</Label>
-            <Input
-              {...register("domain", {
-                required: t('sites.new.validation.domainRequired'),
-                pattern: {
-                  value: /^(?:localhost|[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,})$/,
-                  message: t('sites.new.validation.domainInvalid')
-                }
-              })}
-              placeholder="example.com"
-              type="text"
-              className={errors.domain ? "border-red-500" : ""}
-            />
-            {errors.domain && <p className="text-sm text-red-500">{errors.domain.message}</p>}
-          </div>
+      <div className="w-full max-w-[440px] space-y-3">
+        <button
+          type="button"
+          onClick={() => navigate("/sites")}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>{t('sites.title')}</span>
+        </button>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">{t('sites.new.description')}</Label>
-            <Textarea
-              {...register("description", {
-                maxLength: {
-                  value: 200,
-                  message: t('sites.new.validation.descriptionMaxLength')
-                }
-              })}
-              placeholder={t('sites.new.descriptionPlaceholder')}
-              className={errors.description ? "border-red-500" : ""}
-            />
-            {errors.description && <p className="text-sm text-red-500">{errors.description.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="limit_minute">{t('sites.new.rateLimit')}</Label>
-            <div className="flex gap-2">
-              {rateLimitUnit !== "unlimited" && (
-                <Input
-                  {...register("limit_minute", {
-                    valueAsNumber: true,
-                    min: 0
-                  })}
-                  placeholder="Limit count"
-                  type="number"
-                  className={errors.limit_minute ? "border-red-500" : ""}
-                />
-              )}
-              <Controller
-                name="rateLimitUnit"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    defaultValue="second"
-                  >
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder="Unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unlimited">{t('sites.new.unlimited')}</SelectItem>
-                      <SelectItem value="second">{t('sites.new.perSecond')}</SelectItem>
-                      <SelectItem value="minute">{t('sites.new.perMinute')}</SelectItem>
-                      <SelectItem value="hour">{t('sites.new.perHour')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+        <Card className="w-full rounded-2xl border-border/80 shadow-lg shadow-black/[0.03] dark:shadow-black/30">
+          <CardHeader className="space-y-2 pb-2">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/15 shrink-0">
+                <Globe className="h-5 w-5" />
+              </div>
+              <CardTitle className="text-xl font-bold tracking-tight">{t('sites.new.title')}</CardTitle>
             </div>
-          </div>
+          </CardHeader>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => navigate("/sites")}>{t('sites.new.cancel')}</Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? t('sites.new.submitting') : t('sites.new.createSite')}
-            </Button>
-          </div>
-        </form>
-      </Card>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="domain" className="text-xs font-medium">{t('sites.new.domain')}</Label>
+                <Input
+                  {...register("domain", {
+                    required: t('sites.new.validation.domainRequired'),
+                    pattern: {
+                      value: /^(?:localhost|[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,})$/,
+                      message: t('sites.new.validation.domainInvalid')
+                    }
+                  })}
+                  placeholder="example.com"
+                  type="text"
+                  className={errors.domain ? "border-destructive" : ""}
+                />
+                {errors.domain && <p className="text-xs text-destructive">{errors.domain.message}</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="description" className="text-xs font-medium">{t('sites.new.description')}</Label>
+                <Textarea
+                  {...register("description", {
+                    maxLength: {
+                      value: 200,
+                      message: t('sites.new.validation.descriptionMaxLength')
+                    }
+                  })}
+                  placeholder={t('sites.new.descriptionPlaceholder')}
+                  className={errors.description ? "border-destructive" : ""}
+                />
+                {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="limit_minute" className="text-xs font-medium">{t('sites.new.rateLimit')}</Label>
+                <div className="flex gap-2">
+                  {rateLimitUnit !== "unlimited" && (
+                    <Input
+                      {...register("limit_minute", {
+                        valueAsNumber: true,
+                        min: 0
+                      })}
+                      placeholder="Limit count"
+                      type="number"
+                      className={errors.limit_minute ? "border-destructive" : ""}
+                    />
+                  )}
+                  <Controller
+                    name="rateLimitUnit"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        defaultValue="second"
+                      >
+                        <SelectTrigger className={rateLimitUnit === "unlimited" ? "w-full" : "w-[150px]"}>
+                          <SelectValue placeholder="Unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unlimited">{t('sites.new.unlimited')}</SelectItem>
+                          <SelectItem value="second">{t('sites.new.perSecond')}</SelectItem>
+                          <SelectItem value="minute">{t('sites.new.perMinute')}</SelectItem>
+                          <SelectItem value="hour">{t('sites.new.perHour')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3">
+                <Button type="button" variant="outline" size="sm" className="h-9 px-4" onClick={() => navigate("/sites")}>
+                  {t('sites.new.cancel')}
+                </Button>
+                <Button type="submit" size="sm" className="h-9 px-4 shadow-xs" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoading ? t('sites.new.submitting') : t('sites.new.createSite')}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

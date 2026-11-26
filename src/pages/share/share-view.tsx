@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Lock } from "lucide-react";
 import axios from "@utils/axios";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import ShareStatsPage from "./share-stats";
 
 interface SharedLinkInfo {
@@ -78,32 +82,37 @@ export default function ShareView() {
     };
 
     return (
-      <div className="flex items-center justify-center h-screen px-4">
-        <form
-          onSubmit={verify}
-          className="w-full max-w-xs flex flex-col gap-3 rounded-lg border border-border p-6"
-        >
-          <h1 className="text-base font-semibold text-foreground">{state.info.name}</h1>
-          <p className="text-sm text-muted-foreground">{t("share.passwordPrompt")}</p>
-          <input
-            type="password"
-            autoFocus
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={t("share.passwordPlaceholder")}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
-          {pwError && (
-            <p className="text-sm text-destructive">{t("share.passwordWrong")}</p>
-          )}
-          <button
-            type="submit"
-            disabled={verifying || !password}
-            className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-          >
-            {verifying ? t("share.loading") : t("share.passwordSubmit")}
-          </button>
-        </form>
+      <div className="flex items-center justify-center min-h-screen px-4 bg-background">
+        <Card className="w-full max-w-sm rounded-2xl border-border/80 shadow-lg">
+          <CardHeader className="text-center pb-2">
+            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Lock className="h-5 w-5" />
+            </div>
+            <CardTitle className="text-lg">{state.info.name}</CardTitle>
+            <CardDescription>{t("share.passwordPrompt")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={verify} className="space-y-3">
+              <Input
+                type="password"
+                autoFocus
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("share.passwordPlaceholder")}
+              />
+              {pwError && (
+                <p className="text-xs text-destructive">{t("share.passwordWrong")}</p>
+              )}
+              <Button
+                type="submit"
+                disabled={verifying || !password}
+                className="w-full"
+              >
+                {verifying ? t("share.loading") : t("share.passwordSubmit")}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     );
   }

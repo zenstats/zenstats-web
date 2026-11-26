@@ -34,42 +34,54 @@ function StatCard({ label, value, change, comparisonValue, isPercent, onClick, a
 
   return (
     <button
+      type="button"
       className={cn(
-        "group relative flex flex-col items-start w-full text-left px-4 py-3 transition-colors",
-        "border-t-2 -mt-[1px]", // top border for active indicator, negative margin to align
+        "group relative flex flex-col items-start w-full h-full text-left px-4 py-3.5 transition-all",
         active
-          ? "border-indigo-500 bg-gray-50/80 dark:bg-gray-800/50"
-          : "border-transparent hover:bg-gray-50/50 dark:hover:bg-gray-800/30",
-        // Subtle right divider between cards (except last handled by parent)
+          ? "bg-primary/[0.04] dark:bg-primary/[0.09]"
+          : "hover:bg-muted/45 dark:hover:bg-muted/25",
       )}
       onClick={onClick}
     >
+      {/* Active top indicator bar */}
+      <span
+        className={cn(
+          "absolute inset-x-0 top-0 h-[2.5px] transition-opacity",
+          active ? "bg-primary opacity-100" : "bg-primary/40 opacity-0 group-hover:opacity-50"
+        )}
+      />
+
       {/* Label */}
-      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+      <span
+        className={cn(
+          "text-[11px] font-medium tracking-wide mb-1.5 transition-colors",
+          active ? "text-primary font-semibold" : "text-muted-foreground group-hover:text-foreground/80"
+        )}
+      >
         {label}
       </span>
 
       {/* Value row */}
-      <div className="flex items-baseline gap-1.5 flex-wrap">
-        <span className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight tabular-nums">
+      <div className="flex items-baseline gap-1 flex-wrap">
+        <span className="text-2xl font-bold text-foreground tracking-tight tabular-nums leading-none">
           {typeof value === "number" ? value.toLocaleString() : value}
         </span>
         {isPercent && (
-          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">%</span>
+          <span className="text-xs font-medium text-muted-foreground">%</span>
         )}
       </div>
 
       {/* Change / Comparison row */}
-      <div className="flex items-center gap-1.5 mt-1">
+      <div className="flex items-center gap-1.5 mt-2 min-h-[18px]">
         {hasChange && !isPercent && (
           <span
             className={cn(
-              "inline-flex items-center gap-0.5 text-xs font-medium rounded-full px-1.5 py-px",
+              "inline-flex items-center gap-0.5 text-[11px] font-semibold rounded-full px-1.5 py-0.5 tabular-nums",
               isPositive
-                ? "text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30"
+                ? "text-emerald-700 dark:text-emerald-400 bg-emerald-500/10"
                 : isNegative
-                  ? "text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30"
-                  : "text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800"
+                  ? "text-rose-700 dark:text-rose-400 bg-rose-500/10"
+                  : "text-muted-foreground bg-muted"
             )}
           >
             {isPositive ? <TrendingUp className="h-3 w-3" /> : isNegative ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
@@ -77,7 +89,7 @@ function StatCard({ label, value, change, comparisonValue, isPercent, onClick, a
           </span>
         )}
         {comparisonValue !== undefined && comparisonValue !== null && (
-          <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">
+          <span className="text-[11px] text-muted-foreground tabular-nums">
             vs {typeof comparisonValue === "number" ? comparisonValue.toLocaleString() : comparisonValue}
           </span>
         )}
@@ -158,11 +170,11 @@ export default function AggregateStats({
 
   if (loading) {
     return (
-      <div className="flex flex-wrap divide-x divide-gray-100 dark:divide-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex flex-wrap divide-x divide-border/60 border-b border-border/70 bg-card">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex-1 min-w-[120px] px-4 py-3">
-            <Skeleton className="h-3 w-16 mb-2" />
-            <Skeleton className="h-7 w-20 mb-1.5" />
+          <div key={i} className="flex-1 min-w-[130px] px-4 py-3.5">
+            <Skeleton className="h-3 w-16 mb-2.5" />
+            <Skeleton className="h-7 w-20 mb-2" />
             <Skeleton className="h-4 w-12" />
           </div>
         ))}
@@ -184,7 +196,7 @@ export default function AggregateStats({
   ];
 
   return (
-    <div className="flex flex-wrap divide-x divide-gray-100 dark:divide-gray-800 border-b border-gray-200 dark:border-gray-700">
+    <div className="flex flex-wrap divide-x divide-border/60 border-b border-border/70 bg-card">
       {displayOrder.map((key) => {
         const metric: AggregateMetric | undefined = data.results[key];
         if (!metric) return null;
@@ -193,7 +205,7 @@ export default function AggregateStats({
           typeof metric.value === "number" ? metric.value : Number(metric.value) || 0;
 
         return (
-          <div key={key} className="flex-1 min-w-[120px]">
+          <div key={key} className="flex-1 min-w-[130px]">
             <StatCard
               label={config.label}
               value={formatMetricValue(key, numericValue)}

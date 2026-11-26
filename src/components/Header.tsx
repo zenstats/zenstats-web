@@ -31,6 +31,9 @@ import {
   Search,
   Users,
   CreditCard,
+  BookOpen,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { isSubAccount } from "@utils/auth";
 
@@ -58,25 +61,26 @@ const useUser = () => {
 };
 
 // User avatar circle
-function UserAvatar({ name }: { name: string }) {
+function UserAvatar({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
   const initial = name ? name.charAt(0).toUpperCase() : "U";
-  const colors = [
-    "bg-indigo-500",
-    "bg-emerald-500",
-    "bg-amber-500",
-    "bg-rose-500",
-    "bg-cyan-500",
-    "bg-violet-500",
+  const gradients = [
+    "from-indigo-500 to-violet-600",
+    "from-emerald-500 to-teal-600",
+    "from-amber-500 to-orange-600",
+    "from-rose-500 to-pink-600",
+    "from-cyan-500 to-blue-600",
+    "from-violet-500 to-purple-600",
   ];
   const colorIndex = name
-    ? name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % colors.length
+    ? name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % gradients.length
     : 0;
 
   return (
     <div
       className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium text-white",
-        colors[colorIndex],
+        "flex items-center justify-center rounded-full font-semibold text-white bg-gradient-to-br shadow-2xs ring-2 ring-background shrink-0",
+        size === "sm" ? "h-7 w-7 text-xs" : "h-8 w-8 text-sm",
+        gradients[colorIndex],
       )}
     >
       {initial}
@@ -88,32 +92,27 @@ function UserAvatar({ name }: { name: string }) {
 function UserDropdown({ user, onLogout, isAdmin, isSubAccount }: { user: { name: string; email: string }; onLogout: () => void; isAdmin: boolean; isSubAccount: boolean }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const initial = user.name ? user.name.charAt(0).toUpperCase() : "U";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2 px-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium text-white bg-indigo-500">
-            {initial}
-          </div>
-          <span className="hidden lg:inline text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[120px] truncate">
+        <Button variant="ghost" size="sm" className="gap-2 px-2 rounded-full hover:bg-accent/70">
+          <UserAvatar name={user.name} size="sm" />
+          <span className="hidden lg:inline text-sm font-medium text-foreground/90 max-w-[120px] truncate">
             {user.name}
           </span>
-          <ChevronDown className="h-3.5 w-3.5 text-gray-400 hidden lg:block" />
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden lg:block" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
-        <div className="px-2 py-2">
+      <DropdownMenuContent className="w-60 rounded-xl shadow-lg border-border/80" align="end" sideOffset={8}>
+        <div className="px-2.5 py-2">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium text-white bg-indigo-500">
-              {initial}
-            </div>
+            <UserAvatar name={user.name} />
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+              <span className="text-sm font-semibold text-foreground truncate">
                 {user.name}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              <span className="text-xs text-muted-foreground truncate">
                 {user.email}
               </span>
             </div>
@@ -283,50 +282,64 @@ export default function Header() {
     };
   }, [open]);
 
+  const isSitesActive = location.pathname.startsWith("/sites");
+  const isDocsActive = location.pathname.startsWith("/docs");
+
   return (
     <>
       <header
         className={cn(
-          "sticky top-0 z-50 w-full border-b border-transparent transition-all",
-          {
-            "bg-white/95 dark:bg-gray-950/95 supports-[backdrop-filter]:bg-white/50 dark:supports-[backdrop-filter]:bg-gray-950/50 border-gray-200 dark:border-gray-800 backdrop-blur-lg":
-              scrolled || open,
-          },
+          "sticky top-0 z-50 w-full border-b border-border/70 bg-background/80 backdrop-blur-xl transition-shadow duration-200",
+          (scrolled || open) && "shadow-2xs border-border bg-background/90",
         )}
       >
         <nav className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <div
-            className="flex items-center gap-2.5 cursor-pointer"
+            className="flex items-center gap-2.5 cursor-pointer group"
             onClick={() => navigate(user?.email ? "/sites" : "/")}
           >
-            <img className="block h-8 w-auto" src={logoSrc} alt="ZenStats" />
-            <span className="font-semibold text-lg hidden sm:inline-block text-gray-900 dark:text-gray-100">
+            <img className="block h-7 w-auto transition-transform duration-200 group-hover:scale-105" src={logoSrc} alt="ZenStats" />
+            <span className="font-semibold text-base tracking-tight hidden sm:inline-block text-foreground">
               ZenStats
             </span>
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-3">
-            {/* Sites quick link */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/sites")}
-              className="text-gray-600 dark:text-gray-400 text-sm gap-1.5"
-            >
-              <Globe className="h-4 w-4" />
-              {t('header.sites')}
-            </Button>
+          <div className="hidden md:flex items-center gap-1.5">
+            {user?.name && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/sites")}
+                className={cn(
+                  "h-8 px-3 text-xs font-medium gap-1.5 rounded-lg transition-colors",
+                  isSitesActive
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                )}
+              >
+                <Globe className="h-3.5 w-3.5" />
+                {t('header.sites')}
+              </Button>
+            )}
 
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/docs")}
-              className="text-gray-600 dark:text-gray-400 text-sm"
+              className={cn(
+                "h-8 px-3 text-xs font-medium gap-1.5 rounded-lg transition-colors",
+                isDocsActive
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+              )}
             >
+              <BookOpen className="h-3.5 w-3.5" />
               {t('header.docs')}
             </Button>
+
+            <div className="h-4 w-px bg-border/80 mx-1" />
 
             <LanguageSwitcher />
 
@@ -336,17 +349,13 @@ export default function Header() {
               size="icon"
               data-theme-toggle
               onClick={toggleTheme}
-              className="text-gray-600 dark:text-gray-400"
+              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
               title={isDark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {isDark ? (
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+                <Sun className="h-4 w-4 text-amber-400" />
               ) : (
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
+                <Moon className="h-4 w-4" />
               )}
             </Button>
 
@@ -357,9 +366,9 @@ export default function Header() {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate("/login")}
-                className="gap-1.5"
+                className="h-8 gap-1.5 text-xs ml-1 shadow-2xs"
               >
-                <User className="h-4 w-4" />
+                <User className="h-3.5 w-3.5" />
                 {t('header.login')}
               </Button>
             )}

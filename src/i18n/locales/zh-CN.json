@@ -555,6 +555,10 @@
     "confirm": "确定",
     "emptyDimensions": "当前分类下没有启用的维度。点击右上角\"维度设置\"启用更多维度。",
     "footer": "由 ZenStats 提供统计服务",
+    "experienceBanner": {
+      "title": "用户体验与交互行为深度洞察",
+      "desc": "结合 Core Web Vitals 性能分析与点击/滚动热力图，全景诊断网站真实运行态势"
+    },
     "period": {
       "today": "今日",
       "yesterday": "昨日",

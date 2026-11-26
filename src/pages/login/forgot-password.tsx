@@ -33,18 +33,19 @@ export default function ForgotPassword() {
 
   if (emailSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">{t('forgotPassword.title')}</CardTitle>
+      <div className="relative flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-10 overflow-hidden">
+        <Card className="w-full max-w-[400px] rounded-2xl border-border/80 shadow-lg">
+          <CardHeader className="text-center pb-2">
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
+              <Mail className="h-6 w-6" />
+            </div>
+            <CardTitle className="text-xl font-bold tracking-tight">{t('forgotPassword.checkEmail')}</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <Mail className="h-16 w-16 text-muted-foreground" />
-            <h2 className="text-xl font-semibold text-center">{t('forgotPassword.checkEmail')}</h2>
-            <p className="text-muted-foreground text-center">
+          <CardContent className="flex flex-col items-center gap-4 text-center">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               {t('forgotPassword.emailSentMessage', { email })}
             </p>
-            <Button variant="link" onClick={() => navigate("/login")}>
+            <Button variant="link" className="h-auto p-0 text-xs" onClick={() => navigate("/login")}>
               {t('forgotPassword.backToLogin')}
             </Button>
           </CardContent>
@@ -54,18 +55,24 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">{t('forgotPassword.title')}</CardTitle>
-          <CardDescription className="text-center">
+    <div className="relative flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-10 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center">
+        <div className="h-[340px] w-[480px] rounded-full bg-primary/[0.07] dark:bg-primary/[0.12] blur-3xl" />
+      </div>
+      <Card className="w-full max-w-[400px] rounded-2xl border-border/80 shadow-lg shadow-black/[0.03] dark:shadow-black/30">
+        <CardHeader className="space-y-2 text-center pb-2">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/15">
+            <Mail className="h-5 w-5" />
+          </div>
+          <CardTitle className="text-xl font-bold tracking-tight">{t('forgotPassword.title')}</CardTitle>
+          <CardDescription className="text-xs">
             {t('forgotPassword.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t('forgotPassword.email')}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-xs font-medium">{t('forgotPassword.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -75,13 +82,15 @@ export default function ForgotPassword() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full h-9 shadow-xs" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? t('forgotPassword.sending') : t('forgotPassword.submit')}
             </Button>
-            <Button variant="link" className="w-full" onClick={() => navigate("/login")}>
-              {t('forgotPassword.backToLogin')}
-            </Button>
+            <div className="text-center pt-1">
+              <Button type="button" variant="link" className="h-auto p-0 text-xs" onClick={() => navigate("/login")}>
+                {t('forgotPassword.backToLogin')}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

@@ -180,16 +180,22 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
     const mainVal = payload.find((p) => p.name === "value")?.value;
     const compVal = payload.find((p) => p.name === "compareValue")?.value;
     return (
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg px-3 py-2">
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</p>
-        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          {mainVal?.toLocaleString()}{" "}
-          {metricLabel}
-        </p>
-        {compVal !== undefined && (
-          <p className="text-xs font-medium text-amber-600 dark:text-amber-400 mt-0.5">
-            {t('stats.compare.label')}: {compVal.toLocaleString()}
+      <div className="bg-popover/95 backdrop-blur-md border border-border/80 rounded-xl shadow-xl px-3.5 py-2.5">
+        <p className="text-[11px] font-medium text-muted-foreground mb-1">{label}</p>
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-indigo-500 shrink-0" />
+          <p className="text-sm font-bold text-foreground tabular-nums">
+            {mainVal?.toLocaleString()}{" "}
+            <span className="font-normal text-xs text-muted-foreground">{metricLabel}</span>
           </p>
+        </div>
+        {compVal !== undefined && (
+          <div className="flex items-center gap-2 mt-1">
+            <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+            <p className="text-xs font-medium text-amber-600 dark:text-amber-400 tabular-nums">
+              {t('stats.compare.label')}: {compVal.toLocaleString()}
+            </p>
+          </div>
         )}
       </div>
     );
@@ -200,38 +206,44 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
     t("stats.graph.intervalByDay");
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg">
-      <div className="flex items-center justify-between px-4 pt-3 pb-2">
-        <div className="flex items-center gap-1">
-          {METRIC_OPTIONS.map((opt) => (
-            <button
-              key={opt.key}
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-                currentMetric === opt.key
-                  ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-              )}
-              onClick={() => onMetricChange(opt.key)}
-            >
-              {opt.label}
-            </button>
-          ))}
+    <div className="bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3.5 pb-2">
+        <div className="flex items-center gap-2">
+          <div className="inline-flex items-center rounded-lg bg-muted/60 border border-border/50 p-0.5">
+            {METRIC_OPTIONS.map((opt) => (
+              <button
+                key={opt.key}
+                type="button"
+                className={cn(
+                  "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
+                  currentMetric === opt.key
+                    ? "bg-card text-foreground shadow-2xs"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => onMetricChange(opt.key)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
 
           {/* Interval selector */}
           <DropdownMenu open={intervalDropdownOpen} onOpenChange={setIntervalDropdownOpen}>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ml-1">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg border border-transparent hover:border-border/60 hover:bg-muted/40 transition-colors"
+              >
                 {intervalLabel}
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown className="h-3 w-3 opacity-70" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-28" align="start">
+            <DropdownMenuContent className="w-32 rounded-xl" align="start">
               {availableIntervals.map((opt) => (
                 <DropdownMenuItem
                   key={opt.key}
                   onClick={() => handleIntervalChange(opt.key)}
-                  className={cn(effectiveInterval === opt.key && "bg-gray-50 dark:bg-gray-800")}
+                  className={cn("text-xs", effectiveInterval === opt.key && "bg-accent text-accent-foreground font-medium")}
                 >
                   {opt.label}
                 </DropdownMenuItem>
@@ -240,57 +252,56 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
           </DropdownMenu>
         </div>
 
-        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        <div className="text-xs sm:text-sm font-semibold text-foreground tabular-nums">
           <span>{total.toLocaleString()}</span>
           {hasComparison && (
             <span className="text-amber-600 dark:text-amber-400 ml-2">
               vs {compareTotal?.toLocaleString()}
             </span>
           )}
-          <span className="font-normal text-gray-500 ml-1">
+          <span className="font-normal text-muted-foreground ml-1">
             {currentMetric === "visitors" ? t('stats.graph.visitors') : t('stats.graph.pageviews')}
           </span>
         </div>
       </div>
 
       {/* Graph */}
-      <div className="px-2 pb-3">
+      <div className="px-3 pb-4">
         {loading ? (
-          <Skeleton className="h-[300px] w-full rounded-md" />
+          <Skeleton className="h-[300px] w-full rounded-xl" />
         ) : (
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={chartData}
-                margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <defs>
                   <linearGradient id="graphGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.24} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
                   </linearGradient>
                   {hasComparison && (
                     <linearGradient id="compareGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.15} />
-                      <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.16} />
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
                     </linearGradient>
                   )}
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
-                  stroke="#f1f5f9"
-                  className="dark:stroke-gray-800"
+                  stroke="var(--border)"
                 />
                 <XAxis
                   dataKey="time"
-                  tick={{ fontSize: 11, fill: "#9ca3af" }}
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                   axisLine={false}
                   tickLine={false}
                   dy={8}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "#9ca3af" }}
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                   axisLine={false}
                   tickLine={false}
                   width={45}
@@ -300,19 +311,22 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
                       : value.toString()
                   }
                 />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ stroke: "var(--border)", strokeWidth: 1, strokeDasharray: "4 4" }}
+                />
                 <Area
                   type="monotone"
                   dataKey="value"
                   stroke="#6366f1"
-                  strokeWidth={2}
+                  strokeWidth={2.2}
                   fillOpacity={1}
                   fill="url(#graphGradient)"
                   dot={false}
                   activeDot={{
-                    r: 4,
+                    r: 4.5,
                     fill: "#6366f1",
-                    stroke: "#fff",
+                    stroke: "var(--card)",
                     strokeWidth: 2,
                   }}
                 />
@@ -329,7 +343,7 @@ export default function MainGraph({ query, activeMetric, onMetricChange, api }: 
                     activeDot={{
                       r: 4,
                       fill: "#f59e0b",
-                      stroke: "#fff",
+                      stroke: "var(--card)",
                       strokeWidth: 2,
                     }}
                   />

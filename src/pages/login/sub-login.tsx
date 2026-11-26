@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
+import { Loader2, Users } from "lucide-react"
 import { toast } from "sonner"
 import axios, { type BaseResponse } from "@utils/axios"
 
@@ -67,18 +67,24 @@ export default function SubLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">{t('subLogin.title')}</CardTitle>
-          <CardDescription className="text-center">
+    <div className="relative flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-10 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center">
+        <div className="h-[340px] w-[480px] rounded-full bg-primary/[0.07] dark:bg-primary/[0.12] blur-3xl" />
+      </div>
+      <Card className="w-full max-w-[400px] rounded-2xl border-border/80 shadow-lg shadow-black/[0.03] dark:shadow-black/30">
+        <CardHeader className="space-y-2 text-center pb-2">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/15">
+            <Users className="h-5 w-5" />
+          </div>
+          <CardTitle className="text-xl font-bold tracking-tight">{t('subLogin.title')}</CardTitle>
+          <CardDescription className="text-xs">
             {t('subLogin.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t('subLogin.email')}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-xs font-medium">{t('subLogin.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -88,8 +94,8 @@ export default function SubLogin() {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">{t('subLogin.password')}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-xs font-medium">{t('subLogin.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -99,14 +105,14 @@ export default function SubLogin() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full h-9 shadow-xs" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? t('subLogin.loggingIn') : t('subLogin.submit')}
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <Button variant="link" className="w-full text-sm" onClick={() => navigate("/login")}>
+        <CardFooter className="flex justify-center pt-0">
+          <Button variant="link" className="h-auto p-0 text-xs" onClick={() => navigate("/login")}>
             {t('subLogin.backToLogin')}
           </Button>
         </CardFooter>

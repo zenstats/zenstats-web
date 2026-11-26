@@ -43,19 +43,20 @@ export default function FilterBar({ filters, onRemove, onClearAll }: FilterBarPr
   if (filters.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-2 flex-wrap mb-1">
       {filters.map((filter, index) => (
         <div
           key={`${filter.dimension}:${filter.value}-${index}`}
-          className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 text-xs font-medium bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
+          className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 text-xs font-medium bg-card text-foreground rounded-full border border-border/80 shadow-2xs"
         >
           {filterIcon(filter.dimension)}
-          <span className="text-gray-500 dark:text-gray-400 text-[11px]">{filter.label}</span>
-          <span className="text-gray-300 dark:text-gray-600">{operatorLabel(filter.operator)}</span>
-          <span className="max-w-[120px] truncate">{filter.value}</span>
+          <span className="text-muted-foreground text-[11px]">{filter.label}</span>
+          <span className="text-muted-foreground/50">{operatorLabel(filter.operator)}</span>
+          <span className="max-w-[140px] truncate font-semibold">{filter.value}</span>
           <button
+            type="button"
             onClick={() => onRemove(index)}
-            className="p-0.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <X className="h-3 w-3" />
           </button>
@@ -63,8 +64,9 @@ export default function FilterBar({ filters, onRemove, onClearAll }: FilterBarPr
       ))}
       {filters.length > 1 && (
         <button
+          type="button"
           onClick={onClearAll}
-          className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 underline"
+          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
         >
           {t('stats.filterBar.clearAll')}
         </button>

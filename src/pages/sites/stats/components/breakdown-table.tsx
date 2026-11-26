@@ -105,147 +105,156 @@ export default function BreakdownTable({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden min-h-[200px]">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-        <div className="flex items-center gap-2">
-          {icon && <span className="text-gray-400">{icon}</span>}
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            {title}
-          </h3>
+    <div className="bg-card rounded-2xl border border-border/80 shadow-2xs overflow-hidden flex flex-col justify-between min-h-[220px]">
+      <div>
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-muted/20">
+          <div className="flex items-center gap-2">
+            {icon && (
+              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/8 dark:bg-primary/15 text-primary">
+                {icon}
+              </span>
+            )}
+            <h3 className="text-sm font-semibold text-foreground">
+              {title}
+            </h3>
+          </div>
+          <div className="flex items-center gap-4">
+            {metricColumns.map((col) => (
+              <span
+                key={col}
+                className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold"
+              >
+                {col}
+              </span>
+            ))}
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          {metricColumns.map((col) => (
-            <span
-              key={col}
-              className="text-xs text-gray-400 uppercase tracking-wider font-medium"
-            >
-              {col}
-            </span>
-          ))}
-        </div>
-      </div>
 
-      {/* Content */}
-      {loading ? (
-        <div className="p-4 space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-between">
-              <Skeleton className="h-4 w-2/5" />
-              <Skeleton className="h-4 w-1/5" />
-            </div>
-          ))}
-        </div>
-      ) : rows.length === 0 ? (
-        <div className="p-8 text-center text-sm text-gray-400">{t('stats.breakdown.noData')}</div>
-      ) : (
-        <div>
-          {displayRows.map((row, index) => {
-            const keyValue = String(row[keyColumn] ?? "");
-            const firstMetric =
-              metricColumns.length > 0 ? row[metricColumns[0]] : 0;
-            const numericMetric =
-              typeof firstMetric === "number" ? firstMetric : Number(firstMetric) || 0;
-            const barWidth = maxVisits > 0 ? (numericMetric / maxVisits) * 100 : 0;
+        {/* Content */}
+        {loading ? (
+          <div className="p-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <Skeleton className="h-4 w-2/5" />
+                <Skeleton className="h-4 w-1/5" />
+              </div>
+            ))}
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="p-10 text-center text-xs text-muted-foreground">{t('stats.breakdown.noData')}</div>
+        ) : (
+          <div className="py-1">
+            {displayRows.map((row, index) => {
+              const keyValue = String(row[keyColumn] ?? "");
+              const firstMetric =
+                metricColumns.length > 0 ? row[metricColumns[0]] : 0;
+              const numericMetric =
+                typeof firstMetric === "number" ? firstMetric : Number(firstMetric) || 0;
+              const barWidth = maxVisits > 0 ? (numericMetric / maxVisits) * 100 : 0;
 
-            return (
-              <div key={index} className="relative group">
-                {/* Background bar */}
-                <div
-                  className="absolute inset-y-0 left-0 bg-indigo-50 dark:bg-indigo-950/30 transition-all duration-300"
-                  style={{ width: `${barWidth}%` }}
-                />
+              return (
+                <div key={index} className="relative group px-2 py-0.5">
+                  {/* Inset horizontal data bar */}
+                  <div
+                    className="absolute inset-y-1 left-2 rounded-lg bg-primary/[0.08] dark:bg-primary/[0.16] group-hover:bg-primary/[0.13] dark:group-hover:bg-primary/[0.22] transition-all duration-300"
+                    style={{ width: `calc(${Math.max(barWidth, 1.5)}% - 16px)` }}
+                  />
 
-                {/* Content row */}
-                <div className="relative flex items-center justify-between px-4 py-2 border-b border-gray-50 dark:border-gray-800/50 last:border-b-0">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="text-xs text-gray-400 w-5 text-right shrink-0">
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0 flex-1 flex items-center gap-1">
-                      <button
-                        onClick={() => handleFilterClick(keyValue)}
-                        className="text-sm text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400 truncate max-w-[200px] text-left"
-                        title={keyValue}
-                      >
-                        {keyValue}
-                      </button>
-                      {query.property === "event:page" && domain && (
-                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/sites/${domain}/heatmap?scope=url&path=${encodeURIComponent(keyValue)}`);
-                            }}
-                            title={t("heatmap.actionTooltip", "查看该页面点击与滚动热力图")}
-                            className="p-1 text-gray-400 hover:text-orange-500 transition-colors rounded hover:bg-orange-50 dark:hover:bg-orange-950/30"
-                          >
-                            <Flame className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/sites/${domain}/performance?path=${encodeURIComponent(keyValue)}`);
-                            }}
-                            title={t("performance.actionTooltip", "查看该页面 Web Vitals 性能分析")}
-                            className="p-1 text-gray-400 hover:text-emerald-500 transition-colors rounded hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-                          >
-                            <Gauge className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      )}
+                  {/* Content row */}
+                  <div className="relative flex items-center justify-between px-2.5 py-1.5 rounded-lg">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <span className="text-[11px] font-mono text-muted-foreground/80 w-4 text-right shrink-0">
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0 flex-1 flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleFilterClick(keyValue)}
+                          className="text-xs sm:text-sm font-medium text-foreground/90 hover:text-primary truncate max-w-[220px] text-left transition-colors"
+                          title={keyValue}
+                        >
+                          {keyValue}
+                        </button>
+                        {query.property === "event:page" && domain && (
+                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/sites/${domain}/heatmap?scope=url&path=${encodeURIComponent(keyValue)}`);
+                              }}
+                              title={t("heatmap.actionTooltip", "查看该页面点击与滚动热力图")}
+                              className="p-1 text-muted-foreground hover:text-orange-500 transition-colors rounded-md hover:bg-orange-500/10"
+                            >
+                              <Flame className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/sites/${domain}/performance?path=${encodeURIComponent(keyValue)}`);
+                              }}
+                              title={t("performance.actionTooltip", "查看该页面 Web Vitals 性能分析")}
+                              className="p-1 text-muted-foreground hover:text-emerald-500 transition-colors rounded-md hover:bg-emerald-500/10"
+                            >
+                              <Gauge className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {metricColumns.map((col) => (
+                        <span
+                          key={col}
+                          className="text-xs sm:text-sm font-semibold text-foreground/90 tabular-nums w-16 text-right"
+                        >
+                          {typeof row[col] === "number"
+                            ? row[col].toLocaleString()
+                            : String(row[col] ?? "")}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    {metricColumns.map((col) => (
-                      <span
-                        key={col}
-                        className="text-sm font-medium text-gray-700 dark:text-gray-300 tabular-nums w-16 text-right"
-                      >
-                        {typeof row[col] === "number"
-                          ? row[col].toLocaleString()
-                          : String(row[col] ?? "")}
-                      </span>
-                    ))}
-                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        )}
+      </div>
 
-          {/* More / Detail buttons — show when there are more rows than initial display */}
-          {rows.length > INITIAL_DISPLAY && (
-            <div className="flex items-center border-t border-gray-100 dark:border-gray-800">
-              <button
-                onClick={() => setShowMore(!showMore)}
-                className="flex-1 px-4 py-2.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-              >
-                {showMore ? t('stats.breakdown.collapse') : t('stats.breakdown.expand', { count: rows.length })}
-              </button>
-              <button
-                onClick={() => setDetailOpen(true)}
-                className="px-4 py-2.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-l border-gray-100 dark:border-gray-800"
-              >
-                {t('stats.breakdown.details')}
-              </button>
-            </div>
-          )}
-          {/* When within initial display, show detail button + item count */}
-          {rows.length > 0 && rows.length <= INITIAL_DISPLAY && (
-            <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
-              <span className="px-4 py-2.5 text-xs text-gray-400">
-                {t('stats.breakdown.totalItems', { count: rows.length })}
-              </span>
-              <button
-                onClick={() => setDetailOpen(true)}
-                className="px-4 py-2.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-              >
-                {t('stats.breakdown.details')}
-              </button>
-            </div>
-          )}
+      {/* Footer: More / Detail buttons */}
+      {!loading && rows.length > INITIAL_DISPLAY && (
+        <div className="flex items-center border-t border-border/60 bg-muted/15">
+          <button
+            type="button"
+            onClick={() => setShowMore(!showMore)}
+            className="flex-1 px-4 py-2.5 text-xs font-medium text-primary hover:bg-muted/50 transition-colors"
+          >
+            {showMore ? t('stats.breakdown.collapse') : t('stats.breakdown.expand', { count: rows.length })}
+          </button>
+          <button
+            type="button"
+            onClick={() => setDetailOpen(true)}
+            className="px-4 py-2.5 text-xs font-medium text-muted-foreground hover:text-primary hover:bg-muted/50 transition-colors border-l border-border/60"
+          >
+            {t('stats.breakdown.details')}
+          </button>
+        </div>
+      )}
+      {!loading && rows.length > 0 && rows.length <= INITIAL_DISPLAY && (
+        <div className="flex items-center justify-between border-t border-border/60 bg-muted/15">
+          <span className="px-4 py-2.5 text-xs text-muted-foreground">
+            {t('stats.breakdown.totalItems', { count: rows.length })}
+          </span>
+          <button
+            type="button"
+            onClick={() => setDetailOpen(true)}
+            className="px-4 py-2.5 text-xs font-medium text-muted-foreground hover:text-primary hover:bg-muted/50 transition-colors"
+          >
+            {t('stats.breakdown.details')}
+          </button>
         </div>
       )}
 

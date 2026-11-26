@@ -874,20 +874,25 @@ export default function StatsPage() {
   const currentSite = sites.find((site) => site.domain === domain);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+    <div className="w-full">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         {/* Header bar：窄屏下允许控件换行到第二行，避免整页横向滚动 */}
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mb-4">
           {/* Domain selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                <Link className="h-4 w-4 text-gray-400" />
-                <span>{domain}</span>
-                <ChevronDown className="h-4 w-4 text-gray-400" />
+              <button
+                type="button"
+                className="inline-flex items-center gap-2.5 px-2.5 py-1.5 -ml-2.5 rounded-xl text-base sm:text-lg font-semibold text-foreground hover:bg-muted/70 transition-colors"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 dark:bg-primary/20 border border-primary/15 text-primary text-xs font-bold uppercase shrink-0">
+                  {domain?.charAt(0) || <Link className="h-3.5 w-3.5" />}
+                </span>
+                <span className="tracking-tight">{domain}</span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="start">
+            <DropdownMenuContent className="w-56 rounded-xl shadow-lg border-border/80" align="start">
               {(currentSite?.role === "admin" || currentSite?.role === "owner") && (
                 <>
                   <DropdownMenuItem
@@ -1018,13 +1023,13 @@ export default function StatsPage() {
                   });
                 }}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-2 text-sm font-medium border transition-colors",
+                  "flex items-center gap-1.5 h-8 px-3 text-xs font-medium border shadow-2xs transition-colors",
                   compareEnabled
-                    ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 rounded-l-lg"
-                    : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg"
+                    ? "bg-primary/10 text-primary border-primary/30 rounded-l-lg"
+                    : "bg-card border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg"
                 )}
               >
-                <ArrowLeftRight className="h-4 w-4" />
+                <ArrowLeftRight className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t('stats.compare.toggle')}</span>
               </button>
               {compareEnabled && (
@@ -1033,9 +1038,8 @@ export default function StatsPage() {
                     <button
                       type="button"
                       className={cn(
-                        "flex items-center gap-1 px-2 py-2 text-sm font-medium border border-l-0 transition-colors rounded-r-lg",
-                        "bg-white dark:bg-gray-900 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400",
-                        "hover:bg-indigo-50 dark:hover:bg-indigo-950/20"
+                        "flex items-center gap-1 h-8 px-2.5 text-xs font-medium border border-l-0 shadow-2xs transition-colors rounded-r-lg",
+                        "bg-card border-primary/30 text-primary hover:bg-primary/5"
                       )}
                     >
                       <span className="text-xs truncate max-w-[120px]">
@@ -1044,17 +1048,17 @@ export default function StatsPage() {
                       <ChevronDown className="h-3 w-3 shrink-0" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-48" align="end">
+                  <DropdownMenuContent className="w-48 rounded-xl" align="end">
                     <DropdownMenuItem
                       onClick={() => handleCompareMode("auto")}
-                      className={cn(compareMode === "auto" && "bg-gray-50 dark:bg-gray-800")}
+                      className={cn("text-xs", compareMode === "auto" && "bg-accent text-accent-foreground font-medium")}
                     >
                       {t('stats.compare.previousPeriod')}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => handleCompareMode("custom")}
-                      className={cn(compareMode === "custom" && "bg-gray-50 dark:bg-gray-800")}
+                      className={cn("text-xs", compareMode === "custom" && "bg-accent text-accent-foreground font-medium")}
                     >
                       {t('stats.compare.customRange')}
                     </DropdownMenuItem>
@@ -1069,7 +1073,7 @@ export default function StatsPage() {
                 <DialogHeader className="sr-only">
                   <DialogTitle>{t('stats.compare.selectCompareRange')}</DialogTitle>
                 </DialogHeader>
-                <div className="px-3 pt-3 text-sm text-gray-500">
+                <div className="px-3 pt-3 text-sm text-muted-foreground">
                   {t('stats.compare.pickDateHint', { days: primaryPeriodDays })}
                 </div>
                 <Calendar
@@ -1103,24 +1107,21 @@ export default function StatsPage() {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors",
-                    "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700",
-                    "hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
-                  )}
+                  className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-border/80 bg-card shadow-2xs hover:bg-muted/50 text-foreground transition-colors"
                 >
                   <span>{selectdOptionName}</span>
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48" align="end">
+              <DropdownMenuContent className="w-48 rounded-xl" align="end">
                 {PERIOD_OPTIONS.map((opt) => (
                   <div key={opt.key}>
                     {opt.separator && <DropdownMenuSeparator />}
                     <DropdownMenuItem
                       onClick={() => handleChangeOption(opt.key)}
                       className={cn(
-                        query.period === opt.key && "bg-gray-50 dark:bg-gray-800"
+                        "text-xs",
+                        query.period === opt.key && "bg-accent text-accent-foreground font-medium"
                       )}
                     >
                       {opt.label}
@@ -1134,7 +1135,7 @@ export default function StatsPage() {
                     setSelectedDateRange({ from: undefined, to: undefined });
                     setIsDropdownOpen(false);
                   }}
-                  className="text-indigo-600 dark:text-indigo-400"
+                  className="text-xs text-primary font-medium"
                 >
                   {t('stats.period.customRange')}
                 </DropdownMenuItem>
@@ -1148,23 +1149,23 @@ export default function StatsPage() {
                   <button
                     type="button"
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border transition-colors",
+                      "flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border shadow-2xs transition-colors",
                       activeSegment
-                        ? "bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800"
-                        : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        ? "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/30"
+                        : "bg-card border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
                   >
-                    <Layers className="h-4 w-4" />
+                    <Layers className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline max-w-[100px] truncate">
                       {activeSegment ? activeSegment.name : t("stats.segment.label")}
                     </span>
                     <ChevronDown className="h-3 w-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuContent align="end" className="w-52 rounded-xl">
                   {activeFilters.length > 0 && (
                     <>
-                      <DropdownMenuItem onClick={openSaveSegment} className="text-violet-600 dark:text-violet-400">
+                      <DropdownMenuItem onClick={openSaveSegment} className="text-xs text-violet-600 dark:text-violet-400 font-medium">
                         <Layers className="h-3.5 w-3.5 mr-1.5" />
                         {t("stats.segment.save")}
                       </DropdownMenuItem>
@@ -1177,19 +1178,19 @@ export default function StatsPage() {
                       onClick={() => handleApplySegment(seg)}
                       className={cn(
                         "flex flex-col items-start gap-0.5",
-                        activeSegment?.id === seg.id && "bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300"
+                        activeSegment?.id === seg.id && "bg-violet-500/10 text-violet-700 dark:text-violet-300"
                       )}
                     >
-                      <span className="text-sm font-medium">{seg.name}</span>
+                      <span className="text-xs font-medium">{seg.name}</span>
                       {seg.description && (
-                        <span className="text-xs text-muted-foreground">{seg.description}</span>
+                        <span className="text-[11px] text-muted-foreground">{seg.description}</span>
                       )}
                     </DropdownMenuItem>
                   ))}
                   {activeSegment && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleClearSegment} className="text-gray-500">
+                      <DropdownMenuItem onClick={handleClearSegment} className="text-xs text-muted-foreground">
                         {t("stats.segment.clear")}
                       </DropdownMenuItem>
                     </>
@@ -1207,12 +1208,12 @@ export default function StatsPage() {
 
             {/* Refresh */}
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
               onClick={refreshData}
-              className="h-9 w-9 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              className="h-8 w-8 rounded-lg bg-card border-border/80 shadow-2xs text-muted-foreground hover:text-foreground"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
@@ -1279,30 +1280,37 @@ export default function StatsPage() {
           onClearAll={handleClearAllFilters}
         />
 
-        {/* Section tabs (Stats / Goals / Properties / Funnels / Custom Query) */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 mt-3 mb-4">
-          {([
-            { key: "stats", label: t("stats.sidebar.stats"), icon: <BarChart3 className="h-3.5 w-3.5" /> },
-            { key: "goals", label: t("stats.sidebar.goals"), icon: <Target className="h-3.5 w-3.5" /> },
-            { key: "properties", label: t("stats.sidebar.properties"), icon: <Layers className="h-3.5 w-3.5" /> },
-            { key: "funnels", label: t("stats.sidebar.funnels"), icon: <Filter className="h-3.5 w-3.5" /> },
-            { key: "user-flows", label: t("stats.sidebar.flows"), icon: <GitMerge className="h-3.5 w-3.5" /> },
-            { key: "custom-query", label: t("stats.sidebar.customQuery"), icon: <Code2 className="h-3.5 w-3.5" /> },
-          ] as const).map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActivePanel(tab.key)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors",
-                activePanel === tab.key
-                  ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm border border-gray-200 dark:border-gray-700"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-900/50"
-              )}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+        {/* Section tabs + Dimension settings aligned on one sleek toolbar row */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mt-3 mb-4">
+          <div className="inline-flex items-center gap-0.5 p-1 rounded-xl bg-muted/60 dark:bg-muted/35 border border-border/50 overflow-x-auto max-w-full">
+            {([
+              { key: "stats", label: t("stats.sidebar.stats"), icon: <BarChart3 className="h-3.5 w-3.5" /> },
+              { key: "goals", label: t("stats.sidebar.goals"), icon: <Target className="h-3.5 w-3.5" /> },
+              { key: "properties", label: t("stats.sidebar.properties"), icon: <Layers className="h-3.5 w-3.5" /> },
+              { key: "funnels", label: t("stats.sidebar.funnels"), icon: <Filter className="h-3.5 w-3.5" /> },
+              { key: "user-flows", label: t("stats.sidebar.flows"), icon: <GitMerge className="h-3.5 w-3.5" /> },
+              { key: "custom-query", label: t("stats.sidebar.customQuery"), icon: <Code2 className="h-3.5 w-3.5" /> },
+            ] as const).map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActivePanel(tab.key)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-all",
+                  activePanel === tab.key
+                    ? "bg-card text-foreground shadow-2xs"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {activePanel === "stats" && (
+            <DimensionSettings dimensions={dimensions} onChange={handleDimensionsChange} />
+          )}
         </div>
 
         {/* Panel content */}
@@ -1310,80 +1318,72 @@ export default function StatsPage() {
           {/* Stats panel */}
           {activePanel === "stats" && (
             <>
-              {/* Dimension settings (inline for stats panel) */}
-              <div className="flex items-center justify-end mb-3">
-                <DimensionSettings dimensions={dimensions} onChange={handleDimensionsChange} />
+              {/* Unified Aggregate KPIs + Main Time-Series Graph Card */}
+              <div className="mb-5 rounded-2xl border border-border/80 bg-card shadow-2xs overflow-hidden">
+                <AggregateStats
+                  query={query}
+                  activeMetric={activeMetric}
+                  onMetricChange={setActiveMetric}
+                  api={api.getAggregate}
+                />
+                <MainGraph
+                  query={query}
+                  activeMetric={activeMetric}
+                  onMetricChange={setActiveMetric}
+                  api={api.getMainGraph}
+                />
               </div>
 
-                {/* Aggregate stats */}
-                <div className="mb-4">
-                  <AggregateStats
-                    query={query}
-                    activeMetric={activeMetric}
-                    onMetricChange={setActiveMetric}
-                    api={api.getAggregate}
-                  />
-                </div>
-
-                {/* Main graph */}
-                <div className="mb-4">
-                  <MainGraph
-                    query={query}
-                    activeMetric={activeMetric}
-                    onMetricChange={setActiveMetric}
-                    api={api.getMainGraph}
-                  />
-                </div>
-
-                {/* Breakdown section */}
-                <div className="mb-4">
-                  {/* Category tab bar */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-1 overflow-x-auto pb-1">
-                      {activeCategories.map((tab) => (
-                        <button
-                          key={tab.key}
-                          onClick={() => setActiveCategoryTab(tab.key)}
-                          className={cn(
-                            "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors",
-                            activeCategoryTab === tab.key
-                              ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm border border-gray-200 dark:border-gray-700"
-                              : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-900/50"
-                          )}
-                        >
-                          {tab.icon}
-                          {tab.label}
-                        </button>
-                      ))}
-                    </div>
+              {/* Breakdown section */}
+              <div className="mb-5">
+                {/* Category tab bar */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="inline-flex items-center gap-0.5 p-1 rounded-xl bg-muted/60 dark:bg-muted/35 border border-border/50 overflow-x-auto max-w-full">
+                    {activeCategories.map((tab) => (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setActiveCategoryTab(tab.key)}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-all",
+                          activeCategoryTab === tab.key
+                            ? "bg-card text-foreground shadow-2xs"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {tab.icon}
+                        {tab.label}
+                      </button>
+                    ))}
                   </div>
-
-                  {/* Breakdown tables for current category */}
-                  {currentCategoryDimensions.length === 0 ? (
-                    <div className="text-center py-12 text-sm text-gray-400 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-                      {t('stats.emptyDimensions')}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {currentCategoryDimensions.map((dim: DimensionConfig) => (
-                        <BreakdownTable
-                          key={dim.key}
-                          title={dim.label}
-                          keyName={dim.label}
-                          limit={50}
-                          query={{ ...query, property: dim.property }}
-                          setQuery={setQuery}
-                          onAddFilter={handleAddFilter}
-                          api={api.getBreakdown}
-                          exportApi={api.exportBreakdown}
-                          icon={DIMENSION_ICONS[dim.key] || <BarChart3 className="h-4 w-4" />}
-                        />
-                      ))}
-                    </div>
-                  )}
                 </div>
-              </>
-            )}
+
+                {/* Breakdown tables for current category */}
+                {currentCategoryDimensions.length === 0 ? (
+                  <div className="text-center py-12 text-xs text-muted-foreground bg-card rounded-2xl border border-border/80">
+                    {t('stats.emptyDimensions')}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {currentCategoryDimensions.map((dim: DimensionConfig) => (
+                      <BreakdownTable
+                        key={dim.key}
+                        title={dim.label}
+                        keyName={dim.label}
+                        limit={50}
+                        query={{ ...query, property: dim.property }}
+                        setQuery={setQuery}
+                        onAddFilter={handleAddFilter}
+                        api={api.getBreakdown}
+                        exportApi={api.exportBreakdown}
+                        icon={DIMENSION_ICONS[dim.key] || <BarChart3 className="h-3.5 w-3.5" />}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
             {/* Goals panel */}
             {activePanel === "goals" && (
@@ -1436,40 +1436,40 @@ export default function StatsPage() {
         <PinnedPanels domain={domain!} query={query} queryV2Api={api.queryV2} />
 
         {/* 网站体验与行为深度分析快捷入口条 */}
-        <div className="rounded-xl border bg-gradient-to-r from-card via-card to-muted/20 p-4 shadow-xs">
+        <div className="mt-4 rounded-2xl border border-border/80 bg-gradient-to-r from-card via-card to-primary/[0.04] p-4 shadow-2xs">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
-                <Gauge className="h-5 w-5" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/15 shrink-0">
+                <Gauge className="h-4.5 w-4.5" />
               </span>
               <div>
-                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <span>用户体验与交互行为深度洞察</span>
+                <h4 className="text-sm font-semibold text-foreground">
+                  {t("stats.experienceBanner.title", "用户体验与交互行为深度洞察")}
                 </h4>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  结合 Core Web Vitals 性能分析与点击/滚动热力图，全景诊断网站真实运行态势
+                  {t("stats.experienceBanner.desc", "结合 Core Web Vitals 性能分析与点击/滚动热力图，全景诊断网站真实运行态势")}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1.5 text-xs shadow-xs"
+                className="h-8 gap-1.5 text-xs bg-card border-border/80 shadow-2xs"
                 onClick={() => navigate(`/sites/${domain}/performance`)}
               >
                 <Gauge className="h-3.5 w-3.5 text-emerald-500" />
-                <span>Web Vitals 性能分析</span>
+                <span>{t("performance.title", "Core Web Vitals")}</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1.5 text-xs shadow-xs"
+                className="h-8 gap-1.5 text-xs bg-card border-border/80 shadow-2xs"
                 onClick={() => navigate(`/sites/${domain}/heatmap`)}
               >
                 <Flame className="h-3.5 w-3.5 text-orange-500" />
-                <span>热力图分析</span>
+                <span>{t("heatmap.title", "热力图分析")}</span>
               </Button>
             </div>
           </div>
@@ -1477,7 +1477,7 @@ export default function StatsPage() {
 
         {/* Footer */}
         <div className="text-center py-6">
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-muted-foreground/70">
             {t('stats.footer')}
           </span>
         </div>

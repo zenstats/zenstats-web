@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "next-themes";
 import {
-  Globe,
   Target,
   Shield,
   Server,
@@ -20,6 +19,7 @@ import {
   ExternalLink,
   Activity,
   Sparkles,
+  Gauge,
 } from "lucide-react";
 import LogoHorizontal from "@/assets/logo-h.svg";
 import LogoHorizontalDark from "@/assets/logo-h-dark.svg";
@@ -48,10 +48,19 @@ const features: FeatureItem[] = [
   },
   {
     icon: <Flame className="w-5 h-5 text-amber-500" />,
-    title: i("无侵入点击热力图", "Click Heatmaps"),
+    title: i("点击与滚动深度热力图", "Click & Scroll Heatmaps"),
     desc: i(
-      "自动捕获高频点击元素，支持屏幕断点适配与精确 Selector 定位，零配置还原页面真实点击热度",
-      "Zero-config click density capturing with breakpoint adaptation and precise selector binding"
+      "零侵入捕获页面点击密度与视口滚动触达率，支持多端断点适配与网页快照叠加诊断",
+      "Zero-config click density and viewport scroll-reach heatmaps with breakpoint adaptation and page snapshots"
+    ),
+    badge: i("全新上线", "New"),
+  },
+  {
+    icon: <Gauge className="w-5 h-5 text-emerald-500" />,
+    title: i("Core Web Vitals 监控", "Core Web Vitals RUM"),
+    desc: i(
+      "真实用户性能采样监控 LCP、INP、CLS、FCP 与 TTFB 的 P75 分位趋势，精准定位慢页面",
+      "Real-user monitoring for P75 LCP, INP, CLS, FCP & TTFB across devices and navigation types"
     ),
     badge: i("全新上线", "New"),
   },
@@ -64,7 +73,7 @@ const features: FeatureItem[] = [
     ),
   },
   {
-    icon: <Shield className="w-5 h-5 text-emerald-500" />,
+    icon: <Shield className="w-5 h-5 text-teal-500" />,
     title: i("无 Cookie 隐私合规", "Cookieless Privacy"),
     desc: i(
       "无需烦人的 Cookie 弹窗横幅，基于内存哈希与会话隔离，完全符合 GDPR / CCPA 隐私规范",
@@ -73,34 +82,26 @@ const features: FeatureItem[] = [
   },
   {
     icon: <Zap className="w-5 h-5 text-yellow-500" />,
-    title: i("轻量极速追踪脚本", "Ultra-light Tracker"),
+    title: i("按需变体极轻脚本", "Modular Ultra-light Tracker"),
     desc: i(
-      "压缩后仅 ~3 KB，异步执行不阻塞渲染，对 Google Lighthouse / Web Vitals 评分零影响",
-      "~3 KB gzipped. Async execution with zero penalty on your Lighthouse & Core Web Vitals"
+      "基础包压缩后仅 ~3 KB，热力图与性能采集模块按需加载，异步执行零阻塞页面渲染",
+      "~3 KB gzipped core with opt-in heatmap & vitals bundles. Async execution with zero render blocking"
     ),
   },
   {
     icon: <Eye className="w-5 h-5 text-cyan-500" />,
     title: i("实时访客流监控", "Live Visitors Stream"),
     desc: i(
-      "秒级刷新当前在站访客、正在浏览的着陆页与地理分布，配合动态波浪走势一目了然",
-      "Second-level live visitors, active landing pages and geo presence with smooth trend waves"
-    ),
-  },
-  {
-    icon: <Globe className="w-5 h-5 text-purple-500" />,
-    title: i("全渠道获客归因", "Acquisition Attribution"),
-    desc: i(
-      "自动识别自然搜索、付费广告、社媒与 UTM 营销活动，精准还原用户来源与转化表现",
-      "Auto-detect organic, paid, social and UTM campaigns with reliable conversion attribution"
+      "秒级刷新当前在站访客、正在浏览的着陆页与地理分布，配合动态趋势曲线一目了然",
+      "Second-level live visitors, active landing pages and geo presence with smooth trend curves"
     ),
   },
   {
     icon: <Target className="w-5 h-5 text-rose-500" />,
-    title: i("多步转化漏斗与目标", "Conversion Funnels & Goals"),
+    title: i("全渠道归因与转化漏斗", "Attribution & Funnels"),
     desc: i(
-      "自定义事件目标与树形漏斗分析，精确计算各转化步骤转化率与相对流失率",
-      "Custom event goals and funnel trees to track step-by-step conversion and drop-off"
+      "自动解析搜索、社媒与 UTM 获客渠道，结合自定义目标与多步漏斗精准计算各环节流失率",
+      "Auto-detect organic, social and UTM channels alongside custom goals and step-by-step conversion funnels"
     ),
   },
   {
@@ -341,21 +342,21 @@ export default function LandingPage() {
             </a>
           </div>
 
-          {/* 一键引入 Tracker / Docker 部署代码胶囊 */}
+          {/* 一键引入 Tracker 代码胶囊 */}
           <div className="max-w-xl mx-auto">
-            <div className="p-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between text-left">
+            <div className="p-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/90 dark:border-slate-800 shadow-xs flex items-center justify-between text-left">
               <div className="flex items-center gap-2 px-3 overflow-hidden font-mono text-xs text-slate-700 dark:text-slate-300 truncate">
                 <span className="text-emerald-500 font-bold select-none">&lt;/&gt;</span>
-                <span className="truncate">&lt;script defer src="https://your-domain.com/tracker.js" data-site-id="my-site"&gt;&lt;/script&gt;</span>
+                <span className="truncate">&lt;script defer src="https://analytics.yourdomain.com/js/script.js" data-domain="example.com"&gt;&lt;/script&gt;</span>
               </div>
               <button
                 onClick={() =>
                   handleCopy(
-                    '<script defer src="https://your-domain.com/tracker.js" data-site-id="my-site"></script>',
+                    '<script defer src="https://analytics.yourdomain.com/js/script.js" data-domain="example.com"></script>',
                     "tracker"
                   )
                 }
-                className="shrink-0 p-2 text-xs font-medium rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1"
+                className="shrink-0 px-2.5 py-1.5 text-xs font-medium rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1"
                 title="Copy snippet"
               >
                 {copiedCodeKey === "tracker" ? (

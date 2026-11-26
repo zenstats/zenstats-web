@@ -555,6 +555,10 @@
     "confirm": "Confirm",
     "emptyDimensions": "No dimensions enabled in the current category. Click 'Dimension Settings' in the top right to enable more dimensions.",
     "footer": "Powered by ZenStats",
+    "experienceBanner": {
+      "title": "Deep UX & Interaction Diagnostics",
+      "desc": "Combine Core Web Vitals real-user monitoring with click & scroll heatmaps to diagnose site experience end-to-end"
+    },
     "period": {
       "today": "Today",
       "yesterday": "Yesterday",

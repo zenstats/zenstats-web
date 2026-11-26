@@ -38,25 +38,23 @@ export default function CurrentVisitors({ query, api }: CurrentVisitorsProps) {
   if (!data) return null;
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2">
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
-        </span>
-        <span
-          className={cn(
-            "text-sm font-semibold text-gray-900 dark:text-gray-100 transition-transform",
-            pulse && "scale-110"
-          )}
-        >
-          {data.total}
-        </span>
-        {/* 文案在窄屏隐藏（只保留绿点 + 数字），否则会被挤成竖排逐字换行 */}
-        <span className="hidden sm:inline whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-          {t('stats.currentVisitors')}
-        </span>
-      </div>
+    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/[0.08] dark:bg-emerald-500/[0.14] px-3 h-8">
+      <span className="relative flex h-2 w-2 shrink-0">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+      </span>
+      <span
+        className={cn(
+          "text-xs font-bold tabular-nums text-emerald-700 dark:text-emerald-300 transition-transform",
+          pulse && "scale-110"
+        )}
+      >
+        {data.total}
+      </span>
+      {/* 文案在窄屏隐藏（只保留绿点 + 数字），否则会被挤成竖排逐字换行 */}
+      <span className="hidden sm:inline whitespace-nowrap text-xs font-medium text-emerald-700/80 dark:text-emerald-300/80">
+        {t('stats.currentVisitors')}
+      </span>
     </div>
   );
 }

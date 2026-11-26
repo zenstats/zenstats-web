@@ -110,8 +110,8 @@ export default function FilterMenu({ domain, query, onAddFilter }: FilterMenuPro
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-            <Search className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs bg-card border-border/80 shadow-2xs">
+            <Search className="h-3.5 w-3.5 text-muted-foreground" />
             {t('stats.filterMenu.addFilter')}
           </Button>
         </PopoverTrigger>
